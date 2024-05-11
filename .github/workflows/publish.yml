@@ -48,8 +48,6 @@ jobs:
         id: release
         uses: cratis/release-action@v1
         with:
-          user-name: "Cratis Build"
-          user-email: "build@cratis.io"
           version: ${{ github.event.inputs.version }}
           release-notes: ${{ github.event.inputs.release-notes }}
 
