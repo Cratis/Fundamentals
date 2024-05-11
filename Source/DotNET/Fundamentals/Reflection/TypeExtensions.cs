@@ -75,6 +75,24 @@ public static class TypeExtensions
     }
 
     /// <summary>
+    /// Gets the element type of an <see cref="IAsyncEnumerable{T}"/>.
+    /// </summary>
+    /// <param name="asyncEnumerableType">The <see cref="Type"/> to get from.</param>
+    /// <returns>The element type.</returns>
+    public static Type GetAsyncEnumerableElementType(this Type asyncEnumerableType)
+    {
+        if (asyncEnumerableType.IsGenericType && asyncEnumerableType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
+        {
+            return asyncEnumerableType.GetGenericArguments()[0];
+        }
+
+        return asyncEnumerableType.GetInterfaces()
+            .Where(t => t.IsGenericType &&
+                t.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
+            .Select(t => t.GenericTypeArguments[0]).FirstOrDefault()!;
+    }
+
+    /// <summary>
     /// Get the underlying nullable type.
     /// </summary>
     /// <param name="type"><see cref="Type"/> to get from.</param>
