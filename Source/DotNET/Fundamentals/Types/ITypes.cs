@@ -3,7 +3,7 @@
 
 using System.Reflection;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Defines a system for working with types.

@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Aksio.Serialization;
+namespace Cratis.Serialization;
 
 /// <summary>
 /// Exception that gets thrown when a derived type is missing for a target type.

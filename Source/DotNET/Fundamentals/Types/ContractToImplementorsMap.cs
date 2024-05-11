@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using Aksio.Reflection;
+using Cratis.Reflection;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Represents an implementation of <see cref="IContractToImplementorsMap"/>.

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Aksio.Fundamentals</AssemblyName>
-        <RootNamespace>Aksio</RootNamespace>
+        <AssemblyName>Cratis.Fundamentals</AssemblyName>
+        <RootNamespace>Cratis</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

@@ -46,10 +46,10 @@ jobs:
 
       - name: Release
         id: release
-        uses: aksio-insurtech/release-action@v1
+        uses: cratis/release-action@v1
         with:
-          user-name: "Aksio Build"
-          user-email: "build@aksio.no"
+          user-name: "Cratis Build"
+          user-email: "build@cratis.io"
           version: ${{ github.event.inputs.version }}
           release-notes: ${{ github.event.inputs.release-notes }}
 

@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Aksio.Serialization;
+namespace Cratis.Serialization;
 
 /// <summary>
 /// Defines a system that tracks derived types and the target type they represents.

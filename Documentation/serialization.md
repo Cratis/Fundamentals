@@ -55,7 +55,7 @@ To create a concrete implementations of this, all you need is to add a `[Derived
 So for our sample, lets say we add a `DebitAccount` and a `CreditAccount`:
 
 ```csharp
-using Aksio.Serialization;
+using Cratis.Serialization;
 
 [DerivedType("2c025801-2223-402c-a42a-893845bb1077")]
 public record DebitAccount(AccountId Id, AccountName Name, AccountType Type) : IAccount;
@@ -161,6 +161,6 @@ export class CreditAccount {
 
 ### Client
 
-In the `@aksio/fundamentals` package you'll find something called `JsonSerializer`.
+In the `@cratis/fundamentals` package you'll find something called `JsonSerializer`.
 This is used by the `QueryFor<>` client type. Anything that is coming from the server will go through this serializer
 and create a result that holds the correct types.

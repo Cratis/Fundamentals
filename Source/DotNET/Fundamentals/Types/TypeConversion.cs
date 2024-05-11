@@ -5,11 +5,11 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Aksio.Concepts;
-using Aksio.Json;
-using Aksio.Reflection;
+using Cratis.Concepts;
+using Cratis.Json;
+using Cratis.Reflection;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Helper methods for type conversion.

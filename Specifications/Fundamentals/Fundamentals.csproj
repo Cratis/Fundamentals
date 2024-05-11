@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <IsTestProject>true</IsTestProject>
-        <AssemblyName>Aksio.Fundamentals.Specs</AssemblyName>
-        <RootNamespace>Aksio</RootNamespace>
+        <AssemblyName>Cratis.Fundamentals.Specs</AssemblyName>
+        <RootNamespace>Cratis</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

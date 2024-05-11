@@ -4,7 +4,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace Aksio.Json.for_ConceptAsJsonConverter.given;
+namespace Cratis.Json.for_ConceptAsJsonConverter.given;
 
 public abstract class converter_for_converting_to_json<TConcept, TUnderlying> : Specification
 {

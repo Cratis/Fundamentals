@@ -3,7 +3,7 @@
 
 using System.Reflection;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Represents an implementation of <see cref="ICanProvideAssembliesForDiscovery"/> that provides a composite of multiple <see cref="ICanProvideAssembliesForDiscovery"/>.

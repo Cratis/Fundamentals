@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
-using Aksio.Types;
+using Cratis.Types;
 
-namespace Aksio.Concepts;
+namespace Cratis.Concepts;
 
 /// <summary>
 /// Provides extensions related to working with <see cref="ITypes"/>.

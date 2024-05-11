@@ -11,7 +11,7 @@ Within the **Fundamentals** package you'll find a namespace called `Json`. This 
 
 ```csharp
 using System.Text.Json;
-using Aksio.Json;
+using Cratis.Json;
 
 var options = new JsonSerializerOptions
 {
@@ -43,7 +43,7 @@ The converter handles deserializing it correctly. Just pass in the converter fac
 
 ```csharp
 using System.Text.Json;
-using Aksio.Json;
+using Cratis.Json;
 
 var options = new JsonSerializerOptions
 {
@@ -57,7 +57,7 @@ var json = "{ \"registeredDate\": \"2022-08-19\", \"registeredTime\": \"13:37:00
 var person = JsonSerializer.Deserialize<Person>(json, options);
 ```
 
-> Note: If you're using the Aksio Application Model, you do not have to configure this. It is automatically configured for the ASP.NET pipelines
+> Note: If you're using the Cratis Application Model, you do not have to configure this. It is automatically configured for the ASP.NET pipelines
 > and other parts that needs it, such as the Cratis Kernel transports.
 
 ## Type Converters
@@ -69,7 +69,7 @@ Out of the box the **Fundamentals** provide a type converter for concepts. All y
 
 ```csharp
 using System.ComponentModel;
-using Aksio.Conversion;
+using Cratis.Conversion;
 
 TypeDescriptor.AddAttributes(typeof(DateOnly), new TypeConverterAttribute(typeof(DateOnlyTypeConverter)));
 TypeDescriptor.AddAttributes(typeof(TimeOnly), new TypeConverterAttribute(typeof(TimeOnlyTypeConverter)));
@@ -78,12 +78,12 @@ TypeDescriptor.AddAttributes(typeof(TimeOnly), new TypeConverterAttribute(typeof
 There is a convenience method for registering these and other converters in **Fundamentals**:
 
 ```csharp
-using Aksio.Conversion;
+using Cratis.Conversion;
 
 TypeConverters.Register();
 ```
 
-> Note: If you're using the Aksio Application Model, you do not have to manually set this up. It is automatically configured at startup.
+> Note: If you're using the Cratis Application Model, you do not have to manually set this up. It is automatically configured at startup.
 
 ## MongoDB
 
@@ -96,11 +96,11 @@ this in the same way.
 You can either use the serializer manually on maps defined or you can register it globally as shown below:
 
 ```csharp
-using Aksio.Extensions.MongoDB;
+using Cratis.Extensions.MongoDB;
 using MongoDB.Bson.Serialization;
 
 BsonSerializer.RegisterSerializationProvider(new DateOnlySerializer());
 BsonSerializer.RegisterSerializationProvider(new TimeOnlySerializer());
 ```
 
-> Note: If you're using the Aksio Application Model, you do not have to manually set this up. It is automatically configured at startup.
+> Note: If you're using the Cratis Application Model, you do not have to manually set this up. It is automatically configured at startup.

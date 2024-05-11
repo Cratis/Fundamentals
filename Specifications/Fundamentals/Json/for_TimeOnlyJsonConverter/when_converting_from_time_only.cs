@@ -4,7 +4,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace Aksio.Json.for_TimeOnlyJsonConverter;
+namespace Cratis.Json.for_TimeOnlyJsonConverter;
 
 public class when_converting_from_time_only : Specification
 {

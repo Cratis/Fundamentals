@@ -4,10 +4,10 @@
 using System.Collections;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Aksio.Concepts;
-using Aksio.Types;
+using Cratis.Concepts;
+using Cratis.Types;
 
-namespace Aksio.Json;
+namespace Cratis.Json;
 
 /// <summary>
 /// Represents a <see cref="JsonConverter{T}"/> for enumerable of concepts or primitive types represented as models with _id field.

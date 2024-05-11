@@ -4,7 +4,7 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyModel;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Represents an implementation of <see cref="ICanProvideAssembliesForDiscovery"/> that provides package referenced assemblies.
@@ -24,7 +24,7 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
 
     readonly List<string> _assemblyPrefixesToInclude = new()
     {
-        "Aksio"
+        "Cratis"
     };
 
     readonly List<Assembly> _assemblies = new();

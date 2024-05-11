@@ -1,9 +1,9 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Aksio.Execution;
+using Cratis.Execution;
 
-namespace Aksio.Configuration;
+namespace Cratis.Configuration;
 
 /// <summary>
 /// Exception that gets thrown when configuration is missing for a specific configuration object type for a specific tenant.

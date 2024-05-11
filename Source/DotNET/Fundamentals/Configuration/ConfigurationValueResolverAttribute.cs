@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Aksio.Configuration;
+namespace Cratis.Configuration;
 
 /// <summary>
 /// Attribute used to adorn properties to use a specific <see cref="IConfigurationValueResolver"/> for resolving its value.

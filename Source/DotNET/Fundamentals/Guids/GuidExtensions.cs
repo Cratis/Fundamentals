@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
-namespace Aksio.Guids;
+namespace Cratis.Guids;
 
 /// <summary>
 /// Provides a set of extension methods for working with <see cref="Guid"/>.

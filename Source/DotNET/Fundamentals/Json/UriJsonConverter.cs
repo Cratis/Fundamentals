@@ -4,7 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Aksio.Json;
+namespace Cratis.Json;
 
 /// <summary>
 /// Represents a <see cref="JsonConverter{T}"/> that can convert to and from <see cref="Uri"/>.

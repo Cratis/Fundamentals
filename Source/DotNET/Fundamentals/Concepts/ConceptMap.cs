@@ -4,7 +4,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace Aksio.Concepts;
+namespace Cratis.Concepts;
 
 /// <summary>
 /// Maps a concept type to the underlying primitive type.

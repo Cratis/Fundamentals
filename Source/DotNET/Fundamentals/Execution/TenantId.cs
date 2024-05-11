@@ -1,9 +1,9 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Aksio.Concepts;
+using Cratis.Concepts;
 
-namespace Aksio.Execution;
+namespace Cratis.Execution;
 
 /// <summary>
 /// Represents the unique identifier of a tenant in the system.

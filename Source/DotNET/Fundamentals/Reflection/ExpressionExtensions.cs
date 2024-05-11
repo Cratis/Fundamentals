@@ -4,7 +4,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Aksio.Reflection;
+namespace Cratis.Reflection;
 
 /// <summary>
 /// Provides methods for working with expressions.

@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Aksio.Serialization.for_DerivedTypeJsonConverterFactory.given;
+namespace Cratis.Serialization.for_DerivedTypeJsonConverterFactory.given;
 
 public class a_derived_type_json_converter_factory : Specification
 {

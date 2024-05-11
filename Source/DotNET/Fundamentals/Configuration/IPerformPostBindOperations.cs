@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Aksio.Configuration;
+namespace Cratis.Configuration;
 
 /// <summary>
 /// Defines an interface for configuration objects to implement to be called when the configuration object is initialized.

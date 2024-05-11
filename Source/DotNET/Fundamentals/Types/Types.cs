@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Aksio.Collections;
+using Cratis.Collections;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Represents an implementation of <see cref="ITypes"/>.

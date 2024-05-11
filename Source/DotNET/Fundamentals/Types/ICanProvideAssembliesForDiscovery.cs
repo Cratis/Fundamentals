@@ -3,7 +3,7 @@
 
 using System.Reflection;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Defines a system that can provide assemblies that can be used for type discovery.

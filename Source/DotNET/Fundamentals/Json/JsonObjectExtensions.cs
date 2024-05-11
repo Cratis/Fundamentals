@@ -5,7 +5,7 @@ using System.Dynamic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Aksio.Json;
+namespace Cratis.Json;
 
 /// <summary>
 /// Extension methods for working with <see cref="JsonObject"/>.

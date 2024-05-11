@@ -4,7 +4,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace Aksio.Json.for_DateOnlyJsonConverter;
+namespace Cratis.Json.for_DateOnlyJsonConverter;
 
 public class when_converting_to_date_only_from_string : Specification
 {

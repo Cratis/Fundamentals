@@ -4,7 +4,7 @@
 using System.Globalization;
 using System.Text.Json;
 
-namespace Aksio.Json;
+namespace Cratis.Json;
 
 /// <summary>
 /// Represents extension methods for <see cref="JsonElement"/>.

@@ -3,7 +3,7 @@
 
 using System.ComponentModel;
 
-namespace Aksio.Conversion;
+namespace Cratis.Conversion;
 
 /// <summary>
 /// Represents known type converters in the system.

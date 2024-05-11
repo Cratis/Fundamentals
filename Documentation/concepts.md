@@ -141,7 +141,7 @@ By leveraging the converter:
 
 ```csharp
 using System.Text.Json;
-using Aksio.Json;
+using Cratis.Json;
 
 var options = new JsonSerializerOptions
 {
@@ -167,7 +167,7 @@ The converter handles deserializing it correctly. Just pass in the converter fac
 
 ```csharp
 using System.Text.Json;
-using Aksio.Json;
+using Cratis.Json;
 
 var options = new JsonSerializerOptions
 {
@@ -181,7 +181,7 @@ var json = "{ \"SocialSecurityNumber\": \"12345678901\" }";
 var person = JsonSerializer.Deserialize<Person>(json, options);
 ```
 
-> Note: If you're using the Aksio Application Model, you do not have to configure this. It is automatically configured for the ASP.NET pipelines
+> Note: If you're using the Cratis Application Model, you do not have to configure this. It is automatically configured for the ASP.NET pipelines
 > and other parts that needs it, such as the Cratis Kernel transports.
 
 ## TypeConverters
@@ -202,14 +202,14 @@ With the [type](./types.md) system in the **Fundamentals** you can easily do thi
 the `ITypes` type that does this for you.
 
 ```csharp
-using Aksio.Concepts;
-using Aksio.Types;
+using Cratis.Concepts;
+using Cratis.Types;
 
 var types = new Types();
 types.RegisterTypeConvertersForConcepts();
 ```
 
-> Note: If you're using the Aksio Application Model, you do not have to manually set this up. It is automatically configured at startup.
+> Note: If you're using the Cratis Application Model, you do not have to manually set this up. It is automatically configured at startup.
 
 ## MongoDB
 
@@ -222,10 +222,10 @@ this in the same way.
 You can either use the serializer manually on maps defined or you can register it globally as shown below:
 
 ```csharp
-using Aksio.Extensions.MongoDB;
+using Cratis.Extensions.MongoDB;
 using MongoDB.Bson.Serialization;
 
 BsonSerializer.RegisterSerializationProvider(new ConceptSerializationProvider());
 ```
 
-> Note: If you're using the Aksio Application Model, you do not have to manually set this up. It is automatically configured at startup.
+> Note: If you're using the Cratis Application Model, you do not have to manually set this up. It is automatically configured at startup.

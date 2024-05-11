@@ -4,7 +4,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace Aksio.Json.for_EnumerableModelWithIdToConceptOrPrimitiveEnumerableConverter;
+namespace Cratis.Json.for_EnumerableModelWithIdToConceptOrPrimitiveEnumerableConverter;
 
 public class when_converting_from_json_with_array_with_objects_with_id : Specification
 {

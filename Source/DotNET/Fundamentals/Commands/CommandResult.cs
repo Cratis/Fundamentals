@@ -1,10 +1,10 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Aksio.Execution;
-using Aksio.Validation;
+using Cratis.Execution;
+using Cratis.Validation;
 
-namespace Aksio.Commands;
+namespace Cratis.Commands;
 
 /// <summary>
 /// Represents the result coming from executing a command.

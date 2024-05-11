@@ -4,7 +4,7 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyModel;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Represents an implementation of <see cref="ICanProvideAssembliesForDiscovery"/> that provides project referenced assemblies.

@@ -3,9 +3,9 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Aksio.Concepts;
+using Cratis.Concepts;
 
-namespace Aksio.Json;
+namespace Cratis.Json;
 
 /// <summary>
 /// Represents a <see cref="JsonConverter{T}"/> for <see cref="ConceptAs{T}"/>.

@@ -4,7 +4,7 @@
 using System.Dynamic;
 using System.Reflection;
 
-namespace Aksio.Reflection;
+namespace Cratis.Reflection;
 
 /// <summary>
 /// Provides a set of methods for working with <see cref="Type">types</see>.

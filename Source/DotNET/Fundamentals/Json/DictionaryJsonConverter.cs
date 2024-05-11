@@ -4,7 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Aksio.Json;
+namespace Cratis.Json;
 
 /// <summary>
 /// Represents a <see cref="JsonConverter"/> for converting dictionaries to and from JSON.

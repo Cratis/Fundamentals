@@ -10,7 +10,7 @@
         "g:lint:ci": "cd $INIT_CWD && eslint --cache . --ext .ts,.tsx --quiet",
         "g:test": "cd $INIT_CWD && mocha --config ${PROJECT_CWD}/.mocharc.js",
         "g:ci": "cd $INIT_CWD && yarn clean && yarn lint:ci && tsc -b && yarn test",
-        "g:up": "cd $INIT_CWD && ncu -u \\!'@aksio/*'",
+        "g:up": "cd $INIT_CWD && ncu -u \\!'@cratis/*'",
         "clean": "node ./run-task-on-workspaces.js clean",
         "build": "node ./run-task-on-workspaces.js build",
         "lint": "node ./run-task-on-workspaces.js lint",

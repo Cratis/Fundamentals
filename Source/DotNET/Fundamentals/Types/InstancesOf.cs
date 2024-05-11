@@ -3,7 +3,7 @@
 
 using System.Collections;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Represents an implementation of <see cref="IInstancesOf{T}"/>.

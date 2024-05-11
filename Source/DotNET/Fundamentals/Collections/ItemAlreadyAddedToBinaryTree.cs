@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Aksio.Collections;
+namespace Cratis.Collections;
 
 /// <summary>
 /// Exception that gets thrown when an element is already added to a binary tree.

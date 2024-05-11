@@ -1,6 +1,6 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-namespace Aksio.Serialization;
+namespace Cratis.Serialization;
 
 /// <summary>
 /// Attribute used to adorn types that represent a unique type in the system and serializers need to recognize.

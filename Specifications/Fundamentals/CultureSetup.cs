@@ -4,7 +4,7 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace Aksio;
+namespace Cratis;
 
 public static class CultureSetup
 {

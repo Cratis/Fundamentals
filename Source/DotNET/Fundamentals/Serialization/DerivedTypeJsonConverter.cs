@@ -5,9 +5,9 @@ using System.Dynamic;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Aksio.Strings;
+using Cratis.Strings;
 
-namespace Aksio.Serialization;
+namespace Cratis.Serialization;
 
 /// <summary>
 /// Represents a <see cref="JsonConverter{T}"/> for converting types that are adorned with the <see cref="DerivedTypeAttribute"/>.

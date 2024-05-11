@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Aksio.Concepts;
+using Cratis.Concepts;
 
-namespace Aksio.Json.for_ConceptAsJsonConverter;
+namespace Cratis.Json.for_ConceptAsJsonConverter;
 
 public record SByteConcept(sbyte Value) : ConceptAs<sbyte>(Value);

@@ -3,7 +3,7 @@
 
 using System.Reflection;
 
-namespace Aksio.Types;
+namespace Cratis.Types;
 
 /// <summary>
 /// Represents helpers for working with assemblies.

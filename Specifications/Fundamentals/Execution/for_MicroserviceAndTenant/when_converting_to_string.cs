@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Aksio.Execution.for_MicroserviceAndTenant;
+namespace Cratis.Execution.for_MicroserviceAndTenant;
 
 public class when_converting_to_string : Specification
 {

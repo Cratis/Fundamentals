@@ -3,10 +3,10 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Aksio.Concepts;
-using Aksio.Reflection;
+using Cratis.Concepts;
+using Cratis.Reflection;
 
-namespace Aksio.Json;
+namespace Cratis.Json;
 
 /// <summary>
 /// Represents a <see cref="JsonConverterFactory"/> for providing <see cref="EnumerableModelWithIdToConceptOrPrimitiveEnumerableConverter{T, TElement}"/> for

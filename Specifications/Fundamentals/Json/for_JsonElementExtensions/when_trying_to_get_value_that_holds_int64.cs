@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Aksio.Json.for_JsonElementExtensions;
+namespace Cratis.Json.for_JsonElementExtensions;
 
 public class when_trying_to_get_value_that_holds_int64 : when_trying_to_get_value_of_type<long>
 {

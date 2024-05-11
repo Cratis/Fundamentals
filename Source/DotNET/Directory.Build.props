@@ -1,17 +1,16 @@
 <Project>
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
         <ImplicitUsings>true</ImplicitUsings>
-        
-
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <IsPackable>true</IsPackable>
-        <Copyright>Copyright Aksio Insurtech</Copyright>
+        <Copyright>Copyright Cratis</Copyright>
         <Authors>all contributors</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <RepositoryUrl>https://github.com/aksio-insurtech/Fundamentals</RepositoryUrl>
-        <PackageProjectUrl>https://github.com/aksio-insurtech/Fundamentals</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/cratis/Fundamentals</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/cratis/Fundamentals</PackageProjectUrl>
         <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     </PropertyGroup>
 

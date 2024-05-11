@@ -1,6 +1,6 @@
 # Fundamentals
 
-Fundamentals is a [package](https://www.nuget.org/packages/Aksio.Fundamentals/) that offers common utilities, formalizations and abstractions.
+Fundamentals is a [package](https://www.nuget.org/packages/Cratis.Fundamentals/) that offers common utilities, formalizations and abstractions.
 
 | Topic | Description |
 | ------- | ----------- |

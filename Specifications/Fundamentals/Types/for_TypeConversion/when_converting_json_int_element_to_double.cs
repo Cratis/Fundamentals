@@ -3,7 +3,7 @@
 
 using System.Text.Json;
 
-namespace Aksio.Types.for_TypeConversion;
+namespace Cratis.Types.for_TypeConversion;
 
 public class when_converting_json_int_element_to_double : Specification
 {

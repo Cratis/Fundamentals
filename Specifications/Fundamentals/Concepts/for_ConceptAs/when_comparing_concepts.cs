@@ -1,9 +1,9 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Aksio.Concepts.given;
+using Cratis.Concepts.given;
 
-namespace Aksio.Concepts.for_ConceptAs;
+namespace Cratis.Concepts.for_ConceptAs;
 
 public class when_comparing_concepts : Specification
 {

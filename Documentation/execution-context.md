@@ -38,7 +38,7 @@ The current execution context can be retrieved by taking a dependency to the `IE
 in a constructor in your code. On there you'll find a property called `Current`:
 
 ```csharp
-using Aksio.Execution;
+using Cratis.Execution;
 
 [Route("/api/my-controller")]
 public class MyController : Controller
@@ -67,7 +67,7 @@ On the `IExecutionContextManager` you find a method called `Establish()` that al
 to set the current execution context for your call context.
 
 ```csharp
-using Aksio.Execution;
+using Cratis.Execution;
 
 [Route("/api/my-controller")]
 public class MyController : Controller
@@ -99,7 +99,7 @@ For this scenario, the `IExecutionContextManager` has a method called `ForTenant
 `ExecutionContextScope`.
 
 ```csharp
-using Aksio.Execution;
+using Cratis.Execution;
 
 [Route("/api/my-controller")]
 public class MyController : Controller

@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Aksio.Execution;
-using Aksio.Reflection;
-using Aksio.Types;
+using Cratis.Execution;
+using Cratis.Reflection;
+using Cratis.Types;
 
-namespace Aksio.Serialization;
+namespace Cratis.Serialization;
 
 /// <summary>
 /// Represents an implementation of <see cref="IDerivedTypes"/>.
@@ -23,7 +23,7 @@ public class DerivedTypes : IDerivedTypes
     /// Its recommended to use the singleton defined here, rather than building your own instance.
     /// This is due to the performance impact of scanning all assemblies in the application.
     /// </remarks>
-    public static readonly DerivedTypes Instance = new(Aksio.Types.Types.Instance);
+    public static readonly DerivedTypes Instance = new(Cratis.Types.Types.Instance);
 
     readonly IDictionary<Type, IEnumerable<DerivedTypeAndIdentifier>> _targetTypeToDerivedType;
     readonly IDictionary<Type, Type> _derivedTypeToTargetType;

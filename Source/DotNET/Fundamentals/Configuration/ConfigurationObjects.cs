@@ -3,15 +3,15 @@
 
 using System.Collections.Concurrent;
 using System.Reflection;
-using Aksio.Execution;
-using Aksio.Reflection;
-using Aksio.Types;
+using Cratis.Execution;
+using Cratis.Reflection;
+using Cratis.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Aksio.Configuration;
+namespace Cratis.Configuration;
 
 /// <summary>
 /// Represents a system that is able to discover and configure all configuration objects based on <see cref="ConfigurationAttribute"/>.

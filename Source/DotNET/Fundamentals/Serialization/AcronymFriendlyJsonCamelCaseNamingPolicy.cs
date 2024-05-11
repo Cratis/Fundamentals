@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
-using Aksio.Strings;
+using Cratis.Strings;
 
-namespace Aksio.Serialization;
+namespace Cratis.Serialization;
 
 /// <summary>
 /// A <see cref="JsonNamingPolicy"/> that converts names to camel case, but also takes acronyms into consideration.

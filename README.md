@@ -2,18 +2,17 @@
 
 ## Packages / Deployables
 
-[![Nuget](https://img.shields.io/nuget/v/Aksio.Fundamentals?logo=nuget)](http://nuget.org/packages/aksio.fundamentals)
-[![NPM](https://img.shields.io/npm/v/@aksio/fundamentals?label=@aksio/fundamentals&logo=npm)](https://www.npmjs.com/package/@aksio/fundamentals)
+[![Nuget](https://img.shields.io/nuget/v/Cratis.Fundamentals?logo=nuget)](http://nuget.org/packages/cratis.fundamentals)
+[![NPM](https://img.shields.io/npm/v/@cratis/fundamentals?label=@cratis/fundamentals&logo=npm)](https://www.npmjs.com/package/@cratis/fundamentals)
 
 ## Builds
 
-[![.NET Build](https://github.com/aksio-insurtech/Fundamentals/actions/workflows/dotnet-build.yml/badge.svg)](https://github.com/aksio-insurtech/Fundamentals/actions/workflows/dotnet-build.yml)
-[![JavaScript Build](https://github.com/aksio-insurtech/Fundamentals/actions/workflows/javascript-build.yml/badge.svg)](https://github.com/aksio-insurtech/Fundamentals/actions/workflows/javascript-build.yml)
-
+[![.NET Build](https://github.com/cratis/Fundamentals/actions/workflows/dotnet-build.yml/badge.svg)](https://github.com/cratis/Fundamentals/actions/workflows/dotnet-build.yml)
+[![JavaScript Build](https://github.com/cratis/Fundamentals/actions/workflows/javascript-build.yml/badge.svg)](https://github.com/cratis/Fundamentals/actions/workflows/javascript-build.yml)
 
 ## Description
 
-The Aksio fundamentals holds generic reusable helpers, utilities and tools that aims at solving common problems and help developers be more productive.
+The Cratis fundamentals holds generic reusable helpers, utilities and tools that aims at solving common problems and help developers be more productive.
 Fundamentals offers functionality for .NET and JavaScript environments. It is not a goal to have parity, as the different environments offer different
 building blocks.
 

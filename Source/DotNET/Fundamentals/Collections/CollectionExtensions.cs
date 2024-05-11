@@ -3,9 +3,9 @@
 
 using System.Collections;
 using System.Reflection;
-using Aksio.Reflection;
+using Cratis.Reflection;
 
-namespace Aksio.Collections;
+namespace Cratis.Collections;
 
 /// <summary>
 /// Provides a set of extension methods for different collection and enumerable types.

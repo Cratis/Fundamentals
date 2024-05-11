@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-global using Aksio.Specifications;
-global using Aksio.Types;
+global using Cratis.Specifications;
+global using Cratis.Types;
 global using ExecutionContext = Aksio.Execution.ExecutionContext;
 global using Moq;
 global using Xunit;

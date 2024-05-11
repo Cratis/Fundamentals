@@ -1,11 +1,11 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Aksio.Types;
+using Cratis.Types;
 
 #nullable disable
 
-namespace Aksio.Concepts;
+namespace Cratis.Concepts;
 
 /// <summary>
 /// Factory to create an instance of a <see cref="ConceptAs{T}"/> from the Type and Underlying value.

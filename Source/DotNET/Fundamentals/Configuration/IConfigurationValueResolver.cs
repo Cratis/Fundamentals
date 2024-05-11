@@ -3,7 +3,7 @@
 
 using Microsoft.Extensions.Configuration;
 
-namespace Aksio.Configuration;
+namespace Cratis.Configuration;
 
 /// <summary>
 /// Represents a resolver that is able to resolve the instance of a property on a configuration object.

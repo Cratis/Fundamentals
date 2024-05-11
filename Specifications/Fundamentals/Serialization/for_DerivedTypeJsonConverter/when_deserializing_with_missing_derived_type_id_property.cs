@@ -4,7 +4,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace Aksio.Serialization.for_DerivedTypeJsonConverterFactory;
+namespace Cratis.Serialization.for_DerivedTypeJsonConverterFactory;
 
 public class when_deserializing_with_missing_derived_type_id_property : Specification
 {

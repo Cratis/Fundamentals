@@ -1,10 +1,10 @@
 {
-    "name": "@aksio/fundamentals",
+    "name": "@cratis/fundamentals",
     "version": "1.0.5-test2",
     "description": "",
-    "author": "Aksio Insurtech",
+    "author": "Cratis",
     "license": "MIT",
-    "repository":"github:aksio-insurtech/fundamentals",
+    "repository":"github:cratis/fundamentals",
     "publishConfig": {
         "access": "public"
     },
@@ -35,7 +35,7 @@
         "up": "yarn g:up"
     },
     "dependencies": {
-        "@aksio/typescript": "1.0.0",
+        "@cratis/typescript": "1.0.0",
         "reflect-metadata": "0.1.13"
     }
 }

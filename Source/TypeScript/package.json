@@ -1,10 +1,10 @@
 {
-    "name": "@aksio/typescript",
+    "name": "@cratis/typescript",
     "version": "1.0.5-test2",
     "description": "",
-    "author": "Aksio Insurtech",
+    "author": "Cratis",
     "license": "MIT",
-    "repository":"github:aksio-insurtech/fundamentals",
+    "repository":"github:cratis/fundamentals",
     "publishConfig": {
         "access": "public"
     },

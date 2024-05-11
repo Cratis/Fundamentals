@@ -17,7 +17,7 @@ The reason for that is that configuration should not be possible to change withi
 The following is an example of a configuration object:
 
 ```csharp
-using Aksio.Configuration;
+using Cratis.Configuration;
 
 [Configuration]
 public class MyConfig
@@ -40,14 +40,14 @@ Add a JSON file called `myconfig.json` at the root of your project that correspo
 
 The filename it will use for looking for the file is by default the name of the C# type lower cased and with `.json` as file extension.
 
-> Note: If you're using the Aksio Application Model, it will automatically be configured for you and you can therefor skip the configuration part.
+> Note: If you're using the Cratis Application Model, it will automatically be configured for you and you can therefor skip the configuration part.
 
 The system uses type discovery to automatically register all configuration objects and leverages the [types system](./types.md) found in Fundamentals as well.
 
 If you're using the .NET 6 minimal API surface:
 
 ```csharp
-using Aksio.Types;
+using Cratis.Types;
 
 var types = new Types();
 var builder = WebApplication.CreateBuilder(args);
@@ -58,7 +58,7 @@ var app = builder.Build();
 If you're using the generic [HostBuilder](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-6.0):
 
 ```csharp
-using Aksio.Types;
+using Cratis.Types;
 
 public static class Program
 {
@@ -108,7 +108,7 @@ It is possible to override the default name of the configuration. This name will
 file name. You do this by using the **name** parameter of the `[Configuration]` attribute.
 
 ```csharp
-using Aksio.Configuration;
+using Cratis.Configuration;
 
 [Configuration("my-config")]
 public class MyConfig
@@ -154,7 +154,7 @@ The following configuration type has a property that is of type `object` and is 
 value in the configuration (`Type`).
 
 ```csharp
-using Aksio.Configuration;
+using Cratis.Configuration;
 
 [Configuration]
 public class Cluster
@@ -172,7 +172,7 @@ public class Cluster
 The actual resolver will then look for the value of `type` from the config and resolve the object accordingly.
 
 ```csharp
-using Aksio.Configuration;
+using Cratis.Configuration;
 using Microsoft.Extensions.Configuration;
 using Orleans.Clustering.AzureStorage;
 using Orleans.Configuration;
@@ -264,7 +264,7 @@ that sits in a folder with the name matching the tenant identifier and then the 
 on the `[Configuration]` attribute:
 
 ```csharp
-using Aksio.Configuration;
+using Cratis.Configuration;
 
 [Configuration(perTenant:true)]
 public class MyConfig

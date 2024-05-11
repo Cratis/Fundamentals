@@ -4,7 +4,7 @@
 using System.ComponentModel;
 using System.Globalization;
 
-namespace Aksio.Conversion;
+namespace Cratis.Conversion;
 
 /// <summary>
 /// Defines a base type for dealing with conversion of specific types to and from string.

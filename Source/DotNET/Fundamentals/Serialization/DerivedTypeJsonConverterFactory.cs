@@ -4,7 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Aksio.Serialization;
+namespace Cratis.Serialization;
 
 /// <summary>
 /// Represents a <see cref="JsonConverterFactory"/> for creating converters for types that are adorned with <see cref="DerivedTypeAttribute"/>.

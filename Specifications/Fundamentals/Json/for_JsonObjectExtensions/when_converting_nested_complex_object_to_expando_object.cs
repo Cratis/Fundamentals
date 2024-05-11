@@ -4,7 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Aksio.Json.for_JsonObjectExtensions;
+namespace Cratis.Json.for_JsonObjectExtensions;
 
 public class when_converting_nested_complex_object_to_expando_object : Specification
 {

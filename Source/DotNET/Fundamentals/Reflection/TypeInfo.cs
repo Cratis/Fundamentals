@@ -3,7 +3,7 @@
 
 using System.Reflection;
 
-namespace Aksio.Reflection;
+namespace Cratis.Reflection;
 
 /// <summary>
 /// Represents an implementation of <see cref="ITypeInfo"/>.
