@@ -23,8 +23,6 @@ public class MyService
 Default behavior for the JSON serializer options is also to use **camelCase** instead of **PascalCase** and it will automatically translate between
 the two when serializing and deserializing.
 
-> Note: When using the `.UseAksio()` extension in your program, the `.AddControllersFromProjectReferencedAssembles()` will be called.
-
 ## Polymorphism and type discriminators
 
 When working with polymorphism and serialization, the serializers don't generally know what the concrete type that it should be serializing from and
@@ -71,30 +69,10 @@ The `[DerivedType]` attribute requires a unique identifier in the form of a stri
 The JSON serializer will add a `_derivedTypeId` to the payload referring to the type discriminator of the type.
 With this the consumer can recognize the type.
 
-### MongoDB
+### Client
 
-There is a specific implementation for MongoDB to be able to serialize and deserialize with the same attributes.
-This is automatically hooked up when using the MongoDB extension, implicitly pulled in when using the `.UseAksio()` extension.
-Similar to the JSON serializer, this will add a `_derivedTypeId` property to the Bson documents and leverage this on the
-way back for deserialization.
-
-## Proxy Generation
-
-The proxy generator supports the derived type mechanism and adds metadata to the typescript files.
-This metadata will allow it to properly deserialize known types.
-
-Lets say we create an HTTP GET API endpoint that returns the following C# structure:
-
-```csharp
-public record AccountHolderWithAccounts(
-    string FirstName,
-    string LastName,
-    string SocialSecurityNumber,
-    Address Address,
-    IEnumerable<IAccount> Accounts);
-```
-
-This will generate the following:
+In the `@cratis/fundamentals` package you'll find something called `JsonSerializer`.
+The serializer supports proper type deserialization based on metadata.
 
 ```typescript
 export class AccountHolderWithAccounts {
@@ -119,7 +97,7 @@ export class AccountHolderWithAccounts {
 }
 ```
 
-The interface representation will be:
+With an interface definition as follows:
 
 ```typescript
 export interface IAccount {
@@ -129,7 +107,7 @@ export interface IAccount {
 }
 ```
 
-And then for each of the derivatives:
+For derivatives, you'd typically have the following with the usage of the `@derivedType()` decorator.
 
 ```typescript
 @derivedType('2c025801-2223-402c-a42a-893845bb1077')
@@ -158,9 +136,3 @@ export class CreditAccount {
     type!: AccountType;
 }
 ```
-
-### Client
-
-In the `@cratis/fundamentals` package you'll find something called `JsonSerializer`.
-This is used by the `QueryFor<>` client type. Anything that is coming from the server will go through this serializer
-and create a result that holds the correct types.
