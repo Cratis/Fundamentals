@@ -28,7 +28,7 @@ public static class MethodCalls
     /// <returns>The result from the method call.</returns>
     public static TOut CallGenericMethod<TOut, T, T1, T2, T3>(this T target, Expression<Func<T, Func<T1, T2, T3, TOut>>> method, T1 param1, T2 param2, T3 param3, params Type[] genericArguments)
     {
-        return CallGenericMethod<T, TOut>(target, method, new object[] { param1!, param2!, param3! }, genericArguments);
+        return CallGenericMethod<T, TOut>(target, method, [param1!, param2!, param3!], genericArguments);
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ public static class MethodCalls
     /// <returns>The result from the method call.</returns>
     public static TOut CallGenericMethod<TOut, T, T1, T2>(this T target, Expression<Func<T, Func<T1, T2, TOut>>> method, T1 param1, T2 param2, params Type[] genericArguments)
     {
-        return CallGenericMethod<T, TOut>(target, method, new object[] { param1!, param2! }, genericArguments);
+        return CallGenericMethod<T, TOut>(target, method, [param1!, param2!], genericArguments);
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public static class MethodCalls
     /// <returns>The result from the method call.</returns>
     public static TOut CallGenericMethod<TOut, T, T1>(this T target, Expression<Func<T, Func<T1, TOut>>> method, T1 param, params Type[] genericArguments)
     {
-        return CallGenericMethod<T, TOut>(target, method, new object[] { param! }, genericArguments);
+        return CallGenericMethod<T, TOut>(target, method, [param!], genericArguments);
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public static class MethodCalls
     /// <returns>The result from the method call.</returns>
     public static TOut CallGenericMethod<TOut, T>(this T target, Expression<Func<T, Func<TOut>>> method, params Type[] genericArguments)
     {
-        return CallGenericMethod<T, TOut>(target, method, Array.Empty<object>(), genericArguments);
+        return CallGenericMethod<T, TOut>(target, method, [], genericArguments);
     }
 
     static TOut CallGenericMethod<T, TOut>(this T target, Expression method, object[] parameters, Type[] genericArguments)

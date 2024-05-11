@@ -13,23 +13,18 @@ namespace Cratis.Serialization;
 /// Represents a <see cref="JsonConverter{T}"/> for converting types that are adorned with the <see cref="DerivedTypeAttribute"/>.
 /// </summary>
 /// <typeparam name="T">The interface the derived type implements to convert.</typeparam>
-public class DerivedTypeJsonConverter<T> : JsonConverter<T>
+/// <remarks>
+/// Initializes a new instance of the <see cref="DerivedTypeJsonConverter{T}"/> class.
+/// </remarks>
+/// <param name="derivedTypes"><see cref="IDerivedTypes"/> to use for discovering correct type.</param>
+public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConverter<T>
 {
     /// <summary>
     /// The property used in JSON to identify the derived type id.
     /// </summary>
     public const string DerivedTypeIdProperty = "_derivedTypeId";
 
-    readonly IDerivedTypes _derivedTypes;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DerivedTypeJsonConverter{T}"/> class.
-    /// </summary>
-    /// <param name="derivedTypes"><see cref="IDerivedTypes"/> to use for discovering correct type.</param>
-    public DerivedTypeJsonConverter(IDerivedTypes derivedTypes)
-    {
-        _derivedTypes = derivedTypes;
-    }
+    readonly IDerivedTypes _derivedTypes = derivedTypes;
 
     /// <inheritdoc/>
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

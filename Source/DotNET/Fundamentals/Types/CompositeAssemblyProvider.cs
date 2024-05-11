@@ -10,13 +10,7 @@ namespace Cratis.Types;
 /// </summary>
 public class CompositeAssemblyProvider : ICanProvideAssembliesForDiscovery
 {
-    readonly List<ICanProvideAssembliesForDiscovery> _providers = new();
-
-    /// <inheritdoc/>
-    public IEnumerable<Assembly> Assemblies => _providers.SelectMany(_ => _.Assemblies);
-
-    /// <inheritdoc/>
-    public IEnumerable<Type> DefinedTypes => _providers.SelectMany(_ => _.DefinedTypes);
+    readonly List<ICanProvideAssembliesForDiscovery> _providers = [];
 
     /// <summary>
     /// Initializes a new instance of <see cref="CompositeAssemblyProvider"/>.
@@ -26,6 +20,12 @@ public class CompositeAssemblyProvider : ICanProvideAssembliesForDiscovery
     {
         _providers.AddRange(providers);
     }
+
+    /// <inheritdoc/>
+    public IEnumerable<Assembly> Assemblies => _providers.SelectMany(_ => _.Assemblies);
+
+    /// <inheritdoc/>
+    public IEnumerable<Type> DefinedTypes => _providers.SelectMany(_ => _.DefinedTypes);
 
     /// <inheritdoc/>
     public void Initialize()

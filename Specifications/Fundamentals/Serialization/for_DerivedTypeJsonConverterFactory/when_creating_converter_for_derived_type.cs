@@ -7,7 +7,7 @@ namespace Cratis.Serialization.for_DerivedTypeJsonConverterFactory;
 
 public class when_creating_converter_for_derived_type : given.a_derived_type_json_converter_factory
 {
-    interface ITargetType { }
+    interface ITargetType;
 
     JsonConverter converter;
 

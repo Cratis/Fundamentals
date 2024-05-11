@@ -59,10 +59,10 @@ public static class ExpressionExtensions
                 arguments.Add(value);
             }
 
-            return arguments.ToArray();
+            return [..arguments];
         }
 
-        return Array.Empty<object>();
+        return [];
     }
 
     /// <summary>

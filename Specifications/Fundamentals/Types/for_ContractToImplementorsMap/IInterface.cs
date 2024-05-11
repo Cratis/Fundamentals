@@ -3,6 +3,4 @@
 
 namespace Cratis.Types.for_ContractToImplementorsMap;
 
-public interface IInterface
-{
-}
+public interface IInterface;

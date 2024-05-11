@@ -3,6 +3,4 @@
 
 namespace Cratis.Reflection.for_TypeExtensions;
 
-public class TypeWithDefaultConstructor
-{
-}
+public class TypeWithDefaultConstructor;

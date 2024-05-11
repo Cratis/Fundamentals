@@ -5,7 +5,7 @@ namespace Cratis.Serialization.for_DerivedTypeJsonConverterFactory;
 
 public class when_asking_can_convert_on_type_with_derivatives : given.a_derived_type_json_converter_factory
 {
-    interface ITargetType { }
+    interface ITargetType;
 
     bool result;
 

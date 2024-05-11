@@ -7,7 +7,7 @@ namespace Cratis.Reflection.for_TypeExtensions;
 
 public class MyEnumerable : IEnumerable<ComplexType>
 {
-    IEnumerable<ComplexType> _list = new List<ComplexType>();
+    IEnumerable<ComplexType> _list = [];
 
     public IEnumerator<ComplexType> GetEnumerator()
     {

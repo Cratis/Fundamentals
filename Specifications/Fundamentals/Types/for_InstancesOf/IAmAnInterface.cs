@@ -3,6 +3,4 @@
 
 namespace Cratis.Types.for_InstancesOf;
 
-public interface IAmAnInterface
-{
-}
+public interface IAmAnInterface;

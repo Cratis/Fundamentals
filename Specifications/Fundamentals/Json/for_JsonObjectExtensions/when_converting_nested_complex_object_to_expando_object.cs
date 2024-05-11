@@ -14,8 +14,8 @@ public class when_converting_nested_complex_object_to_expando_object : Specifica
     const string second_level_string_value = "Forty three";
     const int third_level_int_value = 44;
     const string third_level_string_value = "Forty four";
-    static int[] first_level_int_array = new[] { int.MaxValue, int.MaxValue - 1, int.MaxValue - 2 };
-    static string[] second_level_string_array = new[] { "Forty five", "Forty six", "Forty seven" };
+    static int[] first_level_int_array = [int.MaxValue, int.MaxValue - 1, int.MaxValue - 2];
+    static string[] second_level_string_array = ["Forty five", "Forty six", "Forty seven"];
     JsonObject json_object;
     dynamic result;
 

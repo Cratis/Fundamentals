@@ -9,18 +9,13 @@ namespace Cratis.Serialization;
 /// <summary>
 /// Represents a <see cref="JsonConverterFactory"/> for creating converters for types that are adorned with <see cref="DerivedTypeAttribute"/>.
 /// </summary>
-public class DerivedTypeJsonConverterFactory : JsonConverterFactory
+/// <remarks>
+/// Initializes a new instance of the <see cref="DerivedTypeJsonConverterFactory"/> class.
+/// </remarks>
+/// <param name="derivedTypes"><see cref="IDerivedTypes"/> to use for discovering correct type.</param>
+public class DerivedTypeJsonConverterFactory(IDerivedTypes derivedTypes) : JsonConverterFactory
 {
-    readonly IDerivedTypes _derivedTypes;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DerivedTypeJsonConverterFactory"/> class.
-    /// </summary>
-    /// <param name="derivedTypes"><see cref="IDerivedTypes"/> to use for discovering correct type.</param>
-    public DerivedTypeJsonConverterFactory(IDerivedTypes derivedTypes)
-    {
-        _derivedTypes = derivedTypes;
-    }
+    readonly IDerivedTypes _derivedTypes = derivedTypes;
 
     /// <inheritdoc/>
     public override bool CanConvert(Type typeToConvert) => _derivedTypes.HasDerivatives(typeToConvert);

@@ -12,7 +12,7 @@ public class when_deserializing_for_known_derived_type : Specification
 
     const string json = $"{{\"{DerivedTypeJsonConverter<object>.DerivedTypeIdProperty}\":\"{derived_type_id}\", \"SomeValue\": 42 }}";
 
-    interface ITargetType { }
+    interface ITargetType;
 
     [DerivedType(derived_type_id)]
     record DerivedType(int SomeValue) : ITargetType;

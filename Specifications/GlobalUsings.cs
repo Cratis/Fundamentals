@@ -3,7 +3,6 @@
 
 global using Cratis.Specifications;
 global using Cratis.Types;
-global using ExecutionContext = Aksio.Execution.ExecutionContext;
 global using Moq;
 global using Xunit;
 global using static Moq.It;

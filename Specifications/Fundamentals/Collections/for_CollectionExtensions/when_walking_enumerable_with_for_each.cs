@@ -6,14 +6,14 @@ namespace Cratis.Collections.for_CollectionExtensions;
 public class when_walking_enumerable_with_for_each : Specification
 {
     IEnumerable<string> enumerable;
-    string[] actual_enumerable = new[]
-    {
+    string[] actual_enumerable =
+    [
         "first",
         "second",
         "third"
-    };
+    ];
 
-    List<string> result = new();
+    List<string> result = [];
 
     void Establish() => enumerable = actual_enumerable;
 

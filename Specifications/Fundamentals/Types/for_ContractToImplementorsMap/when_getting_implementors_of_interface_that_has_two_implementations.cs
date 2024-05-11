@@ -7,7 +7,7 @@ public class when_getting_implementors_of_interface_that_has_two_implementations
 {
     IEnumerable<Type> result;
 
-    void Establish() => map.Feed(new[] { typeof(ImplementationOfInterface), typeof(SecondImplementationOfInterface) });
+    void Establish() => map.Feed([typeof(ImplementationOfInterface), typeof(SecondImplementationOfInterface)]);
 
     void Because() => result = map.GetImplementorsFor(typeof(IInterface));
 

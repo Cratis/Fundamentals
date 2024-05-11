@@ -7,7 +7,7 @@ public class when_getting_implementors_of_abstract_class_with_interface_by_the_a
 {
     IEnumerable<Type> result;
 
-    void Establish() => map.Feed(new[] { typeof(ImplementationOfAbstractClassWithInterface), typeof(SecondImplementationOfAbstractClassWithInterface) });
+    void Establish() => map.Feed([typeof(ImplementationOfAbstractClassWithInterface), typeof(SecondImplementationOfAbstractClassWithInterface)]);
 
     void Because() => result = map.GetImplementorsFor(typeof(AbstractClass));
 

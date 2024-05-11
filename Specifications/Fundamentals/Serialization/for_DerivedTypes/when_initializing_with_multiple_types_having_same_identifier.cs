@@ -5,7 +5,7 @@ namespace Cratis.Serialization.for_DerivedTypes;
 
 public class when_initializing_with_multiple_types_having_same_identifier : given.derived_types
 {
-    interface ITargetType { }
+    interface ITargetType;
 
     [DerivedType("fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6")]
     record FirstDerivedType : ITargetType { }
@@ -15,7 +15,7 @@ public class when_initializing_with_multiple_types_having_same_identifier : give
 
     Exception result;
 
-    protected override IEnumerable<Type> ProvideDerivedTypes() => new[] { typeof(FirstDerivedType), typeof(SecondDerivedType) };
+    protected override IEnumerable<Type> ProvideDerivedTypes() => [typeof(FirstDerivedType), typeof(SecondDerivedType)];
 
     void Because() => result = Catch.Exception(() => _ = new DerivedTypes(types.Object));
 

@@ -8,8 +8,7 @@ namespace Cratis.Serialization.for_DerivedTypeJsonConverterFactory;
 
 public class when_deserializing_with_missing_derived_type_id_property : Specification
 {
-    const string derived_type_id = "230fbbd7-6e87-43c8-a3e5-af69b8fd759d";
-    interface ITargetType { }
+    interface ITargetType;
     Mock<IDerivedTypes> derived_types;
     DerivedTypeJsonConverter<ITargetType> converter;
     ITargetType result;

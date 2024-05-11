@@ -17,7 +17,7 @@ public record ConceptAs<T> : IComparable<ConceptAs<T>>, IComparable<T>, ICompara
     /// <exception cref="ArgumentNullException">Thrown when incoming value is null.</exception>
     public ConceptAs(T value)
     {
-        ArgumentNullException.ThrowIfNull(value, nameof(value));
+        ArgumentNullException.ThrowIfNull(value);
         Value = value;
     }
 
@@ -25,6 +25,52 @@ public record ConceptAs<T> : IComparable<ConceptAs<T>>, IComparable<T>, ICompara
     /// Gets or inits the underlying value for the instance.
     /// </summary>
     public T Value { get; init; }
+
+    /// <summary>
+    /// Implicitly convert from the <see cref="ConceptAs{T}"/> to the value of the type given.
+    /// </summary>
+    /// <param name="value"><see cref="ConceptAs{T}"/> to convert from.</param>
+    public static implicit operator T(ConceptAs<T> value) => value.Value;
+
+    /// <summary>
+    /// Checks if the first instance of <see cref="ConceptAs{T}"/> is greater than the second.
+    /// </summary>
+    /// <param name="first">First instance to compare.</param>
+    /// <param name="second">Second instance to compare.</param>
+    /// <returns>true if the first instance is greater than the second, otherwise false.</returns>
+    public static bool operator >(ConceptAs<T> first, ConceptAs<T> second) => first?.CompareTo(second) > 0;
+
+    /// <summary>
+    /// Checks if the first instance of <see cref="ConceptAs{T}"/> is greater than or equal to the second.
+    /// </summary>
+    /// <param name="first">First instance to compare.</param>
+    /// <param name="second">Second instance to compare.</param>
+    /// <returns>true if the first instance is greater than or equal to the second, otherwise false.</returns>
+    public static bool operator >=(ConceptAs<T> first, ConceptAs<T> second) => first.Equals(second) || first > second;
+
+    /// <summary>
+    /// Checks if the first instance of <see cref="ConceptAs{T}"/> is less than the second.
+    /// </summary>
+    /// <param name="first">First instance to compare.</param>
+    /// <param name="second">Second instance to compare.</param>
+    /// <returns>true if the first instance is less than the second, otherwise false.</returns>
+    public static bool operator <(ConceptAs<T> first, ConceptAs<T> second)
+    {
+        if (first is null)
+        {
+            return second is not null;
+        }
+
+        return first.CompareTo(second) < 0;
+    }
+
+    /// <summary>
+    /// Checks if the first instance of <see cref="ConceptAs{T}"/> is less than or equal to the second.
+    /// </summary>
+    /// <param name="first">First instance to compare.</param>
+    /// <param name="second">Second instance to compare.</param>
+    /// <returns>true if the first instance is less than or equal to the second, otherwise false.</returns>
+    public static bool operator <=(ConceptAs<T> first, ConceptAs<T> second) => first.Equals(second) || first < second;
 
     /// <summary>
     ///  Compares two instances of ConceptAs'T to determine sort order.
@@ -47,52 +93,6 @@ public record ConceptAs<T> : IComparable<ConceptAs<T>>, IComparable<T>, ICompara
     /// <returns>Greater than 0 if greater, 0 if the same and less than 0 if lesser.</returns>
     public int CompareTo(object? obj) => obj == null ? 1 : Comparer<T>.Default.Compare(Value, (ConceptAs<T>)obj);
 
-    /// <summary>
-    /// Implicitly convert from the <see cref="ConceptAs{T}"/> to the value of the type given.
-    /// </summary>
-    /// <param name="value"><see cref="ConceptAs{T}"/> to convert from.</param>
-    public static implicit operator T(ConceptAs<T> value) => value.Value;
-
     /// <inheritdoc/>
     public sealed override string ToString() => Value!.ToString() ?? "[n/a]";
-
-    /// <summary>
-    /// Checks if the first instance of <see cref="ConceptAs{T}"/> is greater than the second.
-    /// </summary>
-    /// <param name="first">First instance to compare.</param>
-    /// <param name="second">Second instane to compare.</param>
-    /// <returns>true if the first instance is greater than the second, otherwise false.</returns>
-    public static bool operator >(ConceptAs<T> first, ConceptAs<T> second) => first?.CompareTo(second) > 0;
-
-    /// <summary>
-    /// Checks if the first instance of <see cref="ConceptAs{T}"/> is greater than or equal to the second.
-    /// </summary>
-    /// <param name="first">First instance to compare.</param>
-    /// <param name="second">Second instance to compare.</param>
-    /// <returns>true if the first instance is greater than or equal to the second, otherwise false.</returns>
-    public static bool operator >=(ConceptAs<T> first, ConceptAs<T> second) => first.Equals(second) || first > second;
-
-    /// <summary>
-    /// Checks if the first instance of <see cref="ConceptAs{T}"/> is less than the second.
-    /// </summary>
-    /// <param name="first">First instance to compare.</param>
-    /// <param name="second">Second instane to compare.</param>
-    /// <returns>true if the first instance is less than the second, otherwise false.</returns>
-    public static bool operator <(ConceptAs<T> first, ConceptAs<T> second)
-    {
-        if (first is null)
-        {
-            return second is not null;
-        }
-
-        return first.CompareTo(second) < 0;
-    }
-
-    /// <summary>
-    /// Checks if the first instance of <see cref="ConceptAs{T}"/> is less than or equal to the second.
-    /// </summary>
-    /// <param name="first">First instance to compare.</param>
-    /// <param name="second">Second instane to compare.</param>
-    /// <returns>true if the first instance is less than or equal to the second, otherwise false.</returns>
-    public static bool operator <=(ConceptAs<T> first, ConceptAs<T> second) => first.Equals(second) || first < second;
 }

@@ -7,7 +7,7 @@ public class when_getting_implementors_of_interface_that_has_one_implementation 
 {
     IEnumerable<Type> result;
 
-    void Establish() => map.Feed(new[] { typeof(ImplementationOfInterface) });
+    void Establish() => map.Feed([typeof(ImplementationOfInterface)]);
 
     void Because() => result = map.GetImplementorsFor(typeof(IInterface));
 

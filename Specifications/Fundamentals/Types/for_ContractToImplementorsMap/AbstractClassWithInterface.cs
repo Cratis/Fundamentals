@@ -3,6 +3,4 @@
 
 namespace Cratis.Types.for_ContractToImplementorsMap;
 
-public abstract class AbstractClassWithInterface : AbstractClass, IInterface
-{
-}
+public abstract class AbstractClassWithInterface : AbstractClass, IInterface;

@@ -5,7 +5,7 @@ namespace Cratis.Serialization.for_DerivedTypes;
 
 public class when_getting_derived_type_without_any_matching_derived_type_identifier : given.derived_types
 {
-    interface ITargetType { }
+    interface ITargetType;
 
     [DerivedType("fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6")]
     record DerivedType : ITargetType { }
@@ -13,7 +13,7 @@ public class when_getting_derived_type_without_any_matching_derived_type_identif
     DerivedTypes derived_types;
     Exception result;
 
-    protected override IEnumerable<Type> ProvideDerivedTypes() => new[] { typeof(DerivedType) };
+    protected override IEnumerable<Type> ProvideDerivedTypes() => [typeof(DerivedType)];
 
     void Establish() => derived_types = new DerivedTypes(types.Object);
 

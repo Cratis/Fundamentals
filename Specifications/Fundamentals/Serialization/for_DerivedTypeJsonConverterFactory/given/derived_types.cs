@@ -9,7 +9,7 @@ public class derived_types : Specification
 {
     protected Mock<ITypes> types;
 
-    protected virtual IEnumerable<Type> ProvideDerivedTypes() => Enumerable.Empty<Type>();
+    protected virtual IEnumerable<Type> ProvideDerivedTypes() => [];
 
     void Establish()
     {

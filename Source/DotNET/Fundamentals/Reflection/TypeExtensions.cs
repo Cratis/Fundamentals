@@ -11,8 +11,8 @@ namespace Cratis.Reflection;
 /// </summary>
 public static class TypeExtensions
 {
-    static readonly HashSet<Type> _additionalPrimitiveTypes = new()
-    {
+    static readonly HashSet<Type> _additionalPrimitiveTypes =
+    [
         typeof(decimal),
         typeof(string),
         typeof(Guid),
@@ -21,10 +21,10 @@ public static class TypeExtensions
         typeof(DateTime),
         typeof(DateTimeOffset),
         typeof(TimeSpan)
-    };
+    ];
 
-    static readonly HashSet<Type> _numericTypes = new()
-    {
+    static readonly HashSet<Type> _numericTypes =
+    [
         typeof(byte),
         typeof(sbyte),
         typeof(short),
@@ -36,7 +36,7 @@ public static class TypeExtensions
         typeof(double),
         typeof(decimal),
         typeof(float)
-    };
+    ];
 
     /// <summary>
     /// Check if a type has an attribute associated with it.

@@ -21,13 +21,7 @@ public class Types : ITypes
     public static readonly Types Instance = new();
 
     readonly IContractToImplementorsMap _contractToImplementorsMap = new ContractToImplementorsMap();
-    readonly List<Assembly> _assemblies = new();
-
-    /// <inheritdoc/>
-    public IEnumerable<Assembly> Assemblies => _assemblies;
-
-    /// <inheritdoc/>
-    public IEnumerable<Type> All { get; }
+    readonly List<Assembly> _assemblies = [];
 
     /// <summary>
     /// Initializes a new instance of <see cref="Types"/>.
@@ -36,11 +30,7 @@ public class Types : ITypes
     /// This will automatically set up <see cref="Types"/> using the <see cref="ProjectReferencedAssemblies"/> and <see cref="PackageReferencedAssemblies"/> providers.
     /// </remarks>
     public Types()
-        : this(new ICanProvideAssembliesForDiscovery[]
-        {
-            ProjectReferencedAssemblies.Instance,
-            PackageReferencedAssemblies.Instance
-        })
+        : this([ProjectReferencedAssemblies.Instance, PackageReferencedAssemblies.Instance])
     {
     }
 
@@ -56,6 +46,12 @@ public class Types : ITypes
         All = _assemblies.SelectMany(_ => _.DefinedTypes).Distinct().ToArray();
         _contractToImplementorsMap.Feed(All);
     }
+
+    /// <inheritdoc/>
+    public IEnumerable<Assembly> Assemblies => _assemblies;
+
+    /// <inheritdoc/>
+    public IEnumerable<Type> All { get; }
 
     /// <inheritdoc/>
     public Type FindSingle<T>() => FindSingle(typeof(T));

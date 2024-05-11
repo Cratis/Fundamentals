@@ -3,6 +3,4 @@
 
 namespace Cratis.Types.for_ImplementationsOf;
 
-public class SecondImplementation : IAmAnInterface
-{
-}
+public class SecondImplementation : IAmAnInterface;

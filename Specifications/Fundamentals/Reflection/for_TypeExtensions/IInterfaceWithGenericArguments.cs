@@ -4,6 +4,4 @@
 namespace Cratis.Reflection.for_TypeExtensions;
 
 public interface IInterfaceWithGenericArguments<T>
-    where T : new()
-{
-}
+    where T : new();

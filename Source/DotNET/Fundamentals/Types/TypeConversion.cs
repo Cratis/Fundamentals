@@ -47,7 +47,7 @@ public static class TypeConversion
         {
             try
             {
-                return _getValueMethod.MakeGenericMethod(type).Invoke(value, Array.Empty<object>())!;
+                return _getValueMethod.MakeGenericMethod(type).Invoke(value, [])!;
             }
             catch
             {

@@ -61,6 +61,6 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
 
     ConcurrentBag<Type> GetImplementingTypesFor(Type contract)
     {
-        return _contractsAndImplementors.GetOrAdd(contract, _ => new ConcurrentBag<Type>());
+        return _contractsAndImplementors.GetOrAdd(contract, _ => []);
     }
 }

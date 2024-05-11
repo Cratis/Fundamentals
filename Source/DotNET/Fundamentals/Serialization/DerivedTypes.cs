@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Cratis.Execution;
+using Cratis.DependencyInjection;
 using Cratis.Reflection;
 using Cratis.Types;
 
@@ -14,8 +14,6 @@ namespace Cratis.Serialization;
 [Singleton]
 public class DerivedTypes : IDerivedTypes
 {
-    record DerivedTypeAndIdentifier(Type DerivedType, Type TargetType, DerivedTypeId Identifier);
-
     /// <summary>
     /// Gets the global instance of <see cref="DerivedTypes"/>.
     /// </summary>
@@ -23,13 +21,10 @@ public class DerivedTypes : IDerivedTypes
     /// Its recommended to use the singleton defined here, rather than building your own instance.
     /// This is due to the performance impact of scanning all assemblies in the application.
     /// </remarks>
-    public static readonly DerivedTypes Instance = new(Cratis.Types.Types.Instance);
+    public static readonly DerivedTypes Instance = new(Types.Types.Instance);
 
     readonly IDictionary<Type, IEnumerable<DerivedTypeAndIdentifier>> _targetTypeToDerivedType;
     readonly IDictionary<Type, Type> _derivedTypeToTargetType;
-
-    /// <inheritdoc/>
-    public IEnumerable<Type> TypesWithDerivatives => _targetTypeToDerivedType.Keys;
 
     /// <summary>
     /// Initializes a new instance of <see cref="ITypes"/>.
@@ -48,6 +43,9 @@ public class DerivedTypes : IDerivedTypes
             .SelectMany(_ => _.Value)
             .ToDictionary(_ => _.DerivedType, _ => _.TargetType);
     }
+
+    /// <inheritdoc/>
+    public IEnumerable<Type> TypesWithDerivatives => _targetTypeToDerivedType.Keys;
 
     /// <inheritdoc/>
     public Type GetDerivedTypeFor(Type targetType, DerivedTypeId derivedTypeId)
@@ -135,4 +133,6 @@ public class DerivedTypes : IDerivedTypes
             throw new TargetTypeMismatchForDerivedType(derivedType);
         }
     }
+
+    record DerivedTypeAndIdentifier(Type DerivedType, Type TargetType, DerivedTypeId Identifier);
 }

@@ -6,18 +6,13 @@ namespace Cratis.Timers;
 /// <summary>
 /// Represents an implementation of <see cref="ITimer"/>.
 /// </summary>
-public class Timer : ITimer
+/// <remarks>
+/// Initializes a new instance of the <see cref="Timer"/> class.
+/// </remarks>
+/// <param name="timer">The actual timer.</param>
+public class Timer(System.Threading.Timer timer) : ITimer
 {
-    readonly System.Threading.Timer _timer;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Timer"/> class.
-    /// </summary>
-    /// <param name="timer">The actual timer.</param>
-    public Timer(System.Threading.Timer timer)
-    {
-        _timer = timer;
-    }
+    readonly System.Threading.Timer _timer = timer;
 
     /// <inheritdoc/>
     public void Dispose() => _timer.Dispose();

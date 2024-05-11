@@ -10,8 +10,8 @@ public class when_combining_many_lookups : Specification
 
     void Establish()
     {
-        lookups = new[]
-        {
+        lookups =
+        [
             new[]
             {
                 new { K = "1", V = 1 },
@@ -34,7 +34,7 @@ public class when_combining_many_lookups : Specification
                 new { K = "", V = 88 },
                 new { K = "4", V = 444 },
             }.ToLookup(a => a.K, a => a.V),
-        };
+        ];
     }
 
     void Because() => result = lookups.Combine();

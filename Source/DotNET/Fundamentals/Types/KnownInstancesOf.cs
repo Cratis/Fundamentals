@@ -20,7 +20,7 @@ public class KnownInstancesOf<T> : IInstancesOf<T>
     /// <summary>
     /// Initializes a new instance of the <see cref="KnownInstancesOf{T}"/> class.
     /// </summary>
-    public KnownInstancesOf() : this(Array.Empty<T>())
+    public KnownInstancesOf() : this([])
     {
     }
 

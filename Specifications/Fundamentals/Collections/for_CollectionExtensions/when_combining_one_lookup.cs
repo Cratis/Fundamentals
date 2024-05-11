@@ -10,14 +10,14 @@ public class when_combining_one_lookup : Specification
 
     void Establish()
     {
-        lookups = new[]
-        {
+        lookups =
+        [
             new[]
             {
                 new { K = "1", V = 1 },
                 new { K = "2", V = 2 },
             }.ToLookup(a => a.K, a => a.V)
-        };
+        ];
     }
 
     void Because() => result = lookups.Combine();

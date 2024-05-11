@@ -9,19 +9,14 @@ namespace Cratis.Types;
 /// Represents an implementation of <see cref="IImplementationsOf{T}"/>.
 /// </summary>
 /// <typeparam name="T">Base type to discover for - must be an abstract class or an interface.</typeparam>
-public class ImplementationsOf<T> : IImplementationsOf<T>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ImplementationsOf{T}"/> class.
+/// </remarks>
+/// <param name="types"><see cref="ITypes"/> to use for finding types.</param>
+public class ImplementationsOf<T>(ITypes types) : IImplementationsOf<T>
     where T : class
 {
-    readonly IEnumerable<Type> _types;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ImplementationsOf{T}"/> class.
-    /// </summary>
-    /// <param name="types"><see cref="ITypes"/> to use for finding types.</param>
-    public ImplementationsOf(ITypes types)
-    {
-        _types = types.FindMultiple<T>();
-    }
+    readonly IEnumerable<Type> _types = types.FindMultiple<T>();
 
     /// <inheritdoc/>
     public IEnumerator<Type> GetEnumerator()

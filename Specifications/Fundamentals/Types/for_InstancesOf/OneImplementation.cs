@@ -3,6 +3,4 @@
 
 namespace Cratis.Types.for_InstancesOf;
 
-public class OneImplementation : IAmAnInterface
-{
-}
+public class OneImplementation : IAmAnInterface;

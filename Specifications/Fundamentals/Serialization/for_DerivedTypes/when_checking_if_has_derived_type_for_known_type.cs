@@ -5,14 +5,14 @@ namespace Cratis.Serialization.for_DerivedTypes;
 
 public class when_checking_if_has_derived_type_for_known_type : given.derived_types
 {
-    interface ITargetType { }
+    interface ITargetType;
 
     [DerivedType("fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6")]
-    record DerivedType : ITargetType { }
+    record DerivedType : ITargetType;
 
     bool result;
 
-    protected override IEnumerable<Type> ProvideDerivedTypes() => new[] { typeof(DerivedType) };
+    protected override IEnumerable<Type> ProvideDerivedTypes() => [typeof(DerivedType)];
 
     DerivedTypes derived_types;
 

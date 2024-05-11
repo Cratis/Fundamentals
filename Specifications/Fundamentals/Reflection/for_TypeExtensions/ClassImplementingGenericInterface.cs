@@ -3,6 +3,4 @@
 
 namespace Cratis.Reflection.for_TypeExtensions;
 
-public class ClassImplementingGenericInterface : IInterfaceWithGenericArguments<SomeObject>
-{
-}
+public class ClassImplementingGenericInterface : IInterfaceWithGenericArguments<SomeObject>;

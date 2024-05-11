@@ -3,6 +3,4 @@
 
 namespace Cratis.Types.for_ContractToImplementorsMap;
 
-public abstract class AbstractClass
-{
-}
+public abstract class AbstractClass;

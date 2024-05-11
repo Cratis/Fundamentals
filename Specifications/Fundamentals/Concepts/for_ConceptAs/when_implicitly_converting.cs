@@ -10,7 +10,7 @@ public class when_implicitly_converting
     [Fact]
     public void should_convert_from_primitive_to_concept()
     {
-        var intValue = 42;
+        const int intValue = 42;
         IntConcept conceptValue = intValue;
 
         intValue.ShouldEqual(conceptValue.Value);

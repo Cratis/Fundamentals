@@ -7,7 +7,7 @@ public class when_getting_implementors_of_abstract_class_that_has_one_implementa
 {
     IEnumerable<Type> result;
 
-    void Establish() => map.Feed(new[] { typeof(ImplementationOfAbstractClass) });
+    void Establish() => map.Feed([typeof(ImplementationOfAbstractClass)]);
 
     void Because() => result = map.GetImplementorsFor(typeof(AbstractClass));
 

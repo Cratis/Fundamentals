@@ -10,5 +10,7 @@ public class TimerFactory : ITimerFactory
 {
     /// <inheritdoc/>
     public ITimer Create(TimerCallback callback, int dueTime, int period, object? state = null)
+#pragma warning disable CA2000 // Dispose objects before losing scope
         => new Timer(new System.Threading.Timer(callback, state, dueTime, period));
+#pragma warning restore CA2000 // Dispose objects before losing scope
 }

@@ -6,7 +6,8 @@
         "Namotion",
         "netstandard",
         "Newtonsoft",
-        "runtimepack"
+        "runtimepack",
+        "Xunit"
     ],
     "dotnet.defaultSolution": "Fundamentals.sln"
 }

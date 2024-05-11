@@ -49,7 +49,7 @@ public static class when_converting
     [Fact]
     public static void CamelCaseNullNameReturnsNull()
     {
-        string name = null;
+        const string name = null;
         Assert.Null(name.ToCamelCase());
     }
 }

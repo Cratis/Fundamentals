@@ -15,11 +15,11 @@ public class when_having_multiple_implementations : Specification
     void Establish()
     {
         type_finder = new();
-        type_finder.Setup(t => t.FindMultiple<IAmAnInterface>()).Returns(new Type[]
-        {
+        type_finder.Setup(t => t.FindMultiple<IAmAnInterface>()).Returns(
+        [
                 typeof(OneImplementation),
                 typeof(SecondImplementation)
-        });
+        ]);
         container = new();
         one_implementation_instance = new OneImplementation();
         second_implementation_instance = new SecondImplementation();

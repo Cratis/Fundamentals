@@ -10,7 +10,7 @@ public class when_initializing_without_target_type : given.derived_types
 
     Exception result;
 
-    protected override IEnumerable<Type> ProvideDerivedTypes() => new[] { typeof(DerivedType) };
+    protected override IEnumerable<Type> ProvideDerivedTypes() => [typeof(DerivedType)];
 
     void Because() => result = Catch.Exception(() => _ = new DerivedTypes(types.Object));
 

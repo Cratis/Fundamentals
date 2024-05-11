@@ -22,12 +22,9 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
 
     static readonly object _lock = new();
 
-    readonly List<string> _assemblyPrefixesToInclude = new()
-    {
-        "Cratis"
-    };
+    readonly List<string> _assemblyPrefixesToInclude = ["Cratis"];
 
-    readonly List<Assembly> _assemblies = new();
+    readonly List<Assembly> _assemblies = [];
 
     bool _initialized;
 
@@ -35,7 +32,7 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
     public IEnumerable<Assembly> Assemblies => _assemblies;
 
     /// <inheritdoc/>
-    public IEnumerable<Type> DefinedTypes { get; private set; } = Enumerable.Empty<Type>();
+    public IEnumerable<Type> DefinedTypes { get; private set; } = [];
 
     /// <inheritdoc/>
     public void Initialize()
@@ -53,7 +50,7 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
             var assemblies = dependencyModel.RuntimeLibraries
                                 .Where(_ => !_.Type.Equals("project") &&
                                             _.RuntimeAssemblyGroups.Count > 0 &&
-                                            _assemblyPrefixesToInclude.Any(asm => _.Name.StartsWith(asm)))
+                                            _assemblyPrefixesToInclude.Exists(asm => _.Name.StartsWith(asm)))
                                 .Select(_ => AssemblyHelpers.Resolve(_.Name)!)
                                 .Where(_ => _ is not null)
                                 .Distinct()

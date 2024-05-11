@@ -22,14 +22,14 @@ public class ProjectReferencedAssemblies : ICanProvideAssembliesForDiscovery
 
     static readonly object _lock = new();
 
-    readonly List<Assembly> _assemblies = new();
+    readonly List<Assembly> _assemblies = [];
     bool _initialized;
 
     /// <inheritdoc/>
     public IEnumerable<Assembly> Assemblies => _assemblies;
 
     /// <inheritdoc/>
-    public IEnumerable<Type> DefinedTypes { get; private set; } = Enumerable.Empty<Type>();
+    public IEnumerable<Type> DefinedTypes { get; private set; } = [];
 
     /// <inheritdoc/>
     public void Initialize()

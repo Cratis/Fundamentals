@@ -6,6 +6,4 @@ namespace Cratis.Timers;
 /// <summary>
 /// Represents a timer.
 /// </summary>
-public interface ITimer : IDisposable
-{
-}
+public interface ITimer : IDisposable;

@@ -58,7 +58,7 @@ public static class CollectionExtensions
                 .Single(_ => _.Name == nameof(Enumerable.Count) && _.GetParameters().Length == 1);
             var enumerableInterface = type.GetInterface(typeof(IEnumerable<>).Name);
             var genericCountMethod = countMethod.MakeGenericMethod(enumerableInterface!.GenericTypeArguments);
-            return (int)genericCountMethod.Invoke(null, new object[] { enumerable })!;
+            return (int)genericCountMethod.Invoke(null, [enumerable])!;
         }
 
         var count = 0;
@@ -82,6 +82,6 @@ public static class CollectionExtensions
         {
             list.Add(element);
         }
-        return list.ToArray();
+        return [.. list];
     }
 }

@@ -16,9 +16,6 @@ public class TypeInfo<T> : ITypeInfo
     /// </summary>
     public static readonly TypeInfo<T> Instance = new();
 
-    /// <inheritdoc/>
-    public bool HasDefaultConstructor { get; }
-
     TypeInfo()
     {
         var type = typeof(T);
@@ -30,4 +27,7 @@ public class TypeInfo<T> : ITypeInfo
             typeInfo.IsValueType ||
             defaultConstructor;
     }
+
+    /// <inheritdoc/>
+    public bool HasDefaultConstructor { get; }
 }

@@ -8,7 +8,7 @@ public class when_combining_no_lookups : Specification
     IEnumerable<ILookup<string, int>> lookups;
     ILookup<string, int> result;
 
-    void Establish() => lookups = Enumerable.Empty<ILookup<string, int>>();
+    void Establish() => lookups = [];
 
     void Because() => result = lookups.Combine();
 

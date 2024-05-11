@@ -9,6 +9,4 @@ namespace Cratis.Types;
 /// </summary>
 /// <typeparam name="T">Base type to discover for - must be an abstract class or an interface.</typeparam>
 public interface IInstancesOf<T> : IEnumerable<T>
-    where T : class
-{
-}
+    where T : class;
