@@ -39,6 +39,16 @@ public static class TypeExtensions
     ];
 
     /// <summary>
+    /// Get the type string for a <see cref="Type"/>.
+    /// </summary>
+    /// <param name="type">Type to get from.</param>
+    /// <returns>A type string.</returns>
+    public static string GetTypeString(this Type type) =>
+        (type.Namespace?.StartsWith("System") ?? false) ?
+            (type.FullName ?? type.Name) :
+            $"{type.FullName ?? type.Name}, {type.Assembly.GetName().Name}";
+
+    /// <summary>
     /// Check if a type has an attribute associated with it.
     /// </summary>
     /// <typeparam name="T">Attribute type to check for.</typeparam>
@@ -75,6 +85,22 @@ public static class TypeExtensions
     }
 
     /// <summary>
+    /// Check whether or not a type is in a nullable context.
+    /// </summary>
+    /// <param name="type">Type to check.</param>
+    /// <returns>True if it is in a nullable context, false if not.</returns>
+    public static bool IsNullableContext(this Type type) =>
+        type.GetCustomAttributes().Any(_ => _.GetType().FullName == "System.Runtime.CompilerServices.NullableContextAttribute");
+
+    /// <summary>
+    /// Check whether or not a member that implements <see cref="ICustomAttributeProvider"/> is a nullable reference type.
+    /// </summary>
+    /// <param name="member">Member that implements <see cref="ICustomAttributeProvider"/> to check.</param>
+    /// <returns>True if it nullable, false if not.</returns>
+    public static bool IsNullableReferenceType(this ICustomAttributeProvider member) =>
+        member.GetCustomAttributes(false).Any(_ => _.GetType().FullName == "System.Runtime.CompilerServices.NullableAttribute");
+
+    /// <summary>
     /// Gets the element type of an <see cref="IAsyncEnumerable{T}"/>.
     /// </summary>
     /// <param name="asyncEnumerableType">The <see cref="Type"/> to get from.</param>
@@ -97,10 +123,7 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="type"><see cref="Type"/> to get from.</param>
     /// <returns>Underlying nullable type.</returns>
-    public static Type GetNullableType(this Type type)
-    {
-        return type.GetGenericArguments()[0];
-    }
+    public static Type GetNullableType(this Type type) => type.GetGenericArguments()[0];
 
     /// <summary>
     /// Check if a type is a number or not.
@@ -256,10 +279,7 @@ public static class TypeExtensions
     /// <typeparam name="T">Interface to check for.</typeparam>
     /// <param name="type"><see cref="Type"/> to check.</param>
     /// <returns>True if the type implements the interface, false if not.</returns>
-    public static bool HasInterface<T>(this Type type)
-    {
-        return type.HasInterface(typeof(T));
-    }
+    public static bool HasInterface<T>(this Type type) => type.HasInterface(typeof(T));
 
     /// <summary>
     /// Check if a type implements a specific interface.
