@@ -4,7 +4,7 @@
     "description": "",
     "author": "Cratis",
     "license": "MIT",
-    "repository":"github:cratis/fundamentals",
+    "repository": "github:cratis/fundamentals",
     "publishConfig": {
         "access": "public"
     },
@@ -35,7 +35,6 @@
         "up": "yarn g:up"
     },
     "dependencies": {
-        "@cratis/typescript": "1.0.0",
         "reflect-metadata": "0.1.13"
     }
 }
