@@ -7,35 +7,25 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Samples/TypeDiscovery/TypeDiscovery.csproj",
+                "--no-restore",
                 "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "/consoleloggerparameters:NoSummary",
+                "${input:project}"
             ],
-            "problemMatcher": "$msCompile"
-        },
+            "problemMatcher": "$msCompile",
+            "runOptions": {
+                "reevaluateOnRerun": false
+            }
+        }
+    ],
+    "inputs": [
         {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/Samples/TypeDiscovery/TypeDiscovery.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/Samples/TypeDiscovery/TypeDiscovery.csproj"
-            ],
-            "problemMatcher": "$msCompile"
+            "id": "project",
+            "type": "command",
+            "command": "dotnet-build-commands.selectProject",
+            "args": {
+                "file": "${workspaceFolder}/.vscode/projects.json"
+            }
         }
     ]
 }
