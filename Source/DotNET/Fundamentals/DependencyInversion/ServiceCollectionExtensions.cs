@@ -25,19 +25,25 @@ public static class ServiceCollectionExtensions
 
         static bool convention(Type i, Type t) => i.Namespace == t.Namespace && i.Name == $"I{t.Name}";
 
-        var conventionBasedTypes = types!.All.Where(_ =>
-        {
-            var interfaces = _.GetInterfaces();
-            if (interfaces.Length > 0)
+        var conventionBasedTypes = types!.All
+            .Where(_ =>
             {
-                var conventionInterface = interfaces.SingleOrDefault(i => convention(i, _));
-                if (conventionInterface != default)
+                if (_.HasAttribute<IgnoreConventionAttribute>())
                 {
-                    return types!.All.Count(type => type.HasInterface(conventionInterface)) == 1;
+                    return false;
                 }
-            }
-            return false;
-        });
+
+                var interfaces = _.GetInterfaces();
+                if (interfaces.Length > 0)
+                {
+                    var conventionInterface = interfaces.SingleOrDefault(i => convention(i, _));
+                    if (conventionInterface != default)
+                    {
+                        return types!.All.Count(type => type.HasInterface(conventionInterface)) == 1;
+                    }
+                }
+                return false;
+            });
 
         foreach (var conventionBasedType in conventionBasedTypes)
         {
