@@ -28,7 +28,7 @@ public static class ServiceCollectionExtensions
         var conventionBasedTypes = types!.All
             .Where(_ =>
             {
-                if (_.HasAttribute<IgnoreConventionAttribute>())
+                if (ShouldIgnoreConvention(_))
                 {
                     return false;
                 }
@@ -74,6 +74,7 @@ public static class ServiceCollectionExtensions
             (_.Attributes & staticType) != staticType &&
             !_.IsInterface &&
             !_.IsAbstract &&
+            !ShouldIgnoreConvention(_) &&
             !ShouldIgnoreNamespace(_.Namespace ?? string.Empty) &&
             !HasConstructorWithUnresolvableParameters(_) &&
             !HasConstructorWithRecordTypes(_) &&
@@ -89,6 +90,9 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+    static bool ShouldIgnoreConvention(Type type) =>
+        type.HasAttribute<IgnoreConventionAttribute>();
 
     static bool ShouldIgnoreNamespace(string namespaceToCheck) =>
         _namespacesToIgnoreForSelfBinding.Any(namespaceToCheck.StartsWith);
