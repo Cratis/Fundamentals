@@ -21,6 +21,19 @@ public static class ModelsServiceCollectionExtensions
             .AddSingleton<IModelNameResolver, ModelNameResolver>();
 
     /// <summary>
+    /// Add the namespaced model name convention.
+    /// </summary>
+    /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
+    /// <param name="segmentsToSkip">Optionally number of segments in the namespace to skip. Defaults to 0.</param>
+    /// <param name="separator">Optional separator character to use between namespace segments. Defaults to '-'.</param>
+    /// <param name="prefix">Optional prefix to prepend all model names with.</param>
+    /// <returns><see cref="IServiceCollection"/> for continuing build.</returns>
+    public static IServiceCollection AddNamespaceModelNameConvention(this IServiceCollection services, int segmentsToSkip = 0, char separator = '-', string prefix = "") =>
+        services
+            .AddSingleton<IModelNameConvention>(new NamespacedModelNameConvention(segmentsToSkip, separator, prefix))
+            .AddSingleton<IModelNameResolver, ModelNameResolver>();
+
+    /// <summary>
     /// Add a specific model name convention.
     /// </summary>
     /// <typeparam name="T">Type of <see cref="IModelNameConvention"/> to use.</typeparam>
