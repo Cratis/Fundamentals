@@ -25,8 +25,8 @@ public static class ModelsServiceCollectionExtensions
     /// </summary>
     /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
     /// <param name="segmentsToSkip">Optionally number of segments in the namespace to skip. Defaults to 0.</param>
-    /// <param name="separator">Optional separator character to use between namespace segments. Defaults to 0.</param>
-    /// <param name="prefix">Optional prefix to prepend all collection names with.</param>
+    /// <param name="separator">Optional separator character to use between namespace segments. Defaults to '-'.</param>
+    /// <param name="prefix">Optional prefix to prepend all model names with.</param>
     /// <returns><see cref="IServiceCollection"/> for continuing build.</returns>
     public static IServiceCollection AddNamespaceModelNameConvention(this IServiceCollection services, int segmentsToSkip = 0, char separator = '-', string prefix = "") =>
         services
