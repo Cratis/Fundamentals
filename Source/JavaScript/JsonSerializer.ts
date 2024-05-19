@@ -5,6 +5,7 @@ import { Constructor } from './Constructor';
 import { Field } from './Field';
 import { Fields } from './Fields';
 import { DerivedType } from './DerivedType';
+import { Guid } from './Guid';
 
 type typeSerializer = (value: any) => any;
 
@@ -12,7 +13,8 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
     [Number, (value: any) => value],
     [String, (value: any) => value],
     [Boolean, (value: any) => value],
-    [Date, (value: any) => new Date(value)]
+    [Date, (value: any) => new Date(value)],
+    [Guid, (value: any) => new Guid(value)],
 ]);
 
 const deserializeValue = (field: Field, value: any) => {
