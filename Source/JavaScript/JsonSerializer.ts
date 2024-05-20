@@ -14,7 +14,7 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
     [String, (value: any) => value],
     [Boolean, (value: any) => value],
     [Date, (value: any) => new Date(value)],
-    [Guid, (value: any) => new Guid(value)],
+    [Guid, (value: any) => Guid.parse(value.toString())],
 ]);
 
 const deserializeValue = (field: Field, value: any) => {
