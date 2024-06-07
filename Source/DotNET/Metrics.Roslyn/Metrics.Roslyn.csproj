@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>12.0</LangVersion>
+        <AssemblyName>Cratis.Metrics.Roslyn</AssemblyName>
+        <RootNamespace>Cratis.Metrics.Rolsyn</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="$(MSBuildThisFileDirectory)/Templates/**/*.hbs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="handlebars.net" GeneratePathProperty="true" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Update="@(PackageReference)" PrivateAssets="All" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="$(PKGHandlebars_Net)\lib\netstandard2.0\Handlebars.dll" PackagePath="analyzers/dotnet/cs" />
+        <Content Include="$(PKGHandlebars_Net)\lib\netstandard2.0\Handlebars.dll" PackagePath="lib/netstandard2.0" />
+    </ItemGroup>
+
+</Project>
