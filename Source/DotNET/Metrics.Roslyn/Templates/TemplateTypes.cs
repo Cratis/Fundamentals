@@ -18,7 +18,8 @@ public static class TemplateTypes
     static string GetTemplate(string name)
     {
         var rootType = typeof(TemplateTypes);
-        var stream = rootType.Assembly.GetManifestResourceStream($"{rootType.Namespace}.{name}.hbs");
+        var resourceName = $"{rootType.Namespace}.{name}.hbs";
+        var stream = rootType.Assembly.GetManifestResourceStream(resourceName);
         if (stream != default)
         {
             using var reader = new StreamReader(stream);

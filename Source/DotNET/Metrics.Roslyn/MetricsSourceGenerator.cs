@@ -6,7 +6,7 @@ using Cratis.Metrics.Roslyn.Templates;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Cratis.Metrics.Roslyn.Metrics;
+namespace Cratis.Metrics.Roslyn;
 
 /// <summary>
 /// Represents the source generator for metrics.
