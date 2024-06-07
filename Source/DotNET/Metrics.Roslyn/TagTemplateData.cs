@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Cratis.Metrics.Roslyn.Metrics;
+namespace Cratis.Metrics.Roslyn;
 
 /// <summary>
 /// Represents the template for counter tags.
