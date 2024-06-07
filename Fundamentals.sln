@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fundamentals", "Source\DotN
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fundamentals", "Specifications\Fundamentals\Fundamentals.csproj", "{B6145456-0F67-4BF1-85B5-E03A7F67FE37}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DotNET", "DotNET", "{74932E08-DDD9-47A6-879B-034F68D33F80}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metrics.Roslyn", "Source\DotNET\Metrics.Roslyn\Metrics.Roslyn.csproj", "{CCB4390A-9DAC-4AE6-8381-AB4D5C5229E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,8 +30,14 @@ Global
 		{B6145456-0F67-4BF1-85B5-E03A7F67FE37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B6145456-0F67-4BF1-85B5-E03A7F67FE37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B6145456-0F67-4BF1-85B5-E03A7F67FE37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCB4390A-9DAC-4AE6-8381-AB4D5C5229E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCB4390A-9DAC-4AE6-8381-AB4D5C5229E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCB4390A-9DAC-4AE6-8381-AB4D5C5229E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCB4390A-9DAC-4AE6-8381-AB4D5C5229E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{83E6AC5C-4F7C-4261-9898-DB72F3F9100A} = {B767D860-0EFF-4931-8F89-1F84145ECF56}
+		{74932E08-DDD9-47A6-879B-034F68D33F80} = {B767D860-0EFF-4931-8F89-1F84145ECF56}
+		{CCB4390A-9DAC-4AE6-8381-AB4D5C5229E1} = {74932E08-DDD9-47A6-879B-034F68D33F80}
 	EndGlobalSection
 EndGlobal
