@@ -42,7 +42,7 @@ public static class MethodExtensions
     /// <returns>The actual type.</returns>
     public static Type GetActualReturnType(this MethodInfo methodInfo)
     {
-        if (methodInfo.IsAsync())
+        if (methodInfo.IsAsync() && methodInfo.ReturnType.IsGenericType)
         {
             return methodInfo.ReturnType.GetGenericArguments()[0];
         }
