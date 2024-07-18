@@ -51,8 +51,8 @@ public static class TypeExtensions
     /// <summary>
     /// Check if a type has an attribute associated with it.
     /// </summary>
-    /// <typeparam name="T">Attribute type to check for.</typeparam>
     /// <param name="type"><see cref="Type"/> to check.</param>
+    /// <typeparam name="T">Attribute type to check for.</typeparam>
     /// <returns>True if there is an attribute, false if not.</returns>
     public static bool HasAttribute<T>(this Type type)
         where T : Attribute
