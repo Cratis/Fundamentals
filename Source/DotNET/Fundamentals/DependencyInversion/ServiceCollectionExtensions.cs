@@ -47,7 +47,7 @@ public static class ServiceCollectionExtensions
 
         foreach (var conventionBasedType in conventionBasedTypes)
         {
-            var interfaceToBind = types.All.Single(_ => _.IsInterface && convention(_, conventionBasedType));
+            var interfaceToBind = types.All.First(_ => _.IsInterface && convention(_, conventionBasedType));
             if (services.Any(_ => _.ServiceType == interfaceToBind) || conventionBasedType.IsAbstract)
             {
                 continue;
