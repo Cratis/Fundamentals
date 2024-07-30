@@ -56,7 +56,17 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
                                 .Distinct()
                                 .ToArray();
             _assemblies.AddRange(assemblies);
-            DefinedTypes = _assemblies.SelectMany(_ => _.DefinedTypes).ToArray();
+            DefinedTypes = _assemblies.SelectMany(_ =>
+            {
+                try
+                {
+                    return _.DefinedTypes;
+                }
+                catch
+                {
+                    return [];
+                }
+            }).ToArray();
 
             _initialized = true;
         }
