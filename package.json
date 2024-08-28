@@ -21,7 +21,7 @@
     },
     "devDependencies": {
         "@types/chai": "4.3.4",
-        "@types/chai-as-promised": "7.1.5",
+        "@types/chai-as-promised": "8.0.0",
         "@types/mocha": "10.0.7",
         "@types/node": "22.5.1",
         "@types/sinon": "10.0.13",
@@ -29,7 +29,7 @@
         "@typescript-eslint/eslint-plugin": "8.3.0",
         "@typescript-eslint/parser": "8.3.0",
         "chai": "5.1.1",
-        "chai-as-promised": "7.1.1",
+        "chai-as-promised": "8.0.0",
         "edit-json-file": "1.8.0",
         "eslint": "9.9.1",
         "eslint-config-prettier": "9.1.0",
