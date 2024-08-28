@@ -1,5 +1,8 @@
 name: .NET Build
 
+env:
+  DOTNET_VERSION: "8.0.401"     
+
 on:
   workflow_dispatch:
     inputs:
@@ -34,7 +37,8 @@ jobs:
       - name: Setup .Net
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "6.0.400"
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
 
       - name: Build & run tests for root
         run: dotnet test --configuration Release
