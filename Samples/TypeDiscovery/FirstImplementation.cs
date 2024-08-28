@@ -1,5 +1,3 @@
 namespace TypeDiscovery;
 
-public class FirstImplementation : ISomeInterface
-{
-}
+public class FirstImplementation : ISomeInterface;
