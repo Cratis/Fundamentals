@@ -1,5 +1,3 @@
 namespace TypeDiscovery;
 
-public interface ISomeInterface
-{   
-}
+public interface ISomeInterface;

@@ -45,7 +45,10 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
             }
 
             var entryAssembly = Assembly.GetEntryAssembly();
+            if (entryAssembly is null) return;
+
             var dependencyModel = DependencyContext.Load(entryAssembly);
+            if (dependencyModel is null) return;
 
             var assemblies = dependencyModel.RuntimeLibraries
                                 .Where(_ => !_.Type.Equals("project") &&

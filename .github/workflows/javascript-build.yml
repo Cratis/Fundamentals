@@ -1,5 +1,8 @@
 name: JavaScript Build
 
+env:
+  NODE_VERSION: "22.x"
+
 on:
   workflow_dispatch:
     inputs:
@@ -31,10 +34,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup node v20
+      - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: ${{ env.NODE_VERSION }}
           registry-url: "https://registry.npmjs.org"
 
       - uses: actions/cache@v3

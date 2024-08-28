@@ -1,8 +1,9 @@
 name: Publish
 
 env:
-  NUGET_OUTPUT: ./Artifacts/NuGet
-  DOTNET_VERSION: "6.0.400"
+  NUGET_OUTPUT: ./Artifacts/NuGet 
+  DOTNET_VERSION: "8.0.x"
+  NODE_VERSION: "22.x"
 
 on:
   workflow_dispatch:
@@ -86,13 +87,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup node v20
+      - name: Setup node
         uses: actions/setup-node@v4
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
-          node-version: 20.x
+          node-version: ${{ env.NODE_VERSION }}
           registry-url: "https://registry.npmjs.org"
 
       - uses: actions/cache@v3

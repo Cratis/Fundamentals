@@ -34,7 +34,6 @@
         "noFallthroughCasesInSwitch": true,
         "stripInternal": true,
         "allowSyntheticDefaultImports": true,
-        "watch": true,
         "forceConsistentCasingInFileNames": true,
         "assumeChangesOnlyAffectDirectDependencies": true,
         "alwaysStrict": true,
