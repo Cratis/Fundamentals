@@ -43,6 +43,8 @@ public class ProjectReferencedAssemblies : ICanProvideAssembliesForDiscovery
 
             var entryAssembly = Assembly.GetEntryAssembly()!;
             var dependencyModel = DependencyContext.Load(entryAssembly);
+            if (dependencyModel is null) return;
+
             var projectReferencedAssemblies = dependencyModel.RuntimeLibraries
                                 .Where(_ => _.Type.Equals("project"))
                                 .Select(_ => AssemblyHelpers.Resolve(_.Name)!)
