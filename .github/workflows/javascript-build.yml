@@ -1,7 +1,7 @@
 name: JavaScript Build
 
 env:
-  NODE_VERSION: "22.x"
+  NODE_VERSION: "21.x"
 
 on:
   workflow_dispatch:
