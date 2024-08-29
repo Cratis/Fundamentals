@@ -24,14 +24,8 @@ module.exports = {
     ],
     extends: [
         'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:react/recommended'
+        'plugin:@typescript-eslint/recommended'
     ],
-    settings: {
-        react: {
-            version: 'detect',
-        },
-    },
     rules: {
         'no-irregular-whitespace': 0,
         'semi': [2, "always"],
@@ -45,6 +39,7 @@ module.exports = {
         '@typescript-eslint/no-empty-function': 0,
         '@typescript-eslint/ban-types': 0,
         '@typescript-eslint/no-var-requires': 0,
+        "@typescript-eslint/no-empty-object-type": 0,
         // eslint-plugin-header
         'header/header': [
             2,
