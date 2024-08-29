@@ -20,7 +20,7 @@
         "up": "node ./run-task-on-workspaces.js up"
     },
     "devDependencies": {
-        "@types/chai": "4.3.4",
+        "@types/chai": "4.3.19",
         "@types/chai-as-promised": "8.0.0",
         "@types/mocha": "10.0.7",
         "@types/node": "22.5.1",
