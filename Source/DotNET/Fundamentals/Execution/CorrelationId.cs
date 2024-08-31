@@ -8,19 +8,19 @@ namespace Cratis.Execution;
 /// <summary>
 /// Represents an identifier for correlation.
 /// </summary>
-/// <param name="Value">Actual value.</param>
-public record CorrelationId(string Value) : ConceptAs<string>(Value)
+/// <param name="value">Actual value.</param>
+public record CorrelationId(Guid value) : ConceptAs<Guid>(value)
 {
     /// <summary>
     /// Implicitly convert from <see cref="string"/> to <see cref="CorrelationId"/>.
     /// </summary>
-    /// <param name="id"><see cref="string"/> to convert from.</param>
+    /// <param name="id"><see cref="Guid"/> to convert from.</param>
     /// <returns>A new <see cref="CorrelationId"/>.</returns>
-    public static implicit operator CorrelationId(string id) => new(id);
+    public static implicit operator CorrelationId(Guid id) => new(id);
 
     /// <summary>
     /// Create a new <see cref="CorrelationId"/> based on a new <see cref="Guid"/>.
     /// </summary>
     /// <returns>A new <see cref="CorrelationId"/>.</returns>
-    public static CorrelationId New() => new(Guid.NewGuid().ToString());
+    public static CorrelationId New() => new(Guid.NewGuid());
 }
