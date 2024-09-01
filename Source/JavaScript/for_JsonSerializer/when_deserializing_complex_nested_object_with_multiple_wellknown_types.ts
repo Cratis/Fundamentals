@@ -96,7 +96,7 @@ describe('when deserializing complex nested object with multiple wellknown types
 
     it('should hold correct number for first level number', () => result.someNumber.should.equal(42));
     it('should hold correct string for first level string', () => result.someString.should.equal('forty two'));
-    it('should hold correct bool fvalue for first level boolean', () => result.someBoolean.should.be.true);
+    it('should hold correct bool value for first level boolean', () => result.someBoolean.should.be.true);
     it('should hold correct type for first level date', () => result.someDate.constructor.should.equal(Date));
     it('should hold correct value for first level date', () => result.someDate.toString().should.equal(new Date('2022-10-07 15:51').toString()));
 
