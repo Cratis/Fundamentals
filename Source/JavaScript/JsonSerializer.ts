@@ -17,7 +17,15 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
     [Guid, (value: any) => Guid.parse(value.toString())],
 ]);
 
-const deserializeValue = (field: Field, value: any) => {
+const deserializeValueFromType = (type: Constructor, value: any) => {
+    if (typeSerializers.has(type)) {
+        return typeSerializers.get(type)!(value);
+    } else {
+        return JsonSerializer.deserialize(type, JSON.stringify(value));
+    }
+}
+
+const deserializeValueFromField = (field: Field, value: any) => {
     if (typeSerializers.has(field.type)) {
         return typeSerializers.get(field.type)!(value);
     } else {
@@ -67,14 +75,19 @@ export class JsonSerializer {
      */
     static deserializeFromInstance<TResult extends {}>(targetType: Constructor<TResult>, instance: any): TResult {
         const fields = Fields.getFieldsForType(targetType as Constructor);
+
+        if( typeSerializers.has(targetType) ) {
+            return deserializeValueFromType(targetType, instance);
+        }
+
         const deserialized = new targetType();
         for (const field of fields) {
             let value = instance[field.name];
             if (value) {
                 if (field.enumerable) {
-                    value = value.map(_ => deserializeValue(field, _));
+                    value = value.map(_ => deserializeValueFromField(field, _));
                 } else {
-                    value = deserializeValue(field, value);
+                    value = deserializeValueFromField(field, value);
                 }
             }
 

@@ -4,7 +4,6 @@
 import { field } from '../fieldDecorator';
 import { JsonSerializer } from '../JsonSerializer';
 import { derivedType } from '../derivedTypeDecorator';
-import { Constructor } from '../Constructor';
 
 class OtherType {
     @field(Number)
