@@ -23,7 +23,7 @@ const deserializeValueFromType = (type: Constructor, value: any) => {
     } else {
         return JsonSerializer.deserialize(type, JSON.stringify(value));
     }
-}
+};
 
 const deserializeValueFromField = (field: Field, value: any) => {
     if (typeSerializers.has(field.type)) {
