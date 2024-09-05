@@ -12,6 +12,11 @@ namespace Cratis.Execution;
 public record CorrelationId(Guid value) : ConceptAs<Guid>(value)
 {
     /// <summary>
+    /// Gets the value for not set.
+    /// </summary>
+    public static readonly CorrelationId NotSet = Guid.Empty;
+
+    /// <summary>
     /// Implicitly convert from <see cref="string"/> to <see cref="CorrelationId"/>.
     /// </summary>
     /// <param name="id"><see cref="Guid"/> to convert from.</param>
