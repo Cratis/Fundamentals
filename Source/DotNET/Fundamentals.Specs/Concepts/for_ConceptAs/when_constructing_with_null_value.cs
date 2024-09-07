@@ -11,7 +11,7 @@ public class when_constructing_with_null_value : Specification
 
     Exception result;
 
-    void Because() => result = Catch.Exception(() => { var _ = new RefConcept(null); });
+    void Because() => result = Catch.Exception(() => { var _ = new RefConcept(null!); });
 
     [Fact] void should_throw_argument_null_exception() => result.ShouldBeOfExactType<ArgumentNullException>();
 }

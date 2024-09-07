@@ -22,7 +22,7 @@ public class when_converting_to_time_only : Specification
     {
         Utf8JsonReader reader = new(Encoding.UTF8.GetBytes($"\"{input:O}\"").AsSpan());
         reader.Read();  // Skip quote
-        result = converter.Read(ref reader, typeof(TimeOnly), default);
+        result = converter.Read(ref reader, typeof(TimeOnly), null);
     }
 
     [Fact] void should_convert_to_correct_date_only() => result.ShouldEqual(input);

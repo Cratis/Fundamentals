@@ -6,6 +6,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../../Source/DotNET/Fundamentals/Fundamentals.csproj" />
+        <ProjectReference Include="../Fundamentals/Fundamentals.csproj" />
     </ItemGroup>
 </Project>

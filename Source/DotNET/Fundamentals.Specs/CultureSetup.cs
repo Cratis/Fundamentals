@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 
 namespace Cratis;
 
+#pragma warning disable SA1600 // Elements should be documented
+
 public static class CultureSetup
 {
     [ModuleInitializer]
