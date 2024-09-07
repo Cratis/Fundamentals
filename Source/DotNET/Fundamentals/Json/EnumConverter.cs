@@ -19,6 +19,11 @@ public class EnumConverter<T> : JsonConverter<T>
         if (reader.TokenType == JsonTokenType.Number)
         {
             var intValue = reader.GetInt32();
+            if (!Enum.IsDefined(typeof(T), intValue))
+            {
+                throw new JsonException($"Unable to convert \"{intValue}\" to Enum \"{typeof(T).FullName}\". Value is not defined.");
+            }
+
             return (T)Enum.ToObject(typeof(T), intValue);
         }
 
