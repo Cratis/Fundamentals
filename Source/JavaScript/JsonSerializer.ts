@@ -2,12 +2,20 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { Constructor } from './Constructor';
+import { DerivedType } from './DerivedType';
 import { Field } from './Field';
 import { Fields } from './Fields';
-import { DerivedType } from './DerivedType';
 import { Guid } from './Guid';
 
 type typeSerializer = (value: any) => any;
+
+const typeConverters: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
+    [Number, (value: number) => value],
+    [String, (value: string) => value],
+    [Boolean, (value: boolean) => value],
+    [Date, (value: Date) => value.toISOString()],
+    [Guid, (value: Guid) => value?.toString() ?? '']
+]);
 
 const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
     [Number, (value: any) => value],
@@ -16,6 +24,16 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
     [Date, (value: any) => new Date(value)],
     [Guid, (value: any) => Guid.parse(value.toString())],
 ]);
+
+const serializeValueForType = (type: Constructor, value: any) => {
+    if (!value) return value;
+
+    if (typeConverters.has(type)) {
+        return typeConverters.get(type)!(value);
+    } else {
+        return convertTypesOnInstance(type, value);
+    }
+};
 
 const deserializeValueFromType = (type: Constructor, value: any) => {
     if (typeSerializers.has(type)) {
@@ -39,11 +57,41 @@ const deserializeValueFromField = (field: Field, value: any) => {
     }
 };
 
+const convertTypesOnInstance = (sourceType: Constructor, instance: any) => {
+    const properties = Object.getOwnPropertyNames(instance);
+    const converted: any = {};
+    properties.forEach(property => {
+        let value = instance[property];
+        if (value !== undefined) {
+            if (Array.isArray(value)) {
+                value = value.map(_ => convertTypesOnInstance(value.__proto__.constructor, _));
+            } else {
+                value = serializeValueForType(value.__proto__.constructor, value);
+            }
+        }
+
+        converted[property] = value;
+    });
+
+    return converted;
+};
+
 /**
  * Represents a serializer for JSON.
  */
 export class JsonSerializer {
     static readonly DerivedTypeIdProperty: string = "_derivedTypeId";
+
+    /**
+     * Serialize with strong type information.
+     * @param {Constructor} sourceType The type of the value to serialize.
+     * @param {*} value The value to serialize.
+     * @returns A JSON string.
+     */
+    static serialize<TSource extends {}>(sourceType: Constructor<TSource>, value: TSource): string {
+        const converted = convertTypesOnInstance(sourceType, value);
+        return JSON.stringify(converted);
+    }
 
     /**
      * Deserialize a JSON string to the specific type.
@@ -76,7 +124,7 @@ export class JsonSerializer {
     static deserializeFromInstance<TResult extends {}>(targetType: Constructor<TResult>, instance: any): TResult {
         const fields = Fields.getFieldsForType(targetType as Constructor);
 
-        if( typeSerializers.has(targetType) ) {
+        if (typeSerializers.has(targetType)) {
             return deserializeValueFromType(targetType, instance);
         }
 

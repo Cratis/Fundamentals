@@ -16,6 +16,20 @@
             "stopAtEntry": false
         },
         {
+            "runtimeArgs": [
+                "test"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "name": "Mocha Tests",
+            "runtimeExecutable": "yarn",
+            "cwd": "${workspaceFolder}/Source/JavaScript",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
