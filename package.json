@@ -22,12 +22,12 @@
     "devDependencies": {
         "@types/chai": "4.3.19",
         "@types/chai-as-promised": "8.0.0",
-        "@types/mocha": "10.0.8",
-        "@types/node": "22.5.4",
+        "@types/mocha": "10.0.9",
+        "@types/node": "22.7.5",
         "@types/sinon": "17.0.3",
         "@types/sinon-chai": "3.2.12",
-        "@typescript-eslint/eslint-plugin": "8.5.0",
-        "@typescript-eslint/parser": "8.5.0",
+        "@typescript-eslint/eslint-plugin": "8.8.1",
+        "@typescript-eslint/parser": "8.8.1",
         "chai": "5.1.1",
         "chai-as-promised": "8.0.0",
         "edit-json-file": "1.8.0",
@@ -51,7 +51,7 @@
         "sinon": "19.0.2",
         "sinon-chai": "4.0.0",
         "ts-node": "10.9.2",
-        "typescript": "5.6.2"
+        "typescript": "5.6.3"
     },
     "license": "MIT",
     "version": "0.0.0"
