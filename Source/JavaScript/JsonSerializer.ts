@@ -33,7 +33,7 @@ const serializeValueForType = (type: Constructor, value: any) => {
     } else {
         return convertTypesOnInstance(type, value);
     }
-}
+};
 
 const deserializeValueFromType = (type: Constructor, value: any) => {
     if (typeSerializers.has(type)) {
