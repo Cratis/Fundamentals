@@ -58,19 +58,19 @@ const deserializeValueFromField = (field: Field, value: any) => {
 };
 
 const convertTypesOnInstance = (sourceType: Constructor, instance: any) => {
-    const fields = Fields.getFieldsForType(sourceType as Constructor);
+    const properties = Object.getOwnPropertyNames(instance);
     const converted: any = {};
-    fields.forEach(field => {
-        let value = instance[field.name];
+    properties.forEach(property => {
+        let value = instance[property];
         if (value !== undefined) {
-            if (field.enumerable) {
-                value = value.map(_ => convertTypesOnInstance(field.type, _));
+            if (Array.isArray(value)) {
+                value = value.map(_ => convertTypesOnInstance(value.__proto__.constructor, _));
             } else {
-                value = serializeValueForType(field.type, value);
+                value = serializeValueForType(value.__proto__.constructor, value);
             }
         }
 
-        converted[field.name] = value;
+        converted[property] = value;
     });
 
     return converted;
