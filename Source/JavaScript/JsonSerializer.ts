@@ -31,7 +31,7 @@ const serializeValueForType = (type: Constructor, value: any) => {
     if (typeConverters.has(type)) {
         return typeConverters.get(type)!(value);
     } else {
-        return convertTypesOnInstance(type, value);
+        return convertTypesOnInstance(value);
     }
 };
 
@@ -57,14 +57,14 @@ const deserializeValueFromField = (field: Field, value: any) => {
     }
 };
 
-const convertTypesOnInstance = (sourceType: Constructor, instance: any) => {
+const convertTypesOnInstance = (instance: any) => {
     const properties = Object.getOwnPropertyNames(instance);
     const converted: any = {};
     properties.forEach(property => {
         let value = instance[property];
         if (value !== undefined) {
             if (Array.isArray(value)) {
-                value = value.map(_ => convertTypesOnInstance(value.__proto__.constructor, _));
+                value = value.map(_ => convertTypesOnInstance(_));
             } else {
                 value = serializeValueForType(value.__proto__.constructor, value);
             }
@@ -84,12 +84,11 @@ export class JsonSerializer {
 
     /**
      * Serialize with strong type information.
-     * @param {Constructor} sourceType The type of the value to serialize.
      * @param {*} value The value to serialize.
      * @returns A JSON string.
      */
-    static serialize<TSource extends {}>(sourceType: Constructor<TSource>, value: TSource): string {
-        const converted = convertTypesOnInstance(sourceType, value);
+    static serialize(value: any): string {
+        const converted = convertTypesOnInstance(value);
         return JSON.stringify(converted);
     }
 

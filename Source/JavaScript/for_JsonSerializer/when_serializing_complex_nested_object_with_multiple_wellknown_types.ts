@@ -30,7 +30,7 @@ describe('when serializing complex nested object with multiple wellknown types',
     instance.collectionOfOtherType[1].someGuid = Guid.parse('ee503799-63a7-4666-84b8-46eb1641206a');
     instance.collectionOfOtherType[1].someDate = new Date('2023-01-07 15:51');
    
-    const result = JsonSerializer.serialize(TopLevel, instance);
+    const result = JsonSerializer.serialize(instance);
     const deserialized = JSON.parse(result);
 
     it('should hold correct number for first level number', () => deserialized.someNumber.should.equal(42));
