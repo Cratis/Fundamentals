@@ -58,6 +58,10 @@ const deserializeValueFromField = (field: Field, value: any) => {
 };
 
 const convertTypesOnInstance = (instance: any) => {
+    if (typeConverters.has(instance.constructor)) {
+        return serializeValueForType(instance.constructor, instance);
+    }
+
     const properties = Object.getOwnPropertyNames(instance);
     const converted: any = {};
     properties.forEach(property => {
