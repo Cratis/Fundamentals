@@ -11,6 +11,8 @@ describe('when serializing complex nested object with multiple wellknown types',
     instance.someString = 'forty two';
     instance.someDate = new Date('2022-10-07 15:51');
     instance.someBoolean = true;
+    instance.collectionOfGuids = [Guid.create(), Guid.create()];
+    
     instance.someGuid = Guid.parse('f0fa7c5e-9f7b-4688-8851-e0b6eeebe28b');
     instance.otherType = new OtherType();
     instance.otherType.someNumber = 43;
@@ -37,6 +39,8 @@ describe('when serializing complex nested object with multiple wellknown types',
     it('should hold correct string for first level string', () => deserialized.someString.should.equal('forty two'));
     it('should hold correct bool value for first level boolean', () => deserialized.someBoolean.should.be.true);
     it('should hold correct guid value for first level guid', () => deserialized.someGuid.should.equal(instance.someGuid.toString()));
+    it('should hold correct guid value for first guid in the first level guid array', () => deserialized.collectionOfGuids[0].should.equal(instance.collectionOfGuids[0].toString()));
+    it('should hold correct guid value for second guid in the first level guid array', () => deserialized.collectionOfGuids[1].should.equal(instance.collectionOfGuids[1].toString()));
     it('should hold correct value for first level date', () => deserialized.someDate.toString().should.equal(JSON.stringify(instance.someDate).slice(1, -1)));
 
     it('should hold correct number for second level number', () => deserialized.otherType.someNumber.should.equal(43));

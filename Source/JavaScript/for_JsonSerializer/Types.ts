@@ -56,6 +56,9 @@ export class TopLevel {
     @field(Guid)
     someGuid!: Guid;
 
+    @field(Boolean, true)
+    collectionOfGuids!: Guid[];
+
     @field(OtherType)
     otherType!: OtherType;
 
