@@ -20,7 +20,7 @@ public class Types : ITypes
     /// </remarks>
     public static readonly Types Instance = new();
 
-    readonly IContractToImplementorsMap _contractToImplementorsMap = new ContractToImplementorsMap();
+    readonly ContractToImplementorsMap _contractToImplementorsMap = new();
     readonly List<Assembly> _assemblies = [];
 
     /// <summary>

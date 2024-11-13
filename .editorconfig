@@ -116,6 +116,7 @@ csharp_style_prefer_range_operator = false:none
 # CSharp formatting rules:
 # dont want these bombing the build logs, will still show up in the IDE
 dotnet_diagnostic.IDE0055.severity = none
+dotnet_diagnostic.MA0165.severity = none
 # prefere brace indentation when creating objects etc
 csharp_indent_braces = false
 
@@ -194,3 +195,4 @@ dotnet_diagnostic.MA0069.severity = none
 dotnet_diagnostic.MA0096.severity = none
 dotnet_diagnostic.MA0097.severity = none
 dotnet_diagnostic.MA0132.severity = none
+dotnet_diagnostic.MA0165.severity = none
