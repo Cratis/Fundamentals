@@ -11,7 +11,7 @@ namespace Cratis.Metrics;
 /// </summary>
 public class MetricCollection : ICollection<MetricSnapshot>
 {
-    readonly IDictionary<string, MetricSnapshot> _metrics = new Dictionary<string, MetricSnapshot>();
+    readonly Dictionary<string, MetricSnapshot> _metrics = [];
 
     readonly Dictionary<string, MetricMeasurement> _measurements = [];
 
@@ -63,13 +63,14 @@ public class MetricCollection : ICollection<MetricSnapshot>
             }
 
             return new MetricMeasurementPoint(value, tags);
-        });
+        }).ToArray();
 
-        if (!_measurements.ContainsKey(item.Name) ||
-            _measurements[item.Name].Aggregated != sum ||
-            _measurements[item.Name].Points.Count() != points.Count())
+        if (!_measurements.TryGetValue(item.Name, out var value) ||
+            value.Aggregated != sum ||
+            value.Points.Count() != points.Length)
         {
-            _measurements[item.Name] = new MetricMeasurement(item.Name, sum, points);
+            value = new MetricMeasurement(item.Name, sum, points);
+            _measurements[item.Name] = value;
             ContentChanged();
         }
     }
@@ -78,7 +79,7 @@ public class MetricCollection : ICollection<MetricSnapshot>
     public void Clear() => _metrics.Clear();
 
     /// <inheritdoc/>
-    public bool Contains(MetricSnapshot item) => _metrics.Values.Contains(item);
+    public bool Contains(MetricSnapshot item) => _metrics.ContainsValue(item);
 
     /// <inheritdoc/>
     public void CopyTo(MetricSnapshot[] array, int arrayIndex) => _metrics.Values.CopyTo(array, arrayIndex);

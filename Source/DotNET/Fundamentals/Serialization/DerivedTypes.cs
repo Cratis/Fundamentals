@@ -23,8 +23,8 @@ public class DerivedTypes : IDerivedTypes
     /// </remarks>
     public static readonly DerivedTypes Instance = new(Types.Types.Instance);
 
-    readonly IDictionary<Type, IEnumerable<DerivedTypeAndIdentifier>> _targetTypeToDerivedType;
-    readonly IDictionary<Type, Type> _derivedTypeToTargetType;
+    readonly Dictionary<Type, IEnumerable<DerivedTypeAndIdentifier>> _targetTypeToDerivedType;
+    readonly Dictionary<Type, Type> _derivedTypeToTargetType;
 
     /// <summary>
     /// Initializes a new instance of <see cref="ITypes"/>.
@@ -58,12 +58,12 @@ public class DerivedTypes : IDerivedTypes
     /// <inheritdoc/>
     public Type GetTargetTypeFor(Type derivedType)
     {
-        if (!_derivedTypeToTargetType.ContainsKey(derivedType))
+        if (!_derivedTypeToTargetType.TryGetValue(derivedType, out var value))
         {
             throw new MissingTargetTypeForDerivedType(derivedType);
         }
 
-        return _derivedTypeToTargetType[derivedType];
+        return value;
     }
 
     /// <inheritdoc/>
@@ -93,8 +93,8 @@ public class DerivedTypes : IDerivedTypes
 
     void ThrowIfMissingDerivedTypeOrMissingIdentifier(Type targetType, DerivedTypeId derivedTypeId)
     {
-        if (!_targetTypeToDerivedType.ContainsKey(targetType) ||
-            !_targetTypeToDerivedType[targetType].Any(_ => _.Identifier == derivedTypeId))
+        if (!_targetTypeToDerivedType.TryGetValue(targetType, out var value) ||
+            !value.Any(_ => _.Identifier == derivedTypeId))
         {
             throw new MissingDerivedTypeForTargetType(targetType, derivedTypeId);
         }
@@ -134,5 +134,5 @@ public class DerivedTypes : IDerivedTypes
         }
     }
 
-    record DerivedTypeAndIdentifier(Type DerivedType, Type TargetType, DerivedTypeId Identifier);
+    sealed record DerivedTypeAndIdentifier(Type DerivedType, Type TargetType, DerivedTypeId Identifier);
 }
