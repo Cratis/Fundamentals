@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Cratis;
 
-#pragma warning disable SA1600 // Elements should be documented
+#pragma warning disable SA1600, CA1515 // Elements should be documented
 
 public static class CultureSetup
 {
@@ -17,3 +17,4 @@ public static class CultureSetup
         CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
     }
 }
+#pragma warning restore
