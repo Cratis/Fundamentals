@@ -8,6 +8,6 @@ describe('when getting empty', () => {
 
     it('should return a guid with 16 bytes all set to 0', () => {
         empty.bytes.should.be.lengthOf(16);
-        empty.bytes.some((_: any) => _ !== 0).should.be.false;
+        empty.bytes.some((_: number) => _ !== 0).should.be.false;
     });
 });

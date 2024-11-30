@@ -14,5 +14,5 @@ export interface IEquatable {
      * @param {*} other
      * @returns {boolean}
      */
-    equals(other: any): boolean
+    equals(other: object): boolean
 }

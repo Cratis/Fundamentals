@@ -3,6 +3,7 @@
 
 import { IEquatable } from './IEquatable';
 
+const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const lookUpTable: string[] = [];
 (() => {
     for (let i = 0; i < 256; i += 1) {
@@ -94,6 +95,15 @@ export class Guid implements IEquatable {
     }
 
     /**
+     * Check if a string is a valid {Guid}
+     * @param {string} value Value to check.
+     * @returns True if it is, false if not.
+     */
+    static isGuid(value: string): boolean {
+        return guidRegex.test(value);
+    }
+
+    /**
      * Parses if the type is a string parse, otherwise pass through the input as desired output type.
      * @template T Type to handle for
      * @param {string|T} input String or the generic type.
@@ -109,8 +119,13 @@ export class Guid implements IEquatable {
     /**
      * @inheritdoc
      */
-    equals(other: any): boolean {
-        return Guid.as(other).toString() === this.toString();
+    equals(other: object): boolean {
+        const actualOther = other instanceof Guid ? other : other.toString();
+        if (typeof actualOther === 'string' && !Guid.isGuid(actualOther)) {
+            return false;
+        }
+
+        return Guid.as(actualOther).toString() === this.toString();
     }
 
     /**

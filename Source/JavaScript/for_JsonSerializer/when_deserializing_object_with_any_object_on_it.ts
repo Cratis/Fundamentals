@@ -4,6 +4,7 @@
 import { field } from '../fieldDecorator';
 import { JsonSerializer } from '../JsonSerializer';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 class TheType {
     @field(Object)

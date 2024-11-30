@@ -4,6 +4,8 @@
 import { Constructor } from './Constructor';
 import { Fields } from './Fields';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export function field(targetType: Constructor, enumerable?: boolean, derivatives?: Constructor[]) {
     return function (target: any, propertyKey: string) {
         Fields.addFieldToType(target.constructor, propertyKey, targetType, enumerable || false, derivatives || []);

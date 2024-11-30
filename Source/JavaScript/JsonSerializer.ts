@@ -7,6 +7,8 @@ import { Field } from './Field';
 import { Fields } from './Fields';
 import { Guid } from './Guid';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 type typeSerializer = (value: any) => any;
 
 const typeConverters: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
@@ -102,7 +104,7 @@ export class JsonSerializer {
      * @param {string} json Actual JSON to deserialize.
      * @returns An instance of the target type.
      */
-    static deserialize<TResult extends {}>(targetType: Constructor<TResult>, json: string): TResult {
+    static deserialize<TResult extends object>(targetType: Constructor<TResult>, json: string): TResult {
         const parsed = JSON.parse(json);
         return this.deserializeFromInstance<TResult>(targetType, parsed);
     }
@@ -113,7 +115,7 @@ export class JsonSerializer {
      * @param {string} json Actual JSON to deserialize.
      * @returns An array of instances of the target type.
      */
-    static deserializeArray<TResult extends {}>(targetType: Constructor<TResult>, json: string): TResult[] {
+    static deserializeArray<TResult extends object>(targetType: Constructor<TResult>, json: string): TResult[] {
         const parsed = JSON.parse(json);
         return this.deserializeArrayFromInstance(targetType, parsed);
     }
@@ -124,7 +126,7 @@ export class JsonSerializer {
      * @param {*} instance Actual instance to deserialize.
      * @returns An instance of the target type.
      */
-    static deserializeFromInstance<TResult extends {}>(targetType: Constructor<TResult>, instance: any): TResult {
+    static deserializeFromInstance<TResult extends object>(targetType: Constructor<TResult>, instance: any): TResult {
         const fields = Fields.getFieldsForType(targetType as Constructor);
 
         if (typeSerializers.has(targetType)) {
@@ -146,7 +148,7 @@ export class JsonSerializer {
         }
 
         if ((targetType as Constructor) == Object) {
-            const objectFields = Object.keys(instance).filter((value, index, arr) => {
+            const objectFields = Object.keys(instance).filter((value) => {
                 return !fields.some(_ => _.name == value);
             });
 
@@ -164,7 +166,7 @@ export class JsonSerializer {
      * @param {instances} instances Actual instances to deserialize.
      * @returns An array of instances of the target type.
      */
-    static deserializeArrayFromInstance<TResult extends {}>(targetType: Constructor<TResult>, instances: any): TResult[] {
+    static deserializeArrayFromInstance<TResult extends object>(targetType: Constructor<TResult>, instances: any): TResult[] {
         const deserialized: TResult[] = [];
 
         for (const instance of instances) {

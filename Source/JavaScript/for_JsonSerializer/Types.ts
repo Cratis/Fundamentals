@@ -26,6 +26,7 @@ export class OtherType {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ITargetType { }
 
 @derivedType('ad7593d1-71be-4e26-9026-aedb32fc43d3')

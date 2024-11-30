@@ -4,6 +4,9 @@
 import 'reflect-metadata';
 import { DerivedType } from './DerivedType';
 
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export function derivedType(identifier: string) {
     return function (target: any) {
         DerivedType.set(target, identifier);
