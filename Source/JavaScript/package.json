@@ -19,9 +19,9 @@
     "exports": {
         "./package.json": "./package.json",
         ".": {
-            "import": "./dist/esm/index.js",
+            "types": "./dist/esm/index.d.ts",
             "require": "./dist/cjs/index.js",
-            "types": "./dist/esm/index.d.ts"
+            "import": "./dist/esm/index.js"
         }
     },
     "scripts": {
@@ -31,6 +31,7 @@
         "lint": "yarn g:lint",
         "lint:ci": "yarn g:lint:ci",
         "test": "yarn g:test",
+        "test:watch": "yarn g:test:watch",
         "ci": "yarn g:ci",
         "up": "yarn g:up"
     },
