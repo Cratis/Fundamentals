@@ -6,9 +6,10 @@
     "scripts": {
         "g:clean": "cd $INIT_CWD && tsc -b --clean",
         "g:build": "cd $INIT_CWD && rollup -c rollup.config.js",
-        "g:lint": "cd $INIT_CWD && eslint --cache . --ext .ts,.tsx --quiet --fix",
-        "g:lint:ci": "cd $INIT_CWD && eslint --cache . --ext .ts,.tsx --quiet",
-        "g:test": "cd $INIT_CWD && mocha --config ${PROJECT_CWD}/.mocharc.js",
+        "g:lint": "cd $INIT_CWD && eslint --cache --quiet --fix",
+        "g:lint:ci": "cd $INIT_CWD && eslint --cache --quiet",
+        "g:test": "cd $INIT_CWD && vitest run",
+        "g:test:watch": "cd $INIT_CWD && vitest --watch",
         "g:ci": "cd $INIT_CWD && yarn clean && yarn lint:ci && tsc -b && yarn test",
         "g:up": "cd $INIT_CWD && ncu -u \\!'@cratis/*'",
         "clean": "node ./run-task-on-workspaces.js clean",
@@ -20,6 +21,7 @@
         "up": "node ./run-task-on-workspaces.js up"
     },
     "devDependencies": {
+        "@eslint/compat": "1.2.3",
         "@types/chai": "5.0.1",
         "@types/chai-as-promised": "8.0.1",
         "@types/mocha": "10.0.10",
@@ -52,6 +54,7 @@
         "sinon-chai": "4.0.0",
         "ts-node": "10.9.2",
         "typescript": "5.7.2",
+        "typescript-eslint": "8.16.0",
         "vite-plugin-commonjs": "0.10.4",
         "vite-tsconfig-paths": "5.1.3",
         "vitest": "2.1.6"
