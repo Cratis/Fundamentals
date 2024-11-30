@@ -7,5 +7,5 @@ describe('when checking equality a guid and a number', () => {
     const guid = Guid.parse('1a0a061b-3533-4d91-990a-524b7e6ae6a9');
     const num = 2;
 
-    it('should not be the same', () => guid.equals(num).should.be.false);
+    it('should not be the same', () => guid.equals(num as unknown as object).should.be.false);
 });

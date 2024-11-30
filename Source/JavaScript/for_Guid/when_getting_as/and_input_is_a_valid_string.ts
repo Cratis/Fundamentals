@@ -5,7 +5,7 @@ import { Guid } from '../../Guid';
 
 class MyType extends Guid {}
 
-describe('when getting as and input is string', () => {
+describe('when getting as and input is a valid string', () => {
     const guidAsString = '0be23d5b-90d6-45f4-94fb-f1537caeea73';
     const result = Guid.as<MyType>(guidAsString);
 
