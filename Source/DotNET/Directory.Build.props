@@ -1,9 +1,7 @@
 <Project>
     <Import Project="$(MSBuildThisFileDirectory)../../Directory.Build.props" />
-
+    
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-
         <Version>1.0.0</Version>
         <Copyright>Copyright Cratis</Copyright>
         <Authors>all contributors</Authors>
@@ -26,11 +24,6 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)'==''">
-        <Configuration>Debug</Configuration>
-    </PropertyGroup>
-
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
         <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
         <MSBuildTreatWarningsAsErrors>False</MSBuildTreatWarningsAsErrors>
