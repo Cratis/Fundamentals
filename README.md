@@ -9,6 +9,7 @@
 
 [![.NET Build](https://github.com/cratis/Fundamentals/actions/workflows/dotnet-build.yml/badge.svg)](https://github.com/cratis/Fundamentals/actions/workflows/dotnet-build.yml)
 [![JavaScript Build](https://github.com/cratis/Fundamentals/actions/workflows/javascript-build.yml/badge.svg)](https://github.com/cratis/Fundamentals/actions/workflows/javascript-build.yml)
+[![Documentation site](https://github.com/Cratis/Documentation/actions/workflows/pages.yml/badge.svg)](https://github.com/Cratis/Documentation/actions/workflows/pages.yml)
 
 ## Description
 
