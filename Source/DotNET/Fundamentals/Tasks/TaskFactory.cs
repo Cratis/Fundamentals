@@ -9,8 +9,8 @@ namespace Cratis.Tasks;
 public class TaskFactory : ITaskFactory
 {
     /// <inheritdoc/>
-    public Task Run(Func<Task> function) => Task.Run(function);
+    public Task Run(Func<Task> function, CancellationToken cancellationToken = default) => Task.Run(function, cancellationToken);
 
     /// <inheritdoc/>
-    public Task Delay(int milliseconds) => Task.Delay(milliseconds);
+    public Task Delay(int milliseconds, CancellationToken cancellationToken = default) => Task.Delay(milliseconds, cancellationToken);
 }
