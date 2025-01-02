@@ -10,27 +10,27 @@
         <PackageVersion Include="handlebars.net" Version="2.1.6" />
         
         <!-- Roslyn-->
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.11.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.12.0" />
         <!-- Analysis -->
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="4.11.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="4.12.0" />
         <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" NoWarn="NU5104" />
-        <PackageVersion Include="Roslynator.Analyzers" Version="4.12.9" />
-        <PackageVersion Include="Meziantou.Analyzer" Version="2.0.182" />
+        <PackageVersion Include="Roslynator.Analyzers" Version="4.12.10" />
+        <PackageVersion Include="Meziantou.Analyzer" Version="2.0.184" />
         <!-- Specifications -->
         <PackageVersion Include="Cratis.Specifications.XUnit" Version="3.0.4" />
         <PackageVersion Include="xunit" Version="2.9.2" />
-        <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.0" />
         <PackageVersion Include="moq" Version="4.20.72" />
         <PackageVersion Include="Microsoft.NET.Test.SDK" Version="17.12.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
-        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-        <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="8.0.1" />
-        <PackageVersion Include="System.Text.Json" Version="8.0.5" />
-        <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.9.0" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="9.0.0" />
+        <PackageVersion Include="System.Text.Json" Version="9.0.0" />
+        <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.10.0" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'netstandard2.0' ">
