@@ -24,7 +24,7 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
     [String, (value: any) => value],
     [Boolean, (value: any) => value],
     [Date, (value: any) => new Date(value)],
-    // [Guid, (value: any) => Guid.parse(value.toString())],
+    [Guid, (value: any) => Guid.parse(value.toString())],
 ]);
 
 const serializeValueForType = (type: Constructor, value: any) => {
