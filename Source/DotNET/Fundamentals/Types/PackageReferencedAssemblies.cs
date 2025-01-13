@@ -20,7 +20,7 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
     /// </remarks>
     public static readonly PackageReferencedAssemblies Instance = new();
 
-#pragma warning disable MA0158 // Cannot use Lock in .net 8
+#pragma warning disable MA0158, IDE0330 // Cannot use Lock in .net 8
     static readonly object _lock = new();
 #pragma warning restore
     readonly List<string> _assemblyPrefixesToInclude = ["Cratis"];
