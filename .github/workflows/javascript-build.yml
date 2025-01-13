@@ -20,11 +20,17 @@ on:
       - "main"
     paths:
       - "Source/JavaScript/**"
+      - "package.json"
+      - "tsconfig.json"
+      - "vite*"
   pull_request:
     branches:
       - "**"
     paths:
       - "Source/JavaScript/**"
+      - "package.json"
+      - "tsconfig.json"
+      - "vite*"
 
 jobs:
   build:

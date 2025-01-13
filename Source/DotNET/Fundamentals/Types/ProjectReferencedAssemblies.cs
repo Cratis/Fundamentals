@@ -19,7 +19,7 @@ public class ProjectReferencedAssemblies : ICanProvideAssembliesForDiscovery
     /// This is due to the performance impact of scanning all assemblies in the application.
     /// </remarks>
     public static readonly ProjectReferencedAssemblies Instance = new();
-#pragma warning disable MA0158 // Cannot use Lock in .net 8
+#pragma warning disable MA0158, IDE0330 // Cannot use Lock in .net 8
     static readonly object _lock = new();
 #pragma warning restore
 
