@@ -8,8 +8,8 @@ namespace Cratis.Execution;
 /// <summary>
 /// Represents an identifier for correlation.
 /// </summary>
-/// <param name="value">Actual value.</param>
-public record CorrelationId(Guid value) : ConceptAs<Guid>(value)
+/// <param name="Value">Actual value.</param>
+public record CorrelationId(Guid Value) : ConceptAs<Guid>(Value)
 {
     /// <summary>
     /// Gets the value for not set.
