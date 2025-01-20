@@ -46,7 +46,7 @@ public static class AssemblyHelpers
             var path = Path.Join(AppDomain.CurrentDomain.BaseDirectory, file);
             if (File.Exists(path))
             {
-                return Assembly.LoadFile(path);
+                return Assembly.LoadFrom(path);
             }
 
             return null;
