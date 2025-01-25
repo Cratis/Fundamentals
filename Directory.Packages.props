@@ -33,6 +33,6 @@
         <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
         <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="9.0.1" />
         <PackageVersion Include="System.Text.Json" Version="9.0.1" />
-        <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.10.0" />
+        <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.11.1" />
     </ItemGroup>
 </Project>
