@@ -135,4 +135,12 @@ export class Guid implements IEquatable {
     toString(): string {
         return this._stringVersion;
     }
+
+    /**
+     * Converts the {Guid} to a string that works in JSON serialization.
+     * @returns {string}
+     */
+    toJSON(): string {
+        return this._stringVersion;
+    }
 }
