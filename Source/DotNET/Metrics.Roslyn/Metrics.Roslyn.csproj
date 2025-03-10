@@ -17,7 +17,6 @@
     <ItemGroup>
         <PackageReference Include="handlebars.net" GeneratePathProperty="true" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     </ItemGroup>
 
     <ItemGroup>
@@ -32,5 +31,4 @@
         <Content Include="$(PKGHandlebars_Net)\lib\netstandard2.0\Handlebars.dll" PackagePath="analyzers/dotnet/cs" />
         <Content Include="$(PKGHandlebars_Net)\lib\netstandard2.0\Handlebars.dll" PackagePath="lib/netstandard2.0" />
     </ItemGroup>
-
 </Project>
