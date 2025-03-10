@@ -10,6 +10,6 @@
       <PackageReference Include="System.IO.FileSystem.Primitives" />
       <PackageReference Include="System.Reactive" />
       <PackageReference Include="Humanizer" />
-      <PackageReference Include="OpenTelemetry.Exporter.InMemory" />
+      <PackageReference Include="OpenTelemetry" />
     </ItemGroup>
 </Project>
