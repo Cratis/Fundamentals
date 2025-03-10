@@ -60,7 +60,7 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
                                 .Distinct()
                                 .ToArray();
             _assemblies.AddRange(assemblies);
-            DefinedTypes = _assemblies.SelectMany(_ =>
+            DefinedTypes = [.. _assemblies.SelectMany(_ =>
             {
                 try
                 {
@@ -70,7 +70,7 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
                 {
                     return [];
                 }
-            }).ToArray();
+            })];
 
             _initialized = true;
         }

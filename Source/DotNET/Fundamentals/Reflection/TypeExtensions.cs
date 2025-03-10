@@ -244,7 +244,7 @@ public static class TypeExtensions
     /// <returns>Settable <see cref="PropertyInfo">properties</see>.</returns>
     public static PropertyInfo[] GetSettableProperties(this Type type)
     {
-        return type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite).ToArray();
+        return [.. type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite)];
     }
 
     /// <summary>

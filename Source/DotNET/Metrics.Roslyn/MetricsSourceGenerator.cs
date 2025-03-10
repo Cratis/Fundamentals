@@ -37,7 +37,7 @@ public class MetricsSourceGenerator : ISourceGenerator
                 Namespace = (candidate.Parent as BaseNamespaceDeclarationSyntax)!.Name.ToString(),
                 ClassName = candidate.Identifier.ValueText,
                 ClassDefinition = classDefinition,
-                UsingStatements = usings.ToList()
+                UsingStatements = [.. usings]
             };
 
             var semanticModel = context.Compilation.GetSemanticModel(candidate.SyntaxTree);

@@ -53,7 +53,7 @@ public class ProjectReferencedAssemblies : ICanProvideAssembliesForDiscovery
                                 .Distinct()
                                 .ToArray();
             _assemblies.AddRange(projectReferencedAssemblies);
-            DefinedTypes = _assemblies.SelectMany(_ => _.DefinedTypes).ToArray();
+            DefinedTypes = [.. _assemblies.SelectMany(_ => _.DefinedTypes)];
 
             _initialized = true;
         }
