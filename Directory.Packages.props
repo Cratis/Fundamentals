@@ -25,11 +25,7 @@
         <PackageVersion Include="moq" Version="4.20.72" />
         <PackageVersion Include="Microsoft.NET.Test.SDK" Version="17.13.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" />
-    </ItemGroup>
 
-    <Import Project="$(MSBuildThisFileDirectory)Directory.Packages.Net8.props" Condition=" '$(TargetFramework)' == 'net8.0' "/>
-
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'netstandard2.0' ">
         <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
         <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="9.0.3" />
         <PackageVersion Include="System.Text.Json" Version="9.0.3" />
