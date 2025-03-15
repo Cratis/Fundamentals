@@ -25,6 +25,11 @@ namespace {{Namespace}};
         {
             {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateCounter<{{Type}}>("{{Name}}", "{{Description}}");
         }
+        {{else}}
+        if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
+        {
+            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateCounter<{{Type}}>("{{Name}}", "{{Description}}");
+        }
         {{/if}}
 
         var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
@@ -41,7 +46,11 @@ namespace {{Namespace}};
         }
         {{/if}}
 
+        {{#if HasValueParameter }}
+        {{MethodName}}Metric?.Add({{ValueParameter}}, tags);
+        {{else}}
         {{MethodName}}Metric?.Add(1, tags);
+        {{/if}}
     }
     {{/Counters}}
 
@@ -52,7 +61,12 @@ namespace {{Namespace}};
         {{#if IsScoped}}
         if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
         {
-            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateGauge<{{Type}}>("{{Name}}", "{{Description}}");
+            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateCounter<{{Type}}>("{{Name}}", "{{Description}}");
+        }
+        {{else}}
+        if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
+        {
+            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateCounter<{{Type}}>("{{Name}}", "{{Description}}");
         }
         {{/if}}
 
