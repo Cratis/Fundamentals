@@ -12,6 +12,10 @@ namespace {{Namespace}};
     static Counter<{{Type}}>? {{MethodName}}Metric;
     {{/Counters}}
 
+    {{#Gauges}}
+    static Gauge<{{Type}}>? {{MethodName}}Metric;
+    {{/Gauges}}
+
     {{#Counters}}
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
     {{{MethodSignature}}}
@@ -40,4 +44,33 @@ namespace {{Namespace}};
         {{MethodName}}Metric?.Add(1, tags);
     }
     {{/Counters}}
+
+    {{#Gauges}}
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
+    {{{MethodSignature}}}
+    {
+        {{#if IsScoped}}
+        if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
+        {
+            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateGauge<{{Type}}>("{{Name}}", "{{Description}}");
+        }
+        {{/if}}
+
+        var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
+        {
+            {{#Tags}}
+            new("{{Name}}", {{name}}){{#unless @last}},{{/unless}}
+            {{/Tags}}
+        }));
+
+        {{#if IsScoped}}
+        foreach (var (key, value) in {{ScopeParameter}}.Tags)
+        {
+            tags.Add(key, value);
+        }
+        {{/if}}
+
+        {{MethodName}}Metric?.Add(1, tags);
+    }
+    {{/Gauges}}
 }
