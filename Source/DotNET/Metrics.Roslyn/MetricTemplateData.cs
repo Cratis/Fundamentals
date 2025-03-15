@@ -44,6 +44,16 @@ public class MetricTemplateData
     public string ScopeParameter { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the value parameter.
+    /// </summary>
+    public string ValueParameter { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets whether or not the value parameter has a value.
+    /// </summary>
+    public bool HasValueParameter { get; set; }
+
+    /// <summary>
     /// Gets or sets the tags for the counter.
     /// </summary>
     public IEnumerable<TagTemplateData> Tags { get; set; } = [];
