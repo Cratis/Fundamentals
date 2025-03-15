@@ -25,8 +25,6 @@ public class MetricsSourceGenerator : ISourceGenerator
     {
         if (context.SyntaxReceiver is not MetricsSyntaxReceiver receiver) return;
 
-        while (!System.Diagnostics.Debugger.IsAttached) System.Threading.Thread.Sleep(10);
-
         var counterAttribute = context.Compilation.GetTypeByMetadataName("Cratis.Metrics.CounterAttribute`1")!;
         var gaugeAttribute = context.Compilation.GetTypeByMetadataName("Cratis.Metrics.GaugeAttribute`1")!;
         foreach (var candidate in receiver.Candidates)
