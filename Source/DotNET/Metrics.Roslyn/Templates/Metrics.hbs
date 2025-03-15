@@ -61,12 +61,12 @@ namespace {{Namespace}};
         {{#if IsScoped}}
         if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
         {
-            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateCounter<{{Type}}>("{{Name}}", "{{Description}}");
+            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateGauge<{{Type}}>("{{Name}}", "{{Description}}");
         }
         {{else}}
         if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
         {
-            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateCounter<{{Type}}>("{{Name}}", "{{Description}}");
+            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateGauge<{{Type}}>("{{Name}}", "{{Description}}");
         }
         {{/if}}
 
