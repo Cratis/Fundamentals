@@ -66,8 +66,9 @@ public class MetricsSourceGenerator : ISourceGenerator
                             tags = tags.Skip(1);
                         }
                     }
-                    AddMetricIfAny(templateData.Counters, counterAttribute, method, methodSignature, attributes, isScoped, scopeParameter, tags);
-                    AddMetricIfAny(templateData.Gauges, gaugeAttribute, method, methodSignature, attributes, isScoped, scopeParameter, tags);
+                    var valueParameter = method.ParameterList.Parameters[1].Identifier.ValueText;
+                    AddMetricIfAny(templateData.Counters, counterAttribute, method, methodSignature, attributes, isScoped, scopeParameter, valueParameter, tags);
+                    AddMetricIfAny(templateData.Gauges, gaugeAttribute, method, methodSignature, attributes, isScoped, scopeParameter, valueParameter, tags);
                 }
             }
 
@@ -137,6 +138,7 @@ public class MetricsSourceGenerator : ISourceGenerator
         ImmutableArray<AttributeData> attributes,
         bool isScoped,
         string scopeParameter,
+        string valueParameter,
         IEnumerable<TagTemplateData> tags)
     {
         var attribute = attributes.FirstOrDefault(_ => SymbolEqualityComparer.Default.Equals(_.AttributeClass?.OriginalDefinition, attributeToLookFor));
@@ -155,6 +157,7 @@ public class MetricsSourceGenerator : ISourceGenerator
                         MethodSignature = methodSignature,
                         IsScoped = isScoped,
                         ScopeParameter = scopeParameter,
+                        ValueParameter = valueParameter,
                         Tags = tags
                     });
         }
