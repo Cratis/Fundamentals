@@ -71,10 +71,11 @@ public class MetricsSourceGenerator : ISourceGenerator
                 }
             }
 
-            if (templateData.Counters.Count > 0 && templateData.Gauge.Count > 0)
+            if (templateData.Counters.Count > 0 ||
+                templateData.Gauge.Count > 0)
             {
                 var source = TemplateTypes.Metrics(templateData);
-                context.AddSource($"{candidate.Identifier.ValueText}.metrics.g.cs", source);
+                context.AddSource($"{candidate.Identifier.ValueText}.g.cs", source);
             }
         }
     }
