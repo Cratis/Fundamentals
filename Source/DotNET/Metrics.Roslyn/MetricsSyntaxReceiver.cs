@@ -15,7 +15,7 @@ public class MetricsSyntaxReceiver : ISyntaxReceiver
     static readonly string[] _metricsAttributes =
     [
         "Counter",
-        "Measurement"
+        "Gauge"
     ];
 
     readonly List<ClassDeclarationSyntax> _candidates = [];

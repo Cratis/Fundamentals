@@ -26,7 +26,7 @@ public class MetricsSourceGenerator : ISourceGenerator
         if (context.SyntaxReceiver is not MetricsSyntaxReceiver receiver) return;
 
         var counterAttribute = context.Compilation.GetTypeByMetadataName("Cratis.Metrics.CounterAttribute`1")!;
-        var measurementAttribute = context.Compilation.GetTypeByMetadataName("Cratis.Metrics.MeasurementAttribute`1")!;
+        var gaugeAttribute = context.Compilation.GetTypeByMetadataName("Cratis.Metrics.GaugeAttribute`1")!;
         foreach (var candidate in receiver.Candidates)
         {
             var classDefinition = $"{candidate.Modifiers} class {candidate.Identifier.ValueText}";
@@ -67,14 +67,14 @@ public class MetricsSourceGenerator : ISourceGenerator
                         }
                     }
                     AddMetricIfAny(templateData.Counters, counterAttribute, method, methodSignature, attributes, isScoped, scopeParameter, tags);
-                    AddMetricIfAny(templateData.Measurements, measurementAttribute, method, methodSignature, attributes, isScoped, scopeParameter, tags);
+                    AddMetricIfAny(templateData.Gauge, gaugeAttribute, method, methodSignature, attributes, isScoped, scopeParameter, tags);
                 }
             }
 
-            if (templateData.Counters.Count > 0)
+            if (templateData.Counters.Count > 0 && templateData.Gauge.Count > 0)
             {
                 var source = TemplateTypes.Metrics(templateData);
-                context.AddSource($"{candidate.Identifier.ValueText}.g.cs", source);
+                context.AddSource($"{candidate.Identifier.ValueText}.metrics.g.cs", source);
             }
         }
     }

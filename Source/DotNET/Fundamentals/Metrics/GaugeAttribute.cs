@@ -4,16 +4,16 @@
 namespace Cratis.Metrics;
 
 /// <summary>
-/// Attribute for marking a method as a measurement for the metrics code generator.
+/// Attribute for marking a method as a gauge for the metrics code generator.
 /// </summary>
 /// <typeparam name="T">Type of counter.</typeparam>
 /// <remarks>
-/// Initializes a new instance of <see cref="MeasurementAttribute{T}"/>.
+/// Gauges are used to measure the value of a particular thing at a particular time.
 /// </remarks>
-/// <param name="name">Name of the counter.</param>
+/// <param name="name">Name of the gauge.</param>
 /// <param name="description">Description of the counter.</param>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class MeasurementAttribute<T>(string name, string description) : Attribute
+public sealed class GaugeAttribute<T>(string name, string description) : Attribute
 {
     /// <summary>
     /// Gets the name of the counter.

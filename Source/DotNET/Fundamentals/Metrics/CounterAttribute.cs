@@ -8,7 +8,7 @@ namespace Cratis.Metrics;
 /// </summary>
 /// <typeparam name="T">Type of counter.</typeparam>
 /// <remarks>
-/// Initializes a new instance of <see cref="CounterAttribute{T}"/>.
+/// Counter is an Instrument which supports non-negative increments.
 /// </remarks>
 /// <param name="name">Name of the counter.</param>
 /// <param name="description">Description of the counter.</param>
