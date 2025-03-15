@@ -36,5 +36,5 @@ public class MetricsTemplateData
     /// <summary>
     /// Gets or sets the gauges.
     /// </summary>
-    public IList<MetricTemplateData> Gauge { get; set; } = [];
+    public IList<MetricTemplateData> Gauges { get; set; } = [];
 }

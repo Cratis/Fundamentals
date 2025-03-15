@@ -67,12 +67,12 @@ public class MetricsSourceGenerator : ISourceGenerator
                         }
                     }
                     AddMetricIfAny(templateData.Counters, counterAttribute, method, methodSignature, attributes, isScoped, scopeParameter, tags);
-                    AddMetricIfAny(templateData.Gauge, gaugeAttribute, method, methodSignature, attributes, isScoped, scopeParameter, tags);
+                    AddMetricIfAny(templateData.Gauges, gaugeAttribute, method, methodSignature, attributes, isScoped, scopeParameter, tags);
                 }
             }
 
             if (templateData.Counters.Count > 0 ||
-                templateData.Gauge.Count > 0)
+                templateData.Gauges.Count > 0)
             {
                 var source = TemplateTypes.Metrics(templateData);
                 context.AddSource($"{candidate.Identifier.ValueText}.g.cs", source);
