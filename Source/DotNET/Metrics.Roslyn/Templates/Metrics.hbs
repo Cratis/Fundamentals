@@ -34,13 +34,6 @@ namespace {{Namespace}};
             {{/Tags}}
         }));
 
-        {{#if IsScoped}}
-        foreach (var (key, value) in {{ScopeParameter}}.Tags)
-        {
-            tags.Add(key, value);
-        }
-        {{/if}}
-
         {{MethodName}}Metric?.Add(1, tags);
     }
     {{/Counters}}
@@ -63,14 +56,7 @@ namespace {{Namespace}};
             {{/Tags}}
         }));
 
-        {{#if IsScoped}}
-        foreach (var (key, value) in {{ScopeParameter}}.Tags)
-        {
-            tags.Add(key, value);
-        }
-        {{/if}}
-
-        {{MethodName}}Metric?.Add(1, tags);
+        {{MethodName}}Metric?.Record(1, tags);
     }
     {{/Gauges}}
 }
