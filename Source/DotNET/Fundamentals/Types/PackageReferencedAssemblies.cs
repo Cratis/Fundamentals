@@ -54,6 +54,7 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
             var assemblies = dependencyModel.RuntimeLibraries
                                 .Where(_ => !_.Type.Equals("project") &&
                                             _.RuntimeAssemblyGroups.Count > 0 &&
+                                            _.RuntimeAssemblyGroups.Any(_ => _.RuntimeFiles.Count > 0) &&
                                             _assemblyPrefixesToInclude.Exists(asm => _.Name.StartsWith(asm)))
                                 .Select(_ => AssemblyHelpers.Resolve(_.Name)!)
                                 .Where(_ => _ is not null)
