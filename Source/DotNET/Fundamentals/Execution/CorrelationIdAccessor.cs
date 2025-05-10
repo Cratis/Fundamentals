@@ -9,7 +9,7 @@ namespace Cratis.Execution;
 /// Represents an implementation of <see cref="ICorrelationIdAccessor"/>.
 /// </summary>
 [Singleton]
-public class CorrelationIdAccessor : ICorrelationIdAccessor
+public class CorrelationIdAccessor : ICorrelationIdAccessor, ICorrelationIdModifier
 {
     static readonly AsyncLocal<CorrelationId> _current = new();
 
@@ -21,4 +21,7 @@ public class CorrelationIdAccessor : ICorrelationIdAccessor
     /// </summary>
     /// <param name="correlationId"><see cref="CorrelationId"/> to set.</param>
     public static void SetCurrent(CorrelationId correlationId) => _current.Value = correlationId;
+
+    /// <inheritdoc/>
+    public void Modify(CorrelationId correlationId) => _current.Value = correlationId;
 }
