@@ -86,7 +86,7 @@ public static class TypeConversion
             }
             else
             {
-                val = valueType == typeof(byte[]) ? new Guid((value as byte[])!) : (object)Guid.Empty;
+                val = valueType == typeof(byte[]) ? new Guid((value as byte[])!) : Guid.Empty;
             }
         }
         else if (type.IsString())
