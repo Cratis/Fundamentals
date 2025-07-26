@@ -13,7 +13,7 @@
 
 ## Description
 
-The Cratis fundamentals holds generic reusable helpers, utilities and tools that aims at solving common problems and help developers be more productive.
+The Cratis Fundamentals holds generic reusable helpers, utilities and tools that aims at solving common problems and help developers be more productive.
 Fundamentals offers functionality for .NET and JavaScript environments. It is not a goal to have parity, as the different environments offer different
 building blocks.
 
