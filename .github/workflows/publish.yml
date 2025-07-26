@@ -27,12 +27,9 @@ on:
         - info
         - warning
         - debug
-  pull_request:
-    types: [closed]
+  push:
     branches:
-      - "**"
-    paths:
-      - "**"
+      - "main"
 
 jobs:
   release:
