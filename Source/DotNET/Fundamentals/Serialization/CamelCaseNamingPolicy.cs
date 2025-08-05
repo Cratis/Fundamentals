@@ -8,7 +8,7 @@ using Humanizer;
 namespace Cratis.Serialization;
 
 /// <summary>
-/// Default implementation of <see cref="INamingPolicy"/>.
+/// Camel case implementation of <see cref="INamingPolicy"/>.
 /// </summary>
 /// <param name="pluralizeReadModelNames">Whether to pluralize the read model names. Defaults to true.</param>
 public class CamelCaseNamingPolicy(bool pluralizeReadModelNames = true) : NamingPolicy

@@ -11,7 +11,7 @@ namespace Cratis.Serialization;
 /// Represents a naming policy that applies a namespaced naming convention.
 /// </summary>
 /// <param name="segmentsToSkip">Optionally number of segments in the namespace to skip. Defaults to 0.</param>
-/// <param name="separator">Optional separator character to use between namespace segments. Defaults to 0.</param>
+/// <param name="separator">Optional separator character to use between namespace segments. Defaults to '-'.</param>
 /// <param name="prefix">Optional prefix to prepend all collection names with.</param>
 /// <param name="camelCase">Whether to apply camel case to the names.</param>
 /// <param name="pluralizeReadModelNames">Whether to pluralize the read model names. Defaults to true.</param>

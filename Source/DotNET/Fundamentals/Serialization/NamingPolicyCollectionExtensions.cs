@@ -11,7 +11,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class NamingPolicyCollectionExtensions
 {
     /// <summary>
-    /// Add the default model name convention.
+    /// Add the camel case model name convention.
     /// </summary>
     /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
     /// <returns><see cref="IServiceCollection"/> for continuing build.</returns>
