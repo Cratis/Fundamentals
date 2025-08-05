@@ -20,6 +20,16 @@ public static class NamingPolicyCollectionExtensions
             .AddSingleton<INamingPolicy, DefaultNamingPolicy>();
 
     /// <summary>
+    /// Add the default model name convention.
+    /// </summary>
+    /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
+    /// <param name="pluralizeReadModelNames">Whether to pluralize the read model names. Defaults to true.</param>
+    /// <returns><see cref="IServiceCollection"/> for continuing build.</returns>
+    public static IServiceCollection AddCamelCaseNamingPolicy(this IServiceCollection services, bool pluralizeReadModelNames = true) =>
+        services
+            .AddSingleton<INamingPolicy>(new CamelCaseNamingPolicy(pluralizeReadModelNames));
+
+    /// <summary>
     /// Add the namespaced model name convention.
     /// </summary>
     /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
@@ -27,10 +37,16 @@ public static class NamingPolicyCollectionExtensions
     /// <param name="separator">Optional separator character to use between namespace segments. Defaults to '-'.</param>
     /// <param name="prefix">Optional prefix to prepend all model names with.</param>
     /// <param name="camelCase">Whether to apply camel case to the names.</param>
+    /// <param name="pluralizeReadModelNames">Whether to pluralize the read model names. Defaults to true.</param>
     /// <returns><see cref="IServiceCollection"/> for continuing build.</returns>
-    public static IServiceCollection AddNamespaceNamingPolicy(this IServiceCollection services, int segmentsToSkip = 0, char separator = '-', string prefix = "", bool camelCase = false) =>
-        services
-            .AddSingleton<INamingPolicy>(new NamespacedNamingPolicy(segmentsToSkip, separator, prefix, camelCase));
+    public static IServiceCollection AddNamespaceNamingPolicy(
+        this IServiceCollection services,
+        int segmentsToSkip = 0,
+        char separator = '-',
+        string prefix = "",
+        bool camelCase = false,
+        bool pluralizeReadModelNames = true) =>
+            services.AddSingleton<INamingPolicy>(new NamespacedNamingPolicy(segmentsToSkip, separator, prefix, camelCase, pluralizeReadModelNames));
 
     /// <summary>
     /// Add a specific model name convention.
