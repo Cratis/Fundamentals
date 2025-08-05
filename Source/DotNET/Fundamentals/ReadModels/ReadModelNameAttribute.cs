@@ -1,17 +1,17 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Cratis.Models;
+namespace Cratis.ReadModels;
 
 /// <summary>
 /// Attribute that can be adorned a model type as metadata to indicate the actual name of the model.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="ModelNameAttribute"/> class.
+/// Initializes a new instance of the <see cref="ReadModelNameAttribute"/> class.
 /// </remarks>
 /// <param name="name">Name of the model.</param>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-public sealed class ModelNameAttribute(string name) : Attribute
+public sealed class ReadModelNameAttribute(string name) : Attribute
 {
     /// <summary>
     /// Gets the name of the model.
