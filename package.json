@@ -31,7 +31,7 @@
         "@types/sinon": "17.0.4",
         "@types/sinon-chai": "4.0.0",
         "@typescript-eslint/eslint-plugin": "8.42.0",
-        "@typescript-eslint/parser": "8.41.0",
+        "@typescript-eslint/parser": "8.42.0",
         "chai": "6.0.1",
         "chai-as-promised": "8.0.2",
         "edit-json-file": "1.8.1",
