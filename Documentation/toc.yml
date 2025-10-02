@@ -1,6 +1,6 @@
-- name: Backend
-  href: backend/toc.yml
-- name: Frontend
-  href: frontend/toc.yml
+- name: C#
+  href: csharp/toc.yml
+- name: TypeScript
+  href: typescript/toc.yml
 - name: DerivedTypes Integration
   href: derived_types_integration.md

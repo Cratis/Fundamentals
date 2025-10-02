@@ -1,6 +1,6 @@
-# Frontend (JavaScript/TypeScript)
+# TypeScript (JavaScript/TypeScript)
 
-Frontend documentation for Fundamentals JavaScript/TypeScript package - an [npm package](https://www.npmjs.com/package/@cratis/fundamentals) that offers common utilities, formalizations and abstractions.
+TypeScript documentation for Fundamentals JavaScript/TypeScript package - an [npm package](https://www.npmjs.com/package/@cratis/fundamentals) that offers common utilities, formalizations and abstractions.
 
 ## Overview
 

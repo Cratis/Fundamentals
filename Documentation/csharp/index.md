@@ -1,6 +1,6 @@
-# Backend (.NET)
+# C# (.NET)
 
-Backend documentation for Fundamentals .NET package - a [NuGet package](https://www.nuget.org/packages/Cratis.Fundamentals/) that offers common utilities, formalizations and abstractions.
+C# documentation for Fundamentals .NET package - a [NuGet package](https://www.nuget.org/packages/Cratis.Fundamentals/) that offers common utilities, formalizations and abstractions.
 
 | Topic | Description |
 | ------- | ----------- |

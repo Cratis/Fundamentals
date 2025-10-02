@@ -11,12 +11,12 @@ Fundamentals is a collection of packages that offer common utilities, formalizat
 
 | Section | Description |
 | ------- | ----------- |
-| [Backend](./backend/index.md) | Documentation for the .NET package, including concepts, types, serialization, and more. |
-| [Frontend](./frontend/index.md) | Documentation for the JavaScript/TypeScript package, including utilities and abstractions. |
+| [C#](./csharp/index.md) | Documentation for the .NET package, including concepts, types, serialization, and more. |
+| [TypeScript](./typescript/index.md) | Documentation for the JavaScript/TypeScript package, including utilities and abstractions. |
 
 ## Getting Started
 
 Choose the appropriate section based on your development needs:
 
-- **For .NET developers**: Start with the [Backend documentation](./backend/index.md)
-- **For JavaScript/TypeScript developers**: Start with the [Frontend documentation](./frontend/index.md)
+- **For .NET developers**: Start with the [C# documentation](./csharp/index.md)
+- **For JavaScript/TypeScript developers**: Start with the [TypeScript documentation](./typescript/index.md)
