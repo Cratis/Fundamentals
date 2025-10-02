@@ -2,7 +2,6 @@
   href: index.md
 - name: GUID
   href: guid.md
-- name: Field Decorator
-  href: field_decorator.md
-- name: DerivedTypes
-  href: derived_types.md
+- name: Serialization
+  href: serialization/
+  topicHref: serialization/index.md
