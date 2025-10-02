@@ -5,6 +5,5 @@ Backend documentation for Fundamentals .NET package - a [NuGet package](https://
 | Topic | Description |
 | ------- | ----------- |
 | [Concepts](./concepts.md) | What are concepts and how to work with them. |
-| [Date & Time only](./date_and_time_only.md) | How to work with DateOnly & TimeOnly for serializers and converters. |
 | [Types](./types.md) | How to work with the type discovery mechanism. |
-| [Serialization](./serialization.md) | How to work with serialization. |
+| [Serialization](./serialization/) | How to work with serialization, including JSON serialization and date/time converters. |
