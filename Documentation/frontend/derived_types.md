@@ -2,6 +2,8 @@
 
 The DerivedTypes serialization system in the TypeScript frontend provides seamless polymorphic serialization that works hand-in-hand with the backend .NET implementation. This system allows you to deserialize JSON objects into their correct TypeScript class instances based on type identifiers.
 
+> **Note**: This documentation focuses on derived types and polymorphic serialization. For comprehensive information about the `@field` decorator, including runtime type safety benefits and detailed usage patterns, see [Field Decorator Documentation](field_decorator.md).
+
 ## Overview
 
 The frontend DerivedTypes system consists of:
@@ -99,7 +101,9 @@ const json = JsonSerializer.serialize(newOrder);
 
 ## Field Decorator Parameters
 
-The `@field` decorator accepts three parameters:
+The `@field` decorator is essential for defining serializable properties. For comprehensive documentation on the `@field` decorator, including all parameters, usage patterns, and runtime type safety benefits, see [Field Decorator Documentation](field_decorator.md).
+
+### Quick Reference
 
 ```typescript
 @field(targetType: Constructor, enumerable?: boolean, derivatives?: Constructor[])
@@ -344,6 +348,18 @@ function deserializePayments<T extends IPaymentMethod>(
 
 const creditCards = deserializePayments(json, CreditCard);
 ```
+
+## Runtime Type Safety
+
+The `@field` decorator system provides significant runtime type safety benefits beyond TypeScript's compile-time checking. For detailed information about runtime type safety, including comprehensive examples and comparisons, see the [Field Decorator Documentation](field_decorator.md#runtime-type-safety-benefits).
+
+Key benefits include:
+
+- True runtime class instances instead of plain objects
+- Full method access on deserialized objects
+- Automatic polymorphic type resolution
+- Type-safe business logic execution
+- Proper handling of complex nested object graphs
 
 ## Performance Considerations
 
