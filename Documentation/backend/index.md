@@ -5,5 +5,6 @@ Backend documentation for Fundamentals .NET package - a [NuGet package](https://
 | Topic | Description |
 | ------- | ----------- |
 | [Concepts](./concepts.md) | What are concepts and how to work with them. |
+| [Dependency Injection](./dependency_injection.md) | Convention-based dependency injection utilities for service registration. |
 | [Types](./types.md) | How to work with the type discovery mechanism. |
 | [Serialization](./serialization/) | How to work with serialization, including JSON serialization and date/time converters. |
