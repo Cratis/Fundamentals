@@ -1,8 +1,10 @@
+- name: Overview
+  href: index.md
 - name: Concepts
   href: concepts.md
-- name: Serialization
-  href: serialization/
 - name: Types
   href: types.md
-- name: Api
+- name: Serialization
+  href: serialization/
+- name: API Reference
   href: ../../api/fundamentals/

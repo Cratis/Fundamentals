@@ -1,29 +1,24 @@
 # Types
 
-Within the fundamentals of you'll find a package called `Cratis.Types`.
-This package provides mechanisms for discovering types in the project referenced assemblies
-you have in your project. It will look at the entry assembly and find all its project references
-at runtime and index the types from all of these.
+The fundamentals package includes `Cratis.Types`, which provides mechanisms for discovering types in the project referenced assemblies.
+It examines the entry assembly and finds all its project references at runtime, indexing the types from all of these assemblies.
 
-The type discovery system is meant to make it easier to automate tasks at runtime, for instance
-remove the need for configuration of types to include in a system and discover them based on your
-criteria instead.
+The type discovery system automates tasks at runtime, for instance removing the need for manual configuration of types to include in a system by discovering them based on your criteria instead.
 
-If you want to bypass any automatic hookup of the system, you can manually create an instance of
-the class called `Types` in the `Cratis.Types` namespace. This implements the interface `ITypes`.
+If you want to bypass any automatic hookup of the system, you can manually create an instance of the `Types` class in the `Cratis.Types` namespace. This class implements the `ITypes` interface.
 
-## Assembly prefixes
+## Assembly Prefixes
 
-By default the `Types` system will load all referenced project and package assemblies.
-You can exclude assemblies by using the static method called `Types.AddAssemblyPrefixesToExclude()`.
-This takes a `params` of strings of prefixes to assemblies to exclude.
-Out of the box, it will ignore things like `System`, `Microsoft`, `Newtonsoft`.
+By default, the `Types` system will load all referenced project and package assemblies.
+You can exclude assemblies by using the static method `Types.AddAssemblyPrefixesToExclude()`.
+This takes a `params` of strings representing prefixes of assemblies to exclude.
+Out of the box, it ignores assemblies like `System`, `Microsoft`, and `Newtonsoft`.
 
-On the flip side of this, the constructor for `Types` supports taking an explicit 'opt-in' filter for including assemblies
-in type discovery. This will make it possible to include more assemblies in addition.
+Alternatively, the constructor for `Types` supports taking an explicit 'opt-in' filter for including assemblies
+in type discovery. This allows you to include additional assemblies beyond the defaults.
 
-For both filters the strings you pass to it are considered prefixes, meaning that if you want to include
-a set of assemblies all starting with the same string, you simply put the common start.
+For both filters, the strings you pass are considered prefixes, meaning that if you want to include
+a set of assemblies all starting with the same string, you simply provide the common start.
 
 ```csharp
 using Cratis.Types;
@@ -35,10 +30,10 @@ var types = new Types("Microsoft","SomeOther");
 
 ## Type Discovery
 
-There are basically 2 ways of discovering types:
+There are basically two ways of discovering types:
 
-* Using the APIs found in `ITypes` where you can easily get access to all discovered types or find types based on common base types / interfaces.
-* Use the `IImplementationsOf<>` as a dependency and get all implementations of a specific type using generic parameters.
+- Using the APIs found in `ITypes` where you can easily get access to all discovered types or find types based on common base types/interfaces.
+- Use the `IImplementationsOf<>` as a dependency and get all implementations of a specific type using generic parameters.
 
 ```csharp
 using Cratis.Types;
@@ -51,7 +46,7 @@ public class MySystem
         types.FindMultiple<ISomeInterface>();
 
         // ... or using its Type
-        types.FindMultiple(typeof(ISomeInterfaec));
+        types.FindMultiple(typeof(ISomeInterface));
     }
 }
 ```
@@ -72,9 +67,9 @@ public class MySystem
 
 > Note: The `ITypes` interface also has an `All` property where you can basically filter types based on your own custom criteria.
 
-## As instances
+## As Instances
 
-A common scenario is to discover types were the implementation has dependencies themselves and instances would need to be resolved using
+A common scenario is to discover types where the implementation has dependencies themselves and instances need to be resolved using
 the IoC container. The `IImplementationsOf<>` interface provides this mechanism in a convenient way.
 
 ```csharp

@@ -1,10 +1,10 @@
-# Serialization
+# JSON Serialization
 
 ## JsonSerializerOptions
 
-When using the `.AddControllersFromProjectReferencedAssembles()` method, it sets up the default JSON options for serialization for API controllers.
-Within this it will set up support for [concepts](./concepts.md) and types such as the `DateOnly`, `TimeOnly` and more converters.
-The options are set up for the ASP.NET pipelines as the default options.
+When using the `.AddControllersFromProjectReferencedAssemblies()` method, it sets up the default JSON options for serialization for API controllers.
+This configuration includes support for [concepts](../concepts.md), `DateOnly`, `TimeOnly`, and additional converters.
+The options are set up as the default options for the ASP.NET pipelines.
 
 If you want to have access to the default `JsonSerializerOptions` in your own code, you can simply take a dependency in your constructor to it:
 
@@ -20,25 +20,25 @@ public class MyService
 }
 ```
 
-Default behavior for the JSON serializer options is also to use **camelCase** instead of **PascalCase** and it will automatically translate between
+Default behavior for the JSON serializer options is to use **camelCase** instead of **PascalCase** and automatically translate between
 the two when serializing and deserializing.
 
-## Polymorphism and type discriminators
+## Polymorphism and Type Discriminators
 
-When working with polymorphism and serialization, the serializers don't generally know what the concrete type that it should be serializing from and
-deserializing to. It needs something that helps it identify what the actual type is in order to do so.
+When working with polymorphism and serialization, serializers don't generally know the concrete type that should be used for serializing from and
+deserializing to. They need something that helps identify the actual type to perform the operation.
 
-Different serializers deal with this in different ways. Therefor we have implemented an approach that can be adopted into the different serializers,
-without having different approaches to this and having serializer specific metadata.
+Different serializers deal with this in different ways. Therefore, we have implemented an approach that can be adopted into different serializers,
+without having different approaches and serializer-specific metadata.
 
 When serializing to a target format from a type, serializers tend to include type information to be able to deserialize it to the same type.
-The problem with this approach is that when persisting this to a database you're code and database has to match and you can't rename or maybe not
-even move your code to another namespace. Some serializers offer a way to define a discriminator which could be a string, or a unique identifier
-identifying it that does not couple oneself to the name.
+The problem with this approach is that when persisting this to a database, your code and database have to match and you can't rename or move
+your code to another namespace. Some serializers offer a way to define a discriminator which could be a string or a unique identifier
+that does not couple you to the name.
 
-In the Aksio Fundamentals, we have taken the latter approach, but made it a consistent approach independent of the serializers.
+In the Cratis Fundamentals, we have taken the latter approach, but made it a consistent approach independent of the serializers.
 
-Lets say you have an interface like below:
+Let's say you have an interface like below:
 
 ```csharp
 public interface IAccount
@@ -49,8 +49,8 @@ public interface IAccount
 }
 ```
 
-To create a concrete implementations of this, all you need is to add a `[DerivedType]` attribute in front of it.
-So for our sample, lets say we add a `DebitAccount` and a `CreditAccount`:
+To create concrete implementations of this, all you need is to add a `[DerivedType]` attribute in front of it.
+So for our sample, let's say we add a `DebitAccount` and a `CreditAccount`:
 
 ```csharp
 using Cratis.Serialization;
@@ -62,12 +62,12 @@ public record DebitAccount(AccountId Id, AccountName Name, AccountType Type) : I
 public record CreditAccount(AccountId Id, AccountName Name, AccountType Type) : IAccount;
 ```
 
-The `[DerivedType]` attribute requires a unique identifier in the form of a string representation og a `Guid`.
+The `[DerivedType]` attribute requires a unique identifier in the form of a string representation of a `Guid`.
 
 ### JSON
 
 The JSON serializer will add a `_derivedTypeId` to the payload referring to the type discriminator of the type.
-With this the consumer can recognize the type.
+With this, the consumer can recognize the type.
 
 ### Client
 

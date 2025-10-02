@@ -1,1 +1,4 @@
-# Frontend documentation placeholder - will be expanded as frontend docs are developed
+- name: Overview
+  href: index.md
+- name: GUID
+  href: guid.md
