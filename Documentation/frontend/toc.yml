@@ -2,3 +2,5 @@
   href: index.md
 - name: GUID
   href: guid.md
+- name: DerivedTypes
+  href: derived_types.md

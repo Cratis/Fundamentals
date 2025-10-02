@@ -2,3 +2,5 @@
   href: backend/
 - name: Frontend (JavaScript/TypeScript)
   href: frontend/
+- name: DerivedTypes Integration
+  href: derived_types_integration.md

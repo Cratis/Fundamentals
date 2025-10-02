@@ -1,4 +1,6 @@
 - name: JSON Serialization
   href: serialization.md
+- name: DerivedTypes
+  href: derived_types.md
 - name: Date & Time Only
   href: date_and_time_only.md
