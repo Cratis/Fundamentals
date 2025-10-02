@@ -6,6 +6,8 @@
   href: dependency_injection.md
 - name: Types
   href: types.md
+- name: Metrics
+  href: metrics/
 - name: Serialization
   href: serialization/
 - name: API Reference
