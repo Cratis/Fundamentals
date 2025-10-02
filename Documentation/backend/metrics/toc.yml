@@ -1,4 +1,4 @@
-- name: index.md
+- name: Overview
   href: index.md
-- name: roslyn.md
+- name: Roslyn
   href: roslyn.md

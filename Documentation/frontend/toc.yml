@@ -3,5 +3,5 @@
 - name: GUID
   href: guid.md
 - name: Serialization
-  href: serialization/
+  href: serialization/toc.yml
   topicHref: serialization/index.md

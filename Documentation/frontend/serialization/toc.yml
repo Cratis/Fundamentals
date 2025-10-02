@@ -2,5 +2,5 @@
   href: index.md
 - name: Field Decorator
   href: field_decorator.md
-- name: DerivedTypes
+- name: Derived Types
   href: derived_types.md
