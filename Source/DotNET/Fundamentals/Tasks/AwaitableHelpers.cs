@@ -36,7 +36,6 @@ public static class AwaitableHelpers
             return (true, GetResultFromAwaitableIfPresent(task, TaskResultPropertyName));
         }
 
-        var type = maybeAwaitable.GetType();
 
         if (maybeAwaitable is ValueTask valueTask)
         {
@@ -44,6 +43,7 @@ public static class AwaitableHelpers
             return (true, null);
         }
 
+        var type = maybeAwaitable.GetType();
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ValueTask<>))
         {
             var asTaskMethod = type.GetMethod(ValueTaskAsTaskMethodName, BindingFlags.Instance | BindingFlags.Public);
