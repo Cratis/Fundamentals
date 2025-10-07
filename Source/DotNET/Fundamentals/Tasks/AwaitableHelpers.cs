@@ -36,7 +36,6 @@ public static class AwaitableHelpers
             return (true, GetResultFromAwaitableIfPresent(task, TaskResultPropertyName));
         }
 
-
         if (maybeAwaitable is ValueTask valueTask)
         {
             await valueTask.ConfigureAwait(false);
