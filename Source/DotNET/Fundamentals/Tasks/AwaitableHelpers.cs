@@ -18,6 +18,9 @@ public static class AwaitableHelpers
     /// <summary>
     /// Awaits the given object if it is awaitable.
     /// </summary>
+    /// <remarks>
+    /// Supports <see cref="Task"/>, <see cref="Task{TResult}"/>, <see cref="ValueTask"/> and <see cref="ValueTask{TResult}"/>.
+    /// </remarks>
     /// <param name="maybeAwaitable">The <see cref="object"/> that is maybe awaitable.</param>
     /// <returns>A <see cref="ValueTask{T}"/> with a tuple of a boolean indicating whether the object was awaitable and the nullable result object.</returns>
     public static async ValueTask<(bool IsAwaitable, object? Result)> AwaitIfNeeded(object? maybeAwaitable)
