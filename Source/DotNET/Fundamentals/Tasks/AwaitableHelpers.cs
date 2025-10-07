@@ -51,7 +51,7 @@ public static class AwaitableHelpers
             return (true, GetResultFromAwaitableIfPresent(taskObj, ValueTaskResultPropertyName));
         }
 
-        return (false, null);
+        return (false, maybeAwaitable);
     }
 
     static object? GetResultFromAwaitableIfPresent(object task, string resultPropertyName)

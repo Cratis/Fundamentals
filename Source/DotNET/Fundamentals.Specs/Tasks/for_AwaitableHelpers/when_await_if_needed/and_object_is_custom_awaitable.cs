@@ -14,7 +14,7 @@ public class and_object_is_custom_awaitable : given.the_helper
     Task Because() => AwaitIfNeeded();
 
     [Fact] void should_indicate_it_was_not_awaitable() => Result.IsAwaitable.ShouldBeFalse();
-    [Fact] void should_return_no_result() => Result.Result.ShouldBeNull();
+    [Fact] void should_return_result() => Result.Result.ShouldNotBeNull();
 
     class CustomAwaitable
     {
