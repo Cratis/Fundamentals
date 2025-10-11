@@ -11,9 +11,9 @@ namespace Cratis.Tasks;
 public static class AwaitableHelpers
 {
     const string VoidTaskResultTypeFullName = "System.Threading.Tasks.VoidTaskResult";
-    const string TaskResultPropertyName = nameof(Task<int>.Result);
-    const string ValueTaskResultPropertyName = nameof(ValueTask<int>.Result);
-    const string ValueTaskAsTaskMethodName = nameof(ValueTask<int>.AsTask);
+    const string TaskResultPropertyName = nameof(Task<>.Result);
+    const string ValueTaskResultPropertyName = nameof(ValueTask<>.Result);
+    const string ValueTaskAsTaskMethodName = nameof(ValueTask<>.AsTask);
 
     /// <summary>
     /// Awaits the given object if it is awaitable.
