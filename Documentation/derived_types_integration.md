@@ -10,12 +10,12 @@ The DerivedTypes system creates a bridge between strongly-typed C# classes and T
 
 ### Unique Type Identifiers
 
-Both backend and frontend use GUID-based identifiers that must match exactly:
+Both backend and frontend use unique string identifiers that must match exactly:
 
 **Backend (.NET)**:
 
 ```csharp
-[DerivedType("550e8400-e29b-41d4-a716-446655440001")]
+[DerivedType("credit-card")]
 public class CreditCard : IPaymentMethod
 {
     public decimal Amount { get; set; }
@@ -26,7 +26,7 @@ public class CreditCard : IPaymentMethod
 **Frontend (TypeScript)**:
 
 ```typescript
-@derivedType('550e8400-e29b-41d4-a716-446655440001')
+@derivedType('credit-card')
 export class CreditCard implements IPaymentMethod {
     @field(Number)
     amount!: number;
@@ -35,6 +35,8 @@ export class CreditCard implements IPaymentMethod {
     cardNumber!: string;
 }
 ```
+
+> **Uniqueness Requirement**: Derived type IDs must be unique per interface. Use descriptive strings (e.g., `'credit-card'`, `'paypal'`) for readability, or GUIDs for maximum uniqueness (though with reduced readability). Whatever format you choose, ensure these identifiers are **centralized in shared constants** to maintain consistency across both backend and frontend.
 
 ### JSON Wire Format
 
@@ -45,7 +47,7 @@ Both systems produce and consume identical JSON:
   "paymentMethod": {
     "amount": 99.99,
     "cardNumber": "****-1234",
-    "_derivedTypeId": "550e8400-e29b-41d4-a716-446655440001"
+    "_derivedTypeId": "credit-card"
   }
 }
 ```
@@ -101,7 +103,7 @@ public interface IPaymentMethod
     decimal Amount { get; set; }
 }
 
-[DerivedType("550e8400-e29b-41d4-a716-446655440001")]
+[DerivedType("credit-card")]
 public class CreditCard : IPaymentMethod
 {
     public decimal Amount { get; set; }
@@ -109,7 +111,7 @@ public class CreditCard : IPaymentMethod
     public string ExpiryDate { get; set; }
 }
 
-[DerivedType("550e8400-e29b-41d4-a716-446655440002")]
+[DerivedType("paypal")]
 public class PayPal : IPaymentMethod
 {
     public decimal Amount { get; set; }
@@ -130,12 +132,13 @@ public class PaymentResult
 ```
 
 **Frontend Models** (mirroring backend):
+
 ```typescript
 export interface IPaymentMethod {
     amount: number;
 }
 
-@derivedType('550e8400-e29b-41d4-a716-446655440001')
+@derivedType('credit-card')
 export class CreditCard implements IPaymentMethod {
     @field(Number)
     amount!: number;
@@ -147,7 +150,7 @@ export class CreditCard implements IPaymentMethod {
     expiryDate!: string;
 }
 
-@derivedType('550e8400-e29b-41d4-a716-446655440002')
+@derivedType('paypal')
 export class PayPal implements IPaymentMethod {
     @field(Number)
     amount!: number;
@@ -317,34 +320,82 @@ Maintain a shared understanding of types:
 Configure JSON serialization to use consistent casing:
 
 **Backend**:
+
 ```csharp
 options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 ```
 
 **Frontend**:
+
 ```typescript
 // Field decorators already use camelCase property names
 @field(String)
 cardNumber!: string; // Serializes as "cardNumber"
 ```
 
-### 3. Version Management
+### 3. Centralize Type Identifiers (Magic Strings)
 
-Use meaningful version identifiers for evolution:
+Store derived type identifiers in shared constants to ensure consistency and ease maintenance:
+
+**Backend (C#)**:
 
 ```csharp
-[DerivedType("creditcard-v1-550e8400-e29b-41d4-a716-446655440001")]
+public static class DerivedTypeIds
+{
+    public const string CreditCard = "credit-card";
+    public const string PayPal = "paypal";
+    public const string BankTransfer = "bank-transfer";
+}
+
+[DerivedType(DerivedTypeIds.CreditCard)]
 public class CreditCard : IPaymentMethod { }
 
-[DerivedType("creditcard-v2-550e8400-e29b-41d4-a716-446655440002")]
-public class CreditCardV2 : IPaymentMethod { }
+[DerivedType(DerivedTypeIds.PayPal)]
+public class PayPal : IPaymentMethod { }
 ```
 
-### 4. Error Handling
+**Frontend (TypeScript)**:
+
+```typescript
+export const DERIVED_TYPE_IDS = {
+    CREDIT_CARD: 'credit-card',
+    PAYPAL: 'paypal',
+    BANK_TRANSFER: 'bank-transfer',
+} as const;
+
+@derivedType(DERIVED_TYPE_IDS.CREDIT_CARD)
+export class CreditCard implements IPaymentMethod { }
+
+@derivedType(DERIVED_TYPE_IDS.PAYPAL)
+export class PayPal implements IPaymentMethod { }
+```
+
+> **Why centralize?** These "magic strings" are critical for serialization consistency. Centralizing them prevents duplicates across your codebase, makes it easy to maintain and update, and ensures the frontend and backend remain synchronized.
+
+### 4. Consistent Naming Conventions
+
+Configure JSON serialization to use consistent casing:
+
+**Backend**:
+
+```csharp
+options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+```
+
+**Frontend**:
+
+```typescript
+// Field decorators already use camelCase property names
+@field(String)
+cardNumber!: string; // Serializes as "cardNumber"
+```
+
+### 5. Error Handling
 
 Handle deserialization failures gracefully:
 
 **Frontend**:
+
 ```typescript
 try {
     const result = JsonSerializer.deserialize(PaymentResult, json);
@@ -357,6 +408,7 @@ try {
 ```
 
 **Backend**:
+
 ```csharp
 try
 {
@@ -370,7 +422,7 @@ catch (JsonException ex)
 }
 ```
 
-### 5. Testing Integration
+### 6. Testing Integration
 
 Test the complete round-trip:
 
@@ -402,25 +454,30 @@ describe('Payment integration', () => {
 
 ### 1. Mismatched Type IDs
 
-**Problem**: Frontend and backend have different GUIDs for the same type.
-**Solution**: Use shared constants or code generation.
+**Problem**: Frontend and backend have different identifiers for the same type.
+**Solution**: Use shared constants files to centralize derived type IDs (e.g., `DerivedTypeIds.cs` and `derivedTypeIds.ts`).
 
-### 2. Missing Derivatives Lists
+### 2. Duplicate Magic Strings
+
+**Problem**: Type identifiers duplicated across multiple files, making updates error-prone.
+**Solution**: Centralize all derived type IDs in a single shared location and import from there.
+
+### 3. Missing Derivatives Lists
 
 **Problem**: Frontend field decorators missing derivatives parameter.
 **Solution**: Always specify derivatives for polymorphic fields.
 
-### 3. Case Sensitivity
+### 4. Case Sensitivity
 
 **Problem**: Property names don't match between frontend and backend.
 **Solution**: Configure consistent casing policies.
 
-### 4. Missing Field Decorators
+### 5. Missing Field Decorators
 
 **Problem**: TypeScript properties without `@field` decorators aren't serialized.
 **Solution**: Decorate all serializable properties.
 
-### 5. Type Registration Order
+### 6. Type Registration Order
 
 **Problem**: Derived types not registered before serialization.
 **Solution**: Ensure all classes are imported before use.

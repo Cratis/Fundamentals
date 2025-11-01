@@ -19,6 +19,8 @@ The `JsonSerializer` bridges the gap between JSON data and strongly-typed TypeSc
 Instead of plain JavaScript objects from `JSON.parse()`, the `JsonSerializer` creates actual class instances:
 
 ```typescript
+import { JsonSerializer } from '@cratis/fundamentals';
+
 // Traditional approach - loses type information
 const json = `{"name":"John","age":30}`;
 const user = JSON.parse(json); // Plain object, not a User

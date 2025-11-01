@@ -20,7 +20,9 @@ The DerivedTypes system consists of several key components:
 
 ### Unique Identifiers
 
-Each derived type must have a globally unique identifier (GUID) that remains constant across versions. This identifier is used during serialization to determine which concrete type to instantiate during deserialization.
+Each derived type must have a unique string identifier that remains constant across versions. This identifier is used during serialization to determine which concrete type to instantiate during deserialization.
+
+The recommended approach is to use **descriptive strings** (e.g., `"credit-card"`, `"paypal"`) for readability. See the Uniqueness Requirements section below for details and alternatives.
 
 ## Usage
 
@@ -36,7 +38,7 @@ public interface IPaymentMethod
 ### 2. Create Derived Types
 
 ```csharp
-[DerivedType("550e8400-e29b-41d4-a716-446655440001")]
+[DerivedType("credit-card")]
 public class CreditCard : IPaymentMethod
 {
     public decimal Amount { get; set; }
@@ -44,7 +46,7 @@ public class CreditCard : IPaymentMethod
     public string ExpiryDate { get; set; }
 }
 
-[DerivedType("550e8400-e29b-41d4-a716-446655440002")]
+[DerivedType("paypal")]
 public class PayPal : IPaymentMethod
 {
     public decimal Amount { get; set; }
@@ -83,10 +85,36 @@ When serialized, derived types include a special `_derivedTypeId` property:
     "amount": 99.99,
     "cardNumber": "****-****-****-1234",
     "expiryDate": "12/25",
-    "_derivedTypeId": "550e8400-e29b-41d4-a716-446655440001"
+    "_derivedTypeId": "credit-card"
   }
 }
 ```
+
+## Uniqueness Requirements
+
+Derived type IDs must be **unique per interface** to enable proper polymorphic deserialization. While you can use any string format, using descriptive identifiers is recommended for readability:
+
+**Good approach** - Descriptive and unique:
+
+```csharp
+[DerivedType("credit-card")]
+public class CreditCard : IPaymentMethod { }
+
+[DerivedType("paypal")]
+public class PayPal : IPaymentMethod { }
+```
+
+**Alternative approach** - Using GUIDs for maximum uniqueness:
+
+```csharp
+[DerivedType("550e8400-e29b-41d4-a716-446655440001")]
+public class CreditCard : IPaymentMethod { }
+
+[DerivedType("550e8400-e29b-41d4-a716-446655440002")]
+public class PayPal : IPaymentMethod { }
+```
+
+> **Note on GUIDs**: While GUIDs guarantee uniqueness, they sacrifice readability. If using GUIDs, ensure they are stored in shared constants to maintain consistency across your codebase and frontend services.
 
 ## Advanced Scenarios
 
@@ -130,27 +158,40 @@ The system provides specific exceptions for common issues:
 
 ### 1. Stable Identifiers
 
-Always use stable GUIDs that won't change across versions:
+Always use stable identifiers that won't change across versions:
 
 ```csharp
-// ✅ Good - Use a stable GUID
-[DerivedType("550e8400-e29b-41d4-a716-446655440001")]
+// ✅ Good - Use a stable descriptive string
+[DerivedType("credit-card")]
 public class CreditCard : IPaymentMethod { }
 
-// ❌ Bad - Don't generate GUIDs dynamically
+// ❌ Bad - Don't generate identifiers dynamically
 [DerivedType(Guid.NewGuid().ToString())]
 public class PayPal : IPaymentMethod { }
 ```
 
-### 2. Meaningful Identifiers
+### 2. Centralize Type Identifiers (Magic Strings)
 
-Consider using meaningful GUID generation for better maintainability:
+Store derived type identifiers in a shared constants file to ensure consistency across your codebase:
 
 ```csharp
-// Generate from namespace + type name for consistency
-[DerivedType("550e8400-e29b-41d4-a716-446655440001")] // MyApp.Payments.CreditCard
+// Constants/DerivedTypeIds.cs
+public static class DerivedTypeIds
+{
+    public const string CreditCard = "credit-card";
+    public const string PayPal = "paypal";
+    public const string BankTransfer = "bank-transfer";
+}
+
+// Usage
+[DerivedType(DerivedTypeIds.CreditCard)]
 public class CreditCard : IPaymentMethod { }
+
+[DerivedType(DerivedTypeIds.PayPal)]
+public class PayPal : IPaymentMethod { }
 ```
+
+> **Why centralize?** These "magic strings" are critical for serialization consistency. Centralizing them prevents duplicates across your codebase, makes it easy to maintain and update, and ensures frontend and backend remain synchronized.
 
 ### 3. Interface Design
 
@@ -227,7 +268,7 @@ public interface IEvent
     DateTime Timestamp { get; }
 }
 
-[DerivedType("events-user-created-v1")]
+[DerivedType("user-created")]
 public class UserCreated : IEvent
 {
     public DateTime Timestamp { get; set; }
@@ -243,7 +284,7 @@ Perfect for CQRS implementations:
 ```csharp
 public interface ICommand { }
 
-[DerivedType("commands-create-user-v1")]
+[DerivedType("create-user")]
 public class CreateUser : ICommand
 {
     public string Email { get; set; }

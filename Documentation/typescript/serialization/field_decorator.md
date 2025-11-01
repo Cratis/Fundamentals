@@ -18,7 +18,7 @@ Key capabilities:
 ### Simple Field Declaration
 
 ```typescript
-import { field } from '../fieldDecorator';
+import { field } from '@cratis/fundamentals';
 
 export class User {
     @field(String)

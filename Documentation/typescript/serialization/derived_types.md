@@ -20,13 +20,39 @@ The frontend DerivedTypes system consists of:
 
 The frontend uses TypeScript decorators and reflect-metadata to store type information:
 
-- **Derived Type IDs**: GUIDs that must match exactly with backend `[DerivedType]` attributes
+- **Derived Type IDs**: Unique string identifiers that must match exactly with backend `[DerivedType]` attributes
 - **Field Metadata**: Information about properties including their types and possible derivatives
 - **Runtime Type Resolution**: Dynamic instantiation of correct classes during deserialization
 
 ### Decorator-Based Configuration
 
 Unlike the backend's attribute-based approach, the frontend uses decorators to mark classes and fields with metadata.
+
+## Uniqueness Requirements
+
+Derived type IDs must be **unique per interface** to enable proper polymorphic deserialization. While you can use any string format, using descriptive identifiers is recommended for readability:
+
+**Good approach** - Descriptive and unique:
+
+```typescript
+@derivedType('credit-card')
+export class CreditCard implements IPaymentMethod { }
+
+@derivedType('paypal')
+export class PayPal implements IPaymentMethod { }
+```
+
+**Alternative approach** - Using GUIDs for maximum uniqueness:
+
+```typescript
+@derivedType('550e8400-e29b-41d4-a716-446655440001')
+export class CreditCard implements IPaymentMethod { }
+
+@derivedType('550e8400-e29b-41d4-a716-446655440002')
+export class PayPal implements IPaymentMethod { }
+```
+
+> **Note on GUIDs**: While GUIDs guarantee uniqueness, they sacrifice readability. If using GUIDs, ensure they are stored in shared constants or configuration to maintain consistency across your codebase and backend services.
 
 ## Usage
 
@@ -41,10 +67,10 @@ export interface IPaymentMethod {
 ### 2. Create Derived Types
 
 ```typescript
-import { derivedType } from '../derivedTypeDecorator';
-import { field } from '../fieldDecorator';
+import { derivedType } from '@cratis/fundamentals';
+import { field } from '@cratis/fundamentals';
 
-@derivedType('550e8400-e29b-41d4-a716-446655440001')
+@derivedType('credit-card')
 export class CreditCard implements IPaymentMethod {
     @field(Number)
     amount!: number;
@@ -56,7 +82,7 @@ export class CreditCard implements IPaymentMethod {
     expiryDate!: string;
 }
 
-@derivedType('550e8400-e29b-41d4-a716-446655440002')
+@derivedType('paypal')
 export class PayPal implements IPaymentMethod {
     @field(Number)
     amount!: number;
@@ -104,7 +130,7 @@ The frontend produces the same JSON format as the backend:
     "amount": 99.99,
     "cardNumber": "****-1234",
     "expiryDate": "12/25",
-    "_derivedTypeId": "550e8400-e29b-41d4-a716-446655440001"
+    "_derivedTypeId": "credit-card"
   }
 }
 ```
@@ -184,17 +210,39 @@ Ensure derived type IDs match exactly between frontend and backend:
 
 ```typescript
 // Frontend
-@derivedType('550e8400-e29b-41d4-a716-446655440001')
+@derivedType('credit-card')
 export class CreditCard implements IPaymentMethod { }
 ```
 
 ```csharp
 // Backend
-[DerivedType("550e8400-e29b-41d4-a716-446655440001")]
+[DerivedType("credit-card")]
 public class CreditCard : IPaymentMethod { }
 ```
 
-### 2. Complete Field Decoration
+### 2. Centralize Type Identifiers
+
+Store derived type IDs in a single location to avoid duplication and ensure consistency:
+
+```typescript
+// constants/derivedTypeIds.ts
+export const DERIVED_TYPE_IDS = {
+    CREDIT_CARD: 'credit-card',
+    PAYPAL: 'paypal',
+    BANK_TRANSFER: 'bank-transfer',
+} as const;
+
+// usage
+@derivedType(DERIVED_TYPE_IDS.CREDIT_CARD)
+export class CreditCard implements IPaymentMethod { }
+
+@derivedType(DERIVED_TYPE_IDS.PAYPAL)
+export class PayPal implements IPaymentMethod { }
+```
+
+> **Why centralize?** These "magic strings" are critical for serialization consistency. Centralizing them in one place prevents duplicates, makes them easy to maintain, and ensures frontend and backend stay synchronized.
+
+### 3. Complete Field Decoration
 
 Decorate all serializable properties:
 
@@ -215,7 +263,7 @@ export class CreditCard implements IPaymentMethod {
 }
 ```
 
-### 3. Explicit Derivative Lists
+### 4. Explicit Derivative Lists
 
 Always specify derivatives for polymorphic fields:
 
@@ -229,7 +277,7 @@ paymentMethod!: IPaymentMethod;
 paymentMethod!: IPaymentMethod;
 ```
 
-### 4. Interface Consistency
+### 5. Interface Consistency
 
 Keep interfaces synchronized between frontend and backend:
 
@@ -240,7 +288,7 @@ export interface IPaymentMethod {
 }
 ```
 
-### 5. Testing
+### 6. Testing
 
 Test serialization round-trips:
 
