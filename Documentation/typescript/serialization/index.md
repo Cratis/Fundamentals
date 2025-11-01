@@ -22,6 +22,7 @@ The serialization system consists of two main components that work together to p
 
 | Topic | Description |
 | ------- | ----------- |
+| [JsonSerializer](./json_serializer.md) | The core utility for type-safe JSON serialization and deserialization with runtime type preservation and method access. |
 | [Field Decorator](./field_decorator.md) | The `@field` decorator for runtime type information and proper object deserialization with full type safety. |
 | [DerivedTypes](./derived_types.md) | Polymorphic serialization system that works with backend .NET implementation for type-safe object resolution. |
 

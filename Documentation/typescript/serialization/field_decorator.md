@@ -1,14 +1,15 @@
 # @field Decorator
 
-The `@field` decorator is a fundamental component of the TypeScript serialization system that provides runtime type information and enables proper object deserialization with full type safety. It works hand-in-hand with the `JsonSerializer` to ensure that JSON data is deserialized into actual class instances with complete method access.
+The `@field` decorator is a fundamental component of the TypeScript serialization system that provides runtime type information and enables proper object deserialization with full type safety.
 
 ## Overview
 
-The `@field` decorator system transforms TypeScript's compile-time type information into runtime metadata, enabling:
+The `@field` decorator system transforms TypeScript's compile-time type information into runtime metadata, enabling runtime type safety and proper deserialization. It works seamlessly with the `JsonSerializer` for complete type-safe serialization.
 
-- **True Runtime Types**: Deserialized objects are actual class instances, not plain JavaScript objects
-- **Method Access**: Full access to class methods and business logic on deserialized instances
-- **Polymorphic Deserialization**: Automatic resolution of derived types based on type identifiers
+Key capabilities:
+
+- **Runtime Type Metadata**: Compile-time types converted to runtime metadata
+- **Proper Deserialization**: Works with `JsonSerializer` to create actual class instances
 - **Type-Safe Collections**: Proper typing for arrays and complex nested objects
 - **Deep Object Graphs**: Maintaining correct types throughout complex object hierarchies
 
@@ -292,44 +293,7 @@ console.log(account.lastTransaction instanceof Date); // true
 
 ## Serialization and Deserialization
 
-### Basic Serialization
-
-```typescript
-const user = new User();
-user.name = "John";
-user.age = 30;
-user.createdAt = new Date();
-
-const json = JsonSerializer.serialize(user);
-console.log(json);
-// Output: {"name":"John","age":30,"createdAt":"2023-01-01T00:00:00.000Z"}
-```
-
-### Basic Deserialization
-
-```typescript
-const json = `{"name":"John","age":30,"createdAt":"2023-01-01T00:00:00.000Z"}`;
-const user = JsonSerializer.deserialize(User, json);
-
-console.log(user instanceof User); // true
-console.log(user.name); // "John"
-console.log(user.createdAt instanceof Date); // true
-```
-
-### Array Deserialization
-
-```typescript
-const json = `[
-    {"name":"John","age":30},
-    {"name":"Jane","age":25}
-]`;
-
-const users = JsonSerializer.deserializeArray(User, json);
-users.forEach(user => {
-    console.log(user instanceof User); // true for each
-    console.log(user.getDisplayName()); // Method available
-});
-```
+For detailed information about serialization and deserialization operations, see the [JsonSerializer Documentation](./json_serializer.md).
 
 ## Type System Integration
 
@@ -522,4 +486,10 @@ import 'reflect-metadata';
 // Import this before any decorated classes
 ```
 
-The `@field` decorator system provides a robust foundation for type-safe serialization in TypeScript applications, bridging the gap between compile-time type safety and runtime object integrity.
+The `@field` decorator system provides a robust foundation for type-safe serialization in TypeScript applications, working together with the `JsonSerializer` to bridge the gap between compile-time type safety and runtime object integrity.
+
+## See Also
+
+- [JsonSerializer](./json_serializer.md) - Core serialization utility for type-safe JSON conversion
+- [Derived Types](./derived_types.md) - Polymorphic type handling and interface implementations
+
