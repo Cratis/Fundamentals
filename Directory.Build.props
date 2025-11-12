@@ -19,7 +19,7 @@
         <EnableNETAnalyzers>True</EnableNETAnalyzers>
         <AnalysisMode>AllEnabledByDefault</AnalysisMode>
 
-        <NoWarn>NU1507</NoWarn>
+        <NoWarn>NU1507;NU1510</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'==''">
@@ -27,11 +27,11 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
