@@ -11,7 +11,7 @@ The Fundamentals frontend package provides JavaScript/TypeScript equivalents and
 | Topic | Description |
 | ------- | ----------- |
 | [GUID](./guid.md) | GUID creation, manipulation, and utility functions for unique identifiers. |
-| [Serialization](./serialization/) | Type-safe JSON serialization and deserialization system with polymorphic support and runtime type preservation. |
+| [Serialization](./serialization/index.md) | Type-safe JSON serialization and deserialization system with polymorphic support and runtime type preservation. |
 
 ## Installation
 
