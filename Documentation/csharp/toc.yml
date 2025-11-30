@@ -11,4 +11,4 @@
 - name: Serialization
   href: serialization/toc.yml
 - name: API Reference
-  href: ../../api/fundamentals/
+  href: ../../../api/fundamentals/
