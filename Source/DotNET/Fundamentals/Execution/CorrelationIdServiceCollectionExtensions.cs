@@ -18,6 +18,7 @@ public static class CorrelationIdServiceCollectionExtensions
     public static IServiceCollection AddCorrelationIdSupport(this IServiceCollection services)
     {
         services.AddSingleton<ICorrelationIdAccessor, CorrelationIdAccessor>();
+        services.AddSingleton<ICorrelationIdModifier, CorrelationIdAccessor>();
         return services;
     }
 }
