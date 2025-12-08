@@ -208,6 +208,16 @@ public static class TypeExtensions
     }
 
     /// <summary>
+    /// Check if a type is a TimeSpan or not.
+    /// </summary>
+    /// <param name="type"><see cref="Type"/> to check.</param>
+    /// <returns>True if type is a time span, false if not.</returns>
+    public static bool IsTimeSpan(this Type type)
+    {
+        return Is<TimeSpan>(type);
+    }
+
+    /// <summary>
     /// Check if a type is a Boolean or not.
     /// </summary>
     /// <param name="type"><see cref="Type"/> to check.</param>

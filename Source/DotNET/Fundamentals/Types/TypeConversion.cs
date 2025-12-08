@@ -171,6 +171,21 @@ public static class TypeConversion
                 val = default(DateTimeOffset);
             }
         }
+        else if (type.IsTimeSpan())
+        {
+            if (value is TimeSpan)
+            {
+                val = value;
+            }
+            else if (TimeSpan.TryParse(value.ToString(), CultureInfo.InvariantCulture, out var timeSpanValue))
+            {
+                val = timeSpanValue;
+            }
+            else
+            {
+                val = default(TimeSpan);
+            }
+        }
         else if (type.IsAPrimitiveType())
         {
             val = value ?? Activator.CreateInstance(type);
