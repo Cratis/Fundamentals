@@ -113,6 +113,16 @@ public static class JsonValueExtensions
             return TimeOnly.Parse(value.GetValue<string>());
         }
 
+        if (targetType == typeof(TimeSpan))
+        {
+            if (sourceType == typeof(string))
+            {
+                return TimeSpan.Parse(value.GetValue<string>());
+            }
+
+            return value.GetValue<TimeSpan>();
+        }
+
         return null;
     }
 
@@ -165,8 +175,14 @@ public static class JsonValueExtensions
             case bool actualValue:
                 return JsonValue.Create<bool>(actualValue);
 
+            case byte actualValue:
+                return JsonValue.Create<byte>(actualValue);
+
             case string actualValue:
                 return JsonValue.Create<string>(actualValue);
+
+            case TimeSpan actualValue:
+                return JsonValue.Create(actualValue);
 
             case DateTime actualValue:
                 return JsonValue.Create<DateTime>(actualValue);
