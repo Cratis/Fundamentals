@@ -120,7 +120,7 @@ public static class JsonValueExtensions
                 return TimeSpan.Parse(value.GetValue<string>());
             }
 
-            return value.GetValue<TimeSpan>();
+            return TimeSpan.Parse(value.ToString());
         }
 
         return null;
