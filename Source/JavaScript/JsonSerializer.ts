@@ -6,6 +6,7 @@ import { DerivedType } from './DerivedType';
 import { Field } from './Field';
 import { Fields } from './Fields';
 import { Guid } from './Guid';
+import { TimeSpan } from './TimeSpan';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -16,7 +17,8 @@ const typeConverters: Map<Constructor, typeSerializer> = new Map<Constructor, ty
     [String, (value: string) => value],
     [Boolean, (value: boolean) => value],
     [Date, (value: Date) => value.toISOString()],
-    [Guid, (value: Guid) => value?.toString() ?? '']
+    [Guid, (value: Guid) => value?.toString() ?? ''],
+    [TimeSpan, (value: TimeSpan) => value?.toString() ?? '']
 ]);
 
 const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
@@ -25,6 +27,7 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
     [Boolean, (value: any) => value],
     [Date, (value: any) => new Date(value)],
     [Guid, (value: any) => Guid.parse(value.toString())],
+    [TimeSpan, (value: any) => TimeSpan.parse(value.toString())],
 ]);
 
 const serializeValueForType = (type: Constructor, value: any) => {
