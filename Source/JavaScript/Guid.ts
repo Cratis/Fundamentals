@@ -35,7 +35,12 @@ export class Guid implements IEquatable {
      * Initializes a new instance of the {Guid} class.
      * @param {number[]|Uint8Array} bytes - The 16 bytes that represents a {Guid}.
      */
-    constructor(readonly bytes: number[] | Uint8Array) {
+    constructor(readonly bytes: number[] | Uint8Array | undefined) {
+        if( bytes === undefined ) {
+            this._stringVersion = Guid.empty.toString();
+            return;
+        }
+
         this._stringVersion = '' +
             getString(bytes[3]) + getString(bytes[2]) + getString(bytes[1]) + getString(bytes[0]) +
             '-' +
