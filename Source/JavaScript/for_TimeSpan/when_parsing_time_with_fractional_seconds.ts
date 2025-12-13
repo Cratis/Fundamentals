@@ -1,0 +1,16 @@
+// Copyright (c) Cratis. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+import { TimeSpan } from '../TimeSpan';
+
+describe('when parsing time with fractional seconds', () => {
+    const timeSpanString = '01:30:45.1234567';
+    const parsed = TimeSpan.parse(timeSpanString);
+
+    it('should have correct hours', () => parsed.hours.should.equal(1));
+    it('should have correct minutes', () => parsed.minutes.should.equal(30));
+    it('should have correct seconds', () => parsed.seconds.should.equal(45));
+    it('should have correct milliseconds', () => parsed.milliseconds.should.equal(123));
+    it('should have correct microseconds', () => parsed.microseconds.should.equal(456));
+    it('should have correct nanoseconds', () => parsed.nanoseconds.should.equal(700));
+});
