@@ -1,6 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
+
 namespace Cratis.Metrics;
 
 /// <summary>
@@ -34,7 +36,7 @@ public static class MeterExtensions
 
         var tagsDictionary = new Dictionary<string, object>();
 
-        foreach (var property in tags.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+        foreach (var property in tags.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
         {
             var value = property.GetValue(tags);
             if (value is not null)
