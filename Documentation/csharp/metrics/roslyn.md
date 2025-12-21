@@ -244,10 +244,11 @@ public partial class OrderMetrics
 // Usage
 public async Task ProcessOrderAsync(Order order)
 {
-    using var scope = _meter.BeginScope(new Dictionary<string, object>
+    // Using anonymous type for cleaner syntax
+    using var scope = _meter.BeginScope(new
     {
-        ["order_id"] = order.Id,
-        ["customer_type"] = order.CustomerType
+        order_id = order.Id,
+        customer_type = order.CustomerType
     });
 
     // This will include both the scope tags (order_id, customer_type) 
@@ -257,6 +258,23 @@ public async Task ProcessOrderAsync(Order order)
 
     OrderMetrics.CountOrderStep(scope, "processing");
     await ProcessOrder(order);
+}
+```
+
+You can also use property name inference with anonymous types:
+
+```csharp
+public async Task ProcessOrderAsync(Order order)
+{
+    // Property names are inferred from the source
+    using var scope = _meter.BeginScope(new
+    {
+        order.Id,
+        order.CustomerId,
+        CustomerType = order.CustomerType
+    });
+
+    OrderMetrics.CountOrderStep(scope, "processing");
 }
 ```
 
