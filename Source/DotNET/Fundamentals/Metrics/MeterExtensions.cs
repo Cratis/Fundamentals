@@ -19,4 +19,27 @@ public static class MeterExtensions
     {
         return new MeterScope<T>(meter, tags);
     }
+
+    /// <summary>
+    /// Begin a scope for a meter using an anonymous type for tags.
+    /// </summary>
+    /// <param name="meter">The meter to begin scope for.</param>
+    /// <param name="tags">An anonymous object containing the tags. Property names become tag keys and property values become tag values.</param>
+    /// <typeparam name="T">Type the scope is for.</typeparam>
+    /// <returns>A new <see cref="IMeterScope{T}"/>.</returns>
+    public static IMeterScope<T> BeginScope<T>(this IMeter<T> meter, object tags)
+    {
+        var tagsDictionary = new Dictionary<string, object>();
+
+        foreach (var property in tags.GetType().GetProperties())
+        {
+            var value = property.GetValue(tags);
+            if (value is not null)
+            {
+                tagsDictionary[property.Name] = value;
+            }
+        }
+
+        return new MeterScope<T>(meter, tagsDictionary);
+    }
 }
