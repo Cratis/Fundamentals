@@ -27,11 +27,14 @@ public static class MeterExtensions
     /// <param name="tags">An anonymous object containing the tags. Property names become tag keys and property values become tag values.</param>
     /// <typeparam name="T">Type the scope is for.</typeparam>
     /// <returns>A new <see cref="IMeterScope{T}"/>.</returns>
+    /// <exception cref="ArgumentNullException">The exception that is thrown when tags is null.</exception>
     public static IMeterScope<T> BeginScope<T>(this IMeter<T> meter, object tags)
     {
+        ArgumentNullException.ThrowIfNull(tags);
+
         var tagsDictionary = new Dictionary<string, object>();
 
-        foreach (var property in tags.GetType().GetProperties())
+        foreach (var property in tags.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
         {
             var value = property.GetValue(tags);
             if (value is not null)
