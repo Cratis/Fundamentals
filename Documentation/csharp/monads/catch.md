@@ -146,7 +146,7 @@ public class ConfigurationManager
     {
         var result = _configService.ReadConfigValue(key);
         
-        // Pattern matching with value extraction
+        // Using TryGetResult/TryGetException
         var message = result.TryGetResult(out var value) 
             ? $"Config value: {value}" 
             : result.TryGetException(out var ex) 
@@ -154,6 +154,51 @@ public class ConfigurationManager
                 : "Unknown state";
         
         Console.WriteLine(message);
+    }
+    
+    public string LoadConfigWithMatch(string path)
+    {
+        var result = _configService.LoadConfiguration(path);
+        
+        // Using Match() for functional composition
+        return result.Match(
+            config => $"Loaded: {config.AppName} v{config.Version}",
+            exception => $"Failed to load: {exception.Message}");
+    }
+    
+    public void ProcessConfigWithMatch(string path)
+    {
+        var result = _secureConfigService.LoadSecureConfig(path);
+        
+        // Match() with side effects
+        result.Match(
+            config => 
+            {
+                Console.WriteLine("Configuration loaded successfully");
+                ApplyConfiguration(config);
+            },
+            error => 
+            {
+                Console.WriteLine($"Configuration error: {error.Message}");
+                LogError(error);
+            });
+    }
+    
+    public void HandleConfigWithPatternMatching(string path)
+    {
+        var result = _configService.LoadConfiguration(path);
+        
+        // Pattern matching with switch expression
+        var status = result switch
+        {
+            { IsSuccess: true } => $"Config loaded: {result.AsT0.AppName}",
+            { IsSuccess: false } when result.AsT1 is FileNotFoundException => "Config file not found",
+            { IsSuccess: false } when result.AsT1 is JsonException => "Invalid config format",
+            { IsSuccess: false } => $"Error: {result.AsT1.Message}",
+            _ => "Unknown state"
+        };
+        
+        Console.WriteLine(status);
     }
 }
 ```
@@ -165,6 +210,9 @@ public class ConfigurationManager
   - `Catch` - Simple exception capture without return value
   - `Catch<TResult>` - Capture results or exceptions
   - `Catch<TResult, TError>` - Custom error representation for specific exception types
+- Use `Match()` for functional composition of potentially failing operations
+- Pattern matching with `switch` expressions enables exception-type-specific handling
+- Access specific exception types with pattern guards (e.g., `when result.AsT1 is FileNotFoundException`)
 - Implicit conversions from `TResult` and `Exception` simplify creation
 - `IsSuccess` indicates whether the operation succeeded
 - `TryGetResult` and `TryGetException` provide safe access to values

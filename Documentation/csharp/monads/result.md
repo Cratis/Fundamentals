@@ -122,6 +122,50 @@ public class OrderController
             Console.WriteLine($"Failed to confirm: [{error.Code}] {error.Description}");
         }
     }
+    
+    public string GetOrderStatus(OrderId orderId)
+    {
+        var result = _orderService.ConfirmOrder(orderId);
+        
+        // Using Match() for functional composition
+        return result.Match(
+            confirmation => $"Order {confirmation.Id} confirmed at {confirmation.ConfirmedAt}",
+            error => $"Error: [{error.Code}] {error.Description}");
+    }
+    
+    public void ProcessOrderWithMatch(OrderId orderId)
+    {
+        var result = _orderService.ConfirmOrder(orderId);
+        
+        // Match() with side effects
+        result.Match(
+            confirmation => 
+            {
+                Console.WriteLine($"Success: Order {confirmation.Id} confirmed");
+                SendConfirmationEmail(confirmation);
+            },
+            error => 
+            {
+                Console.WriteLine($"Failed: {error.Description}");
+                LogError(error);
+            });
+    }
+    
+    public void HandleOrderWithPatternMatching(OrderId orderId)
+    {
+        var result = _orderService.ConfirmOrder(orderId);
+        
+        // Pattern matching with switch expression
+        var outcome = result switch
+        {
+            { IsSuccess: true } => $"Confirmed: {result.AsT0.Id}",
+            { IsSuccess: false } when result.AsT1.Code == "NOT_FOUND" => "Order not found",
+            { IsSuccess: false } => $"Error: {result.AsT1.Description}",
+            _ => "Unknown state"
+        };
+        
+        Console.WriteLine(outcome);
+    }
 }
 ```
 
@@ -132,6 +176,9 @@ public class OrderController
   - `Result` - Simple success/failure indication
   - `Result<TError>` - When you need to communicate why it failed
   - `Result<TResult, TError>` - When success produces a value
+- Use `Match()` for functional composition and transforming results
+- Pattern matching with `switch` expressions enables conditional logic based on success/error states
+- Access underlying exception types with pattern guards for specific error handling
 - Implicit conversions simplify creating results from values or errors
 - `IsSuccess` provides a quick check before extracting values
 - `TryGetResult` and `TryGetError` provide safe access to the underlying values

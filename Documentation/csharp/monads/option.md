@@ -73,7 +73,7 @@ public class UserService
     {
         var emailOption = _repository.GetEmailAddress(id);
         
-        // Pattern matching approach
+        // TryGetValue approach
         if (emailOption.TryGetValue(out var email))
         {
             Console.WriteLine($"Email: {email}");
@@ -83,6 +83,40 @@ public class UserService
             Console.WriteLine("No email available");
         }
     }
+    
+    public string GetUserDisplayName(UserId id)
+    {
+        var userOption = _repository.FindById(id);
+        
+        // Using Match() for functional composition
+        return userOption.Match(
+            value => value.Name,
+            none => "Unknown User");
+    }
+    
+    public void ProcessUserWithMatch(UserId id)
+    {
+        var userOption = _repository.FindById(id);
+        
+        // Match() with side effects
+        userOption.Match(
+            value => Console.WriteLine($"Processing user: {value.Name}"),
+            none => Console.WriteLine("User not found"));
+    }
+    
+    public void DisplayUserWithPatternMatching(UserId id)
+    {
+        var userOption = _repository.FindById(id);
+        
+        // Pattern matching with switch expression
+        var message = userOption switch
+        {
+            { IsT0: true } => $"Found user: {userOption.AsT0.Name}",
+            _ => "User not found"
+        };
+        
+        Console.WriteLine(message);
+    }
 }
 ```
 
@@ -91,5 +125,7 @@ public class UserService
 - Use `Option<T>` instead of returning `null` for optional values
 - The `HasValue` property indicates if a value is present
 - `TryGetValue` provides safe value extraction similar to Dictionary's TryGetValue pattern
+- Use `Match()` for functional composition and transforming values
+- Pattern matching with `switch` expressions enables concise conditional logic
 - Implicit conversion from `TValue` to `Option<TValue>` simplifies creation
 - Makes API contracts explicit - callers know they must handle absence
