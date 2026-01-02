@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Reflection;
 using Cratis.Metrics.Roslyn.Templates;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Cratis.Metrics.Roslyn;
@@ -13,7 +13,7 @@ namespace Cratis.Metrics.Roslyn;
 /// Represents the source generator for metrics.
 /// </summary>
 [Generator]
-public class MetricsSourceGenerator : ISourceGenerator
+public class MetricsSourceGenerator : IIncrementalGenerator
 {
     static readonly string[] _systemUsings =
     [
@@ -21,29 +21,63 @@ public class MetricsSourceGenerator : ISourceGenerator
         "System.Diagnostics.Metrics"
     ];
 
-    static MetricsSourceGenerator()
+    /// <inheritdoc/>
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-        {
-            if (args.Name.StartsWith("Handlebars"))
-            {
-                const string path = "/Volumes/Code/Cratis/Fundamentals/Source/DotNET/Metrics.Roslyn/bin/Debug/netstandard2.0/Handlebars.dll";
-                return File.Exists(path) ? Assembly.LoadFile(path) : null;
-            }
-            return null;
-        };
+        // Filter to partial static classes with partial static methods that have metrics attributes
+        var candidateClasses = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (node, _) => IsCandidateClass(node),
+                transform: static (ctx, _) => GetClassDeclaration(ctx))
+            .Where(static candidate => candidate is not null);
+
+        // Combine with compilation to get semantic model
+        var compilationAndClasses = context.CompilationProvider.Combine(candidateClasses.Collect());
+
+        // Generate source for each class
+        context.RegisterSourceOutput(compilationAndClasses, static (spc, source) => Execute(spc, source.Left, source.Right!));
     }
 
-    /// <inheritdoc/>
-    public void Execute(GeneratorExecutionContext context)
+    static bool IsCandidateClass(SyntaxNode node)
     {
-        if (context.SyntaxReceiver is not MetricsSyntaxReceiver receiver) return;
+        if (node is not ClassDeclarationSyntax classSyntax) return false;
 
-        var counterAttribute = context.Compilation.GetTypeByMetadataName("Cratis.Metrics.CounterAttribute`1")!;
-        var gaugeAttribute = context.Compilation.GetTypeByMetadataName("Cratis.Metrics.GaugeAttribute`1")!;
+        if (!classSyntax.Modifiers.Any(SyntaxKind.PartialKeyword)) return false;
+        if (!classSyntax.Modifiers.Any(SyntaxKind.StaticKeyword)) return false;
 
-        foreach (var candidate in receiver.Candidates)
+        return classSyntax.Members.Any(member =>
+            member is MethodDeclarationSyntax method &&
+            method.Modifiers.Any(SyntaxKind.PartialKeyword) &&
+            method.Modifiers.Any(SyntaxKind.StaticKeyword) &&
+            HasMetricsAttribute(method));
+    }
+
+    static bool HasMetricsAttribute(MethodDeclarationSyntax method)
+    {
+        var metricsAttributes = new[] { "Counter", "Gauge" };
+        return method.AttributeLists
+            .SelectMany(list => list.Attributes)
+            .Any(attr => metricsAttributes.Any(m => attr.Name.ToString().StartsWith(m)));
+    }
+
+    static ClassDeclarationSyntax? GetClassDeclaration(GeneratorSyntaxContext context)
+    {
+        return context.Node as ClassDeclarationSyntax;
+    }
+
+    static void Execute(SourceProductionContext context, Compilation compilation, ImmutableArray<ClassDeclarationSyntax?> candidates)
+    {
+        if (candidates.IsDefaultOrEmpty) return;
+
+        var counterAttribute = compilation.GetTypeByMetadataName("Cratis.Metrics.CounterAttribute`1");
+        var gaugeAttribute = compilation.GetTypeByMetadataName("Cratis.Metrics.GaugeAttribute`1");
+
+        if (counterAttribute is null || gaugeAttribute is null) return;
+
+        foreach (var candidate in candidates)
         {
+            if (candidate is null) continue;
+
             var classDefinition = $"{candidate.Modifiers} class {candidate.Identifier.ValueText}";
             var usings = GetUsingsFor(candidate);
 
@@ -55,7 +89,7 @@ public class MetricsSourceGenerator : ISourceGenerator
                 UsingStatements = [.. usings]
             };
 
-            var semanticModel = context.Compilation.GetSemanticModel(candidate.SyntaxTree);
+            var semanticModel = compilation.GetSemanticModel(candidate.SyntaxTree);
             foreach (var member in candidate.Members)
             {
                 if (member is not MethodDeclarationSyntax method) continue;
@@ -85,12 +119,6 @@ public class MetricsSourceGenerator : ISourceGenerator
                 context.AddSource($"{candidate.Identifier.ValueText}.g.cs", source);
             }
         }
-    }
-
-    /// <inheritdoc/>
-    public void Initialize(GeneratorInitializationContext context)
-    {
-        context.RegisterForSyntaxNotifications(() => new MetricsSyntaxReceiver());
     }
 
     static IEnumerable<string> GetUsingsFor(ClassDeclarationSyntax candidate)
@@ -139,7 +167,7 @@ public class MetricsSourceGenerator : ISourceGenerator
             Type = parameter.Type!.ToString()
         });
 
-    static void ValidateFirstParameter(GeneratorExecutionContext context, MethodDeclarationSyntax method, string methodSignature)
+    static void ValidateFirstParameter(SourceProductionContext context, MethodDeclarationSyntax method, string methodSignature)
     {
         if (method.ParameterList.Parameters.Count == 0)
         {
@@ -174,7 +202,7 @@ public class MetricsSourceGenerator : ISourceGenerator
         }
     }
 
-    static void ValidateValueParameter(GeneratorExecutionContext context, MethodDeclarationSyntax method, string methodSignature, string valueParameter, bool valueParameterRequired)
+    static void ValidateValueParameter(SourceProductionContext context, MethodDeclarationSyntax method, string methodSignature, string valueParameter, bool valueParameterRequired)
     {
         if (valueParameter.Length == 0 && valueParameterRequired)
         {
@@ -191,8 +219,8 @@ public class MetricsSourceGenerator : ISourceGenerator
         }
     }
 
-    void AddMetricIfAny(
-        GeneratorExecutionContext context,
+    static void AddMetricIfAny(
+        SourceProductionContext context,
         IList<MetricTemplateData> metrics,
         INamedTypeSymbol attributeToLookFor,
         MethodDeclarationSyntax method,
