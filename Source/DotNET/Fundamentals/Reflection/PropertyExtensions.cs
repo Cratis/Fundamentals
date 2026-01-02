@@ -18,5 +18,5 @@ public static class PropertyExtensions
     /// <returns>True if there is an attribute, false if not.</returns>
     public static bool HasAttribute<T>(this PropertyInfo property)
         where T : Attribute
-        => property.GetCustomAttribute<T>() != default;
+        => Attribute.IsDefined(property, typeof(T));
 }
