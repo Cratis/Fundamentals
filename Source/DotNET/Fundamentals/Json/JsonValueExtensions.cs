@@ -120,7 +120,7 @@ public static class JsonValueExtensions
                 return TimeSpan.Parse(value.GetValue<string>());
             }
 
-            return TimeSpan.Parse(value.ToString());
+            return TimeSpan.Parse(value.GetValue<string>());
         }
 
         return null;
@@ -182,7 +182,7 @@ public static class JsonValueExtensions
                 return JsonValue.Create<string>(actualValue);
 
             case TimeSpan actualValue:
-                return JsonValue.Create(actualValue);
+                return JsonValue.Create(actualValue.ToString());
 
             case DateTime actualValue:
                 return JsonValue.Create<DateTime>(actualValue);
