@@ -60,13 +60,34 @@ public interface IMeterScope<T> : IDisposable
 }
 ```
 
-Use scopes to add context to your metrics:
+Use scopes to add context to your metrics. You can use either a dictionary or an anonymous type:
 
 ```csharp
+// Using a dictionary
 using var scope = meter.BeginScope(new Dictionary<string, object> 
 { 
     ["user_id"] = userId,
     ["operation"] = "login"
+});
+
+// Using an anonymous type (recommended for cleaner syntax)
+using var scope = meter.BeginScope(new 
+{ 
+    user_id = userId,
+    operation = "login"
+});
+```
+
+The anonymous type approach provides a more concise syntax and supports property name inference:
+
+```csharp
+// Property names are inferred from the source properties
+using var scope = meter.BeginScope(new 
+{ 
+    eventSequenceKey.EventStore,
+    eventSequenceKey.Namespace,
+    eventSequenceKey.EventSequenceId,
+    QueueId = queueId
 });
 ```
 
@@ -206,10 +227,11 @@ public class OrderService
 
     public async Task ProcessOrderAsync(Order order)
     {
-        using var scope = _meter.BeginScope(new Dictionary<string, object>
+        // Using anonymous type for cleaner syntax
+        using var scope = _meter.BeginScope(new
         {
-            ["customer_id"] = order.CustomerId,
-            ["order_type"] = order.Type
+            customer_id = order.CustomerId,
+            order_type = order.Type
         });
 
         // All metrics within this scope will include the customer_id and order_type tags
