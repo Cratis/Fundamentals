@@ -59,7 +59,7 @@
         "typescript-eslint": "8.52.0",
         "vite-plugin-commonjs": "0.10.4",
         "vite-tsconfig-paths": "6.0.4",
-        "vitest": "4.0.16"
+        "vitest": "4.0.17"
     },
     "license": "MIT",
     "version": "0.0.0",
