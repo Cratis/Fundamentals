@@ -7,7 +7,7 @@ public class when_checking_if_non_nullable_value_type_record_property_is_nullabl
 {
     static bool result;
 
-    void Because() => result = typeof(RecordWithProperties).GetProperty(nameof(RecordWithProperties.NonNullableInt))!.IsNullable();
+    void Because() => result = typeof(RecordWithProperties).GetProperty(nameof(RecordWithProperties.NonNullableInt)).IsNullable();
 
     [Fact] void should_return_false() => result.ShouldBeFalse();
 }

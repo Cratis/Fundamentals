@@ -7,7 +7,7 @@ public class when_checking_if_nullable_value_type_class_property_is_nullable : S
 {
     static bool result;
 
-    void Because() => result = typeof(ClassWithProperties).GetProperty(nameof(ClassWithProperties.NullableInt))!.IsNullable();
+    void Because() => result = typeof(ClassWithProperties).GetProperty(nameof(ClassWithProperties.NullableInt)).IsNullable();
 
     [Fact] void should_return_true() => result.ShouldBeTrue();
 }

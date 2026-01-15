@@ -7,7 +7,7 @@ public class when_checking_if_non_nullable_record_property_is_nullable : Specifi
 {
     static bool result;
 
-    void Because() => result = typeof(RecordWithProperties).GetProperty(nameof(RecordWithProperties.NonNullableString))!.IsNullable();
+    void Because() => result = typeof(RecordWithProperties).GetProperty(nameof(RecordWithProperties.NonNullableString)).IsNullable();
 
     [Fact] void should_return_false() => result.ShouldBeFalse();
 }
