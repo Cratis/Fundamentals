@@ -19,4 +19,16 @@ public static class ParameterExtensions
     public static bool HasAttribute<T>(this ParameterInfo parameter)
         where T : Attribute
         => parameter.GetCustomAttribute<T>() != default;
+
+    /// <summary>
+    /// Check if a parameter is nullable.
+    /// </summary>
+    /// <param name="parameter"><see cref="ParameterInfo"/> to check.</param>
+    /// <returns>True if the parameter is nullable, false if not.</returns>
+    public static bool IsNullable(this ParameterInfo parameter)
+    {
+        var context = new NullabilityInfoContext();
+        var nullabilityInfo = context.Create(parameter);
+        return nullabilityInfo.WriteState == NullabilityState.Nullable;
+    }
 }
