@@ -5,10 +5,9 @@ namespace Cratis.Serialization.for_DerivedTypes;
 
 public class when_initializing_with_type_with_target_type_but_no_target_types_implemented : given.derived_types
 {
-    interface IFirst;
-    interface ISecond;
+    interface ITarget;
 
-    [DerivedType("fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6", typeof(ISecond))]
+    [DerivedType("fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6", typeof(ITarget))]
     record DerivedType { }
 
     Exception result;

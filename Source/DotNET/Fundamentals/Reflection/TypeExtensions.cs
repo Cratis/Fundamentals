@@ -55,11 +55,8 @@ public static class TypeExtensions
     /// <typeparam name="T">Attribute type to check for.</typeparam>
     /// <returns>True if there is an attribute, false if not.</returns>
     public static bool HasAttribute<T>(this Type type)
-        where T : Attribute
-    {
-        var attributes = type.GetTypeInfo().GetCustomAttributes(typeof(T), false).ToArray();
-        return attributes.Length == 1;
-    }
+        where T : Attribute =>
+        Attribute.IsDefined(type, typeof(T), inherit: true);
 
     /// <summary>
     /// Check if a type is nullable or not.

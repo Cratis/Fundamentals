@@ -30,8 +30,8 @@
         "@types/node": "25.0.8",
         "@types/sinon": "21.0.0",
         "@types/sinon-chai": "4.0.0",
-        "@typescript-eslint/eslint-plugin": "8.52.0",
-        "@typescript-eslint/parser": "8.52.0",
+        "@typescript-eslint/eslint-plugin": "8.53.0",
+        "@typescript-eslint/parser": "8.53.0",
         "chai": "6.2.2",
         "chai-as-promised": "8.0.2",
         "edit-json-file": "1.8.1",
@@ -56,10 +56,10 @@
         "sinon-chai": "4.0.1",
         "ts-node": "10.9.2",
         "typescript": "5.9.3",
-        "typescript-eslint": "8.52.0",
+        "typescript-eslint": "8.53.0",
         "vite-plugin-commonjs": "0.10.4",
         "vite-tsconfig-paths": "6.0.4",
-        "vitest": "4.0.16"
+        "vitest": "4.0.17"
     },
     "license": "MIT",
     "version": "0.0.0",

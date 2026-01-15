@@ -19,4 +19,16 @@ public static class PropertyExtensions
     public static bool HasAttribute<T>(this PropertyInfo property)
         where T : Attribute
         => Attribute.IsDefined(property, typeof(T));
+
+    /// <summary>
+    /// Check if a property is nullable.
+    /// </summary>
+    /// <param name="property"><see cref="PropertyInfo"/> to check.</param>
+    /// <returns>True if the property is nullable, false if not.</returns>
+    public static bool IsNullable(this PropertyInfo property)
+    {
+        var context = new NullabilityInfoContext();
+        var nullabilityInfo = context.Create(property);
+        return nullabilityInfo.WriteState == NullabilityState.Nullable;
+    }
 }
