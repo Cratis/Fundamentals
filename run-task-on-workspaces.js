@@ -95,8 +95,7 @@ for (const workspaceName in workspaces) {
                 }
 
                 console.log(`Publishing workspace '${workspaceName}' at '${workspaceRelativeLocation}'`);
-                const result = spawn('npm', ['publish'], { cwd: workspaceAbsoluteLocation });
-                console.log(result.stdout.toString());
+                const result = spawn('npm', ['publish'], { cwd: workspaceAbsoluteLocation, stdio: 'inherit' });
                 if (result.status !== 0) {
                     process.exit(1);
                     return;
@@ -111,8 +110,7 @@ for (const workspaceName in workspaces) {
 
             console.log(`Workspace '${workspaceName}' at '${workspaceRelativeLocation}'`);
 
-            const result = spawn('yarn', [task], { cwd: workspaceAbsoluteLocation });
-            console.log(result.stdout.toString());
+            const result = spawn('yarn', [task], { cwd: workspaceAbsoluteLocation, stdio: 'inherit' });
             if (result.status !== 0) {
                 process.exit(1);
                 return;
