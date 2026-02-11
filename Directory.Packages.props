@@ -8,7 +8,7 @@
         <PackageVersion Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
         <PackageVersion Include="System.Reactive" Version="6.1.0" />
         <PackageVersion Include="Humanizer" Version="3.0.1" />
-        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.102" />
+        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.103" />
         <PackageVersion Include="handlebars.net" Version="2.1.6" />
         <PackageVersion Include="OneOf" Version="3.0.271" />
         <PackageVersion Include="OneOf.SourceGenerator" Version="3.0.271" />
