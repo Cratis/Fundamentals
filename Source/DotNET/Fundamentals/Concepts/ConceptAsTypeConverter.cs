@@ -14,11 +14,16 @@ namespace Cratis.Concepts;
 public class ConceptAsTypeConverter<TConcept, TValue> : TypeConverter
 {
     /// <inheritdoc/>
-    public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType) => sourceType == typeof(TValue) || sourceType == typeof(string);
+    public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType) => IsConceptValueType(sourceType);
 
     /// <inheritdoc/>
-    public override object ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
-    {
-        return ConceptFactory.CreateConceptInstance(typeof(TConcept), value);
-    }
+    public override object ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value) => ConceptFactory.CreateConceptInstance(typeof(TConcept), value);
+
+    /// <inheritdoc/>
+    public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType) => IsConceptValueType(destinationType);
+
+    /// <inheritdoc/>
+    public override object? ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType) => value?.GetConceptValue();
+
+    static bool IsConceptValueType(Type? type) => type == typeof(TValue) || type == typeof(string);
 }
