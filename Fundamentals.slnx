@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Solution>
+    <Folder Name="/Source/">
+        <Project Path="Source/DotNET/Fundamentals/Fundamentals.csproj" />
+    </Folder>
+    <Folder Name="/Source/DotNET/">
+        <Project Path="Source/DotNET/Metrics.Roslyn/Metrics.Roslyn.csproj" />
+    </Folder>
+    <Project Path="Source/DotNET/Fundamentals.Specs/Fundamentals.Specs.csproj" />
+</Solution>

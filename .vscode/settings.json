@@ -10,5 +10,5 @@
         "runtimepack",
         "Xunit"
     ],
-    "dotnet.defaultSolution": "Fundamentals.sln"
+    "dotnet.defaultSolution": "Fundamentals.slnx"
 }
