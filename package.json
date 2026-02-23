@@ -24,9 +24,9 @@
         "up": "node ./run-task-on-workspaces.js up"
     },
     "devDependencies": {
-        "@tony.ganchev/eslint-plugin-header": "^3.2.1",
         "@eslint/eslintrc": "^3.3.3",
         "@eslint/js": "^10.0.0",
+        "@tony.ganchev/eslint-plugin-header": "^3.2.1",
         "@types/chai": "5.2.3",
         "@types/chai-as-promised": "8.0.2",
         "@types/mocha": "10.0.10",
