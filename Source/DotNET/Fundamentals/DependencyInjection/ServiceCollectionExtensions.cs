@@ -82,7 +82,7 @@ public static class ServiceCollectionExtensions
             !HasConstructorWithUnresolvableParameters(_) &&
             !HasConstructorWithRecordTypes(_) &&
             !_.IsAssignableTo(typeof(Exception)) &&
-            services.Any(s => s.ServiceType != _)).ToList().ForEach(_ =>
+            !services.Any(s => s.ServiceType == _)).ToList().ForEach(_ =>
         {
 #pragma warning disable SA1312 // Variable names should begin with lower-case letter
             var __ = GetServiceLifetime(_) switch
