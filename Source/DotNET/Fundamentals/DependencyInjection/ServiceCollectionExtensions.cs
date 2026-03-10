@@ -53,9 +53,12 @@ public static class ServiceCollectionExtensions
                 continue;
             }
 
-            _ = conventionBasedType.HasAttribute<SingletonAttribute>() ?
-                services.AddSingleton(interfaceToBind, conventionBasedType) :
-                services.AddTransient(interfaceToBind, conventionBasedType);
+            _ = GetServiceLifetime(conventionBasedType) switch
+            {
+                ServiceLifetime.Singleton => services.AddSingleton(interfaceToBind, conventionBasedType),
+                ServiceLifetime.Scoped => services.AddScoped(interfaceToBind, conventionBasedType),
+                _ => services.AddTransient(interfaceToBind, conventionBasedType)
+            };
         }
 
         return services;
@@ -79,12 +82,15 @@ public static class ServiceCollectionExtensions
             !HasConstructorWithUnresolvableParameters(_) &&
             !HasConstructorWithRecordTypes(_) &&
             !_.IsAssignableTo(typeof(Exception)) &&
-            services.Any(s => s.ServiceType != _)).ToList().ForEach(_ =>
+            !services.Any(s => s.ServiceType == _)).ToList().ForEach(_ =>
         {
 #pragma warning disable SA1312 // Variable names should begin with lower-case letter
-            var __ = _.HasAttribute<SingletonAttribute>() ?
-                services.AddSingleton(_, _) :
-                services.AddTransient(_, _);
+            var __ = GetServiceLifetime(_) switch
+            {
+                ServiceLifetime.Singleton => services.AddSingleton(_, _),
+                ServiceLifetime.Scoped => services.AddScoped(_, _),
+                _ => services.AddTransient(_, _)
+            };
 #pragma warning restore SA1312 // Variable names should begin with lower-case letter
         });
 
@@ -102,4 +108,19 @@ public static class ServiceCollectionExtensions
 
     static bool HasConstructorWithRecordTypes(Type type) =>
         type.GetConstructors().Any(_ => _.GetParameters().Any(p => p.ParameterType.IsRecord()));
+
+    static ServiceLifetime GetServiceLifetime(Type type)
+    {
+        if (type.HasAttribute<SingletonAttribute>())
+        {
+            return ServiceLifetime.Singleton;
+        }
+
+        if (type.HasAttribute<ScopedAttribute>())
+        {
+            return ServiceLifetime.Scoped;
+        }
+
+        return ServiceLifetime.Transient;
+    }
 }
