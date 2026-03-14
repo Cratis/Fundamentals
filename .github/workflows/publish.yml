@@ -5,6 +5,9 @@ env:
   DOTNET_VERSION: "10.0.x"
   NODE_VERSION: "20.x"
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -79,6 +82,9 @@ jobs:
     if: needs.release.outputs.publish == 'true'
     runs-on: ubuntu-latest
     needs: [release]
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -86,14 +92,34 @@ jobs:
 
       - name: Setup node
         uses: actions/setup-node@v4
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: "https://registry.npmjs.org"
 
-      - uses: actions/cache@v3
+      - name: Configure npm for OIDC-based publishing
+        run: |
+          # setup-node writes a placeholder _authToken (XXXXX-XXXXX-XXXXX-XXXXX) into
+          # .npmrc and exports NODE_AUTH_TOKEN with the same placeholder. npm uses this
+          # token as-is for registry auth → 404. Remove it so npm falls back to OIDC.
+          sed -i '/_authToken/d' "$NPM_CONFIG_USERCONFIG"
+          echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
+          echo "--- .npmrc after stripping placeholder ---"
+          cat "$NPM_CONFIG_USERCONFIG"
+
+      - name: Upgrade npm for trusted publishing (requires >= 11.5.1)
+        run: |
+          npm install -g npm@11
+          NPM_VER="$(npm --version)"
+          echo "Installed npm $NPM_VER"
+          node -e "
+            const v = '$NPM_VER'.split('.').map(Number);
+            if (v[0] < 11 || (v[0] === 11 && v[1] < 5) || (v[0] === 11 && v[1] === 5 && v[2] < 1)) {
+              console.error('npm >= 11.5.1 is required for trusted publishing, got $NPM_VER');
+              process.exit(1);
+            }
+          "
+
+      - uses: actions/cache@v4
         id: yarn-cache
         with:
           path: |
@@ -102,7 +128,7 @@ jobs:
             **/.eslintcache
             **/yarn.lock
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/package.json') }}
-  
+
       - name: Yarn install
         run: yarn
 
