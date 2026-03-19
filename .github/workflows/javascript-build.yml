@@ -15,14 +15,6 @@ on:
         - info
         - warning
         - debug
-  push:
-    branches:
-      - "main"
-    paths:
-      - "Source/JavaScript/**"
-      - "package.json"
-      - "tsconfig.json"
-      - "vite*"
   pull_request:
     branches:
       - "**"
