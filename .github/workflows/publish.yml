@@ -30,9 +30,6 @@ on:
         - info
         - warning
         - debug
-  push:
-    branches:
-      - "main"
 
 jobs:
   release:
