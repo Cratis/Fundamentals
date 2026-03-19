@@ -30,6 +30,12 @@ on:
         - info
         - warning
         - debug
+  pull_request:
+    types: [closed]
+    branches:
+      - "**"
+    paths:
+      - "Source/**"
 
 jobs:
   release:
