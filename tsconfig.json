@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "baseUrl": ".",
         "rootDir": ".",
         "outDir": "dist",
         "declaration": true,
@@ -13,7 +12,7 @@
         "allowJs": false,
         "checkJs": false,
         "module": "ES2022",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "noEmit": false,
         "pretty": true,
         "noImplicitAny": false,
@@ -29,7 +28,6 @@
         "esModuleInterop": true,
         "strictNullChecks": true,
         "resolveJsonModule": true,
-        "downlevelIteration": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "noImplicitReturns": true,
