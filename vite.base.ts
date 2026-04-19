@@ -1,6 +1,5 @@
 /// <reference types="vitest/config" />
 import commonjs from 'vite-plugin-commonjs';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 const cwd = process.cwd();
 
@@ -9,10 +8,8 @@ export function createConfig() {
         optimizeDeps: {
             exclude: ['tslib'],
         },
-        esbuild: {
-            supported: {
-                'top-level-await': true,
-            },
+        resolve: {
+            tsconfigPaths: true,
         },
         test: {
             globals: true,
@@ -41,8 +38,7 @@ export function createConfig() {
             setupFiles: `${__dirname}/vitest.setup.ts`
         },
         plugins: [
-            commonjs(),
-            tsconfigPaths()
+            commonjs()
         ]
     };
 }
