@@ -26,7 +26,7 @@
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.5",
         "@eslint/js": "^10.0.1",
-        "@tony.ganchev/eslint-plugin-header": "^3.4.3",
+        "@tony.ganchev/eslint-plugin-header": "^3.4.4",
         "@types/chai": "5.2.3",
         "@types/chai-as-promised": "8.0.2",
         "@types/mocha": "10.0.10",
