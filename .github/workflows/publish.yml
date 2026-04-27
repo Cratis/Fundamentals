@@ -40,7 +40,6 @@ on:
       - "**"
     paths:
       - "Source/**"
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -82,8 +81,15 @@ jobs:
       - name: Create NuGet packages
         run: dotnet pack --no-build --configuration Release -o ${{ env.NUGET_OUTPUT }} -p:PackageVersion=${{ needs.release.outputs.version }}
 
+      # Get a short-lived NuGet API key
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push NuGet packages
-        run: dotnet nuget push --skip-duplicate '${{ env.NUGET_OUTPUT }}/*.nupkg' --timeout 900 --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push --skip-duplicate '${{ env.NUGET_OUTPUT }}/*.nupkg' --timeout 900 --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
 
   publish-npm-packages:
     if: needs.release.outputs.publish == 'true'
@@ -141,7 +147,15 @@ jobs:
 
       - name: Publish NPM packages
         run: |
+          echo "npm $(npm --version) | node $(node --version)"
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL is $([ -n \"$ACTIONS_ID_TOKEN_REQUEST_URL\" ] && echo 'set' || echo 'NOT set')"
+          echo "NODE_AUTH_TOKEN is '${NODE_AUTH_TOKEN:-(unset)}'"
+          echo "--- .npmrc ---"
+          cat "$NPM_CONFIG_USERCONFIG" 2>/dev/null || echo "(no .npmrc)"
+          echo "---"
+          yarn build
           yarn publish-version ${{ needs.release.outputs.version }}
+
 
       - name: Git reset (package.json files changed)
         run: |
