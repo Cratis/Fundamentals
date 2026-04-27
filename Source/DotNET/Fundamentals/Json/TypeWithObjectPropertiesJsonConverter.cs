@@ -73,13 +73,13 @@ public abstract class TypeWithObjectPropertiesJsonConverter<TTarget> : JsonConve
             }
         }
 
-        return default!;
+        return default;
     }
 
     /// <inheritdoc/>
     public override void Write(Utf8JsonWriter writer, TTarget value, JsonSerializerOptions options)
     {
-        var type = value?.GetType() ?? null!;
+        var type = value?.GetType();
         if (type is null)
         {
             return;

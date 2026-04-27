@@ -35,7 +35,7 @@ public class MetricsSourceGenerator : IIncrementalGenerator
         var compilationAndClasses = context.CompilationProvider.Combine(candidateClasses.Collect());
 
         // Generate source for each class
-        context.RegisterSourceOutput(compilationAndClasses, static (spc, source) => Execute(spc, source.Left, source.Right!));
+        context.RegisterSourceOutput(compilationAndClasses, static (spc, source) => Execute(spc, source.Left, source.Right));
     }
 
     static bool IsCandidateClass(SyntaxNode node)

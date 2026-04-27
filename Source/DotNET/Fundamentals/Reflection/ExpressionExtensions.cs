@@ -17,9 +17,9 @@ public static class ExpressionExtensions
     public static Func<Expression, MemberExpression> Unwrap { get; } = toUnwrap =>
                                                                         {
                                                                             if (toUnwrap is UnaryExpression unwrap)
-                                                                                return (MemberExpression)unwrap.Operand!;
+                                                                                return (MemberExpression)unwrap.Operand;
 
-                                                                            return (MemberExpression)toUnwrap!;
+                                                                            return (MemberExpression)toUnwrap;
                                                                         };
 
     /// <summary>
@@ -90,7 +90,7 @@ public static class ExpressionExtensions
     public static FieldInfo GetFieldInfo(this Expression expression)
     {
         var memberExpression = GetMemberExpression(expression);
-        return (FieldInfo)memberExpression.Member!;
+        return (FieldInfo)memberExpression.Member;
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public static class ExpressionExtensions
     public static PropertyInfo GetPropertyInfo(this Expression expression)
     {
         var memberExpression = GetMemberExpression(expression);
-        return (PropertyInfo)memberExpression.Member!;
+        return (PropertyInfo)memberExpression.Member;
     }
 
     /// <summary>

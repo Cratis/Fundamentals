@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
 
         static bool convention(Type i, Type t) => i.Namespace == t.Namespace && i.Name == $"I{t.Name}";
 
-        var conventionBasedTypes = types!.All
+        var conventionBasedTypes = types.All
             .Where(_ =>
             {
                 if (ShouldIgnoreConvention(_))
@@ -39,7 +39,7 @@ public static class ServiceCollectionExtensions
                     var conventionInterface = interfaces.SingleOrDefault(i => convention(i, _));
                     if (conventionInterface != default)
                     {
-                        return types!.All.Count(type => type.HasInterface(conventionInterface)) == 1;
+                        return types.All.Count(type => type.HasInterface(conventionInterface)) == 1;
                     }
                 }
                 return false;

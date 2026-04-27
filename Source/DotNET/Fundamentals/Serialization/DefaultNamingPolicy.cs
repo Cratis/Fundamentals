@@ -13,7 +13,7 @@ namespace Cratis.Serialization;
 public class DefaultNamingPolicy(bool pluralizeReadModelNames = true) : NamingPolicy
 {
     /// <inheritdoc/>
-    public override JsonNamingPolicy? JsonPropertyNamingPolicy => null!;
+    public override JsonNamingPolicy? JsonPropertyNamingPolicy => null;
 
     /// <inheritdoc/>
     protected override string GetReadModelNameImplementation(Type readModelType) => pluralizeReadModelNames ? readModelType.Name.Pluralize() : readModelType.Name;
