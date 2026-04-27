@@ -23,7 +23,7 @@ public class NamespacedNamingPolicy(
     bool pluralizeReadModelNames = true) : NamingPolicy
 {
     /// <inheritdoc/>
-    public override JsonNamingPolicy? JsonPropertyNamingPolicy => camelCase ? AcronymFriendlyJsonCamelCaseNamingPolicy.Instance : null!;
+    public override JsonNamingPolicy? JsonPropertyNamingPolicy => camelCase ? AcronymFriendlyJsonCamelCaseNamingPolicy.Instance : null;
 
     /// <inheritdoc/>
     protected override string GetReadModelNameImplementation(Type readModelType)

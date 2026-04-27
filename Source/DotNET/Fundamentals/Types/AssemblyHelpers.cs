@@ -28,7 +28,7 @@ public static class AssemblyHelpers
         }
         catch
         {
-            return null!;
+            return null;
         }
     }
 

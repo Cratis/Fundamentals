@@ -23,6 +23,6 @@ public class EnumerableModelWithIdToConceptOrPrimitiveEnumerableConverterFactory
     public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
         var converterType = typeof(EnumerableModelWithIdToConceptOrPrimitiveEnumerableConverter<,>).MakeGenericType(typeToConvert, typeToConvert.GetGenericArguments()[0]);
-        return (Activator.CreateInstance(converterType) as JsonConverter)!;
+        return Activator.CreateInstance(converterType) as JsonConverter;
     }
 }

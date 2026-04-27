@@ -94,5 +94,5 @@ public record ConceptAs<T> : IComparable<ConceptAs<T>>, IComparable<T>, ICompara
     public int CompareTo(object? obj) => obj == null ? 1 : Comparer<T>.Default.Compare(Value, (ConceptAs<T>)obj);
 
     /// <inheritdoc/>
-    public sealed override string ToString() => Value!.ToString() ?? "[n/a]";
+    public sealed override string ToString() => Value.ToString() ?? "[n/a]";
 }

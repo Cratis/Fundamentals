@@ -29,7 +29,7 @@ public abstract class DictionaryJsonConverter<TKey, TValue> : JsonConverter<IDic
         writer.WriteStartObject();
         foreach (var (key, children) in value)
         {
-            writer.WritePropertyName(GetKeyString(key!));
+            writer.WritePropertyName(GetKeyString(key));
             writer.WriteRawValue(JsonSerializer.Serialize(children, options), true);
         }
 
