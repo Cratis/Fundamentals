@@ -79,6 +79,9 @@ jobs:
       - name: Remove any existing artifacts
         run: rm -rf ${{ env.NUGET_OUTPUT }}
 
+      - name: Clean NuGet cache
+        run: dotnet nuget locals all --clear        
+
       - name: Build
         run: dotnet build --configuration Release
 
