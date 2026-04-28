@@ -52,7 +52,10 @@ public class ProjectReferencedAssemblies : ICanProvideAssembliesForDiscovery
                                 .Where(_ => _ is not null)
                                 .Distinct()
                                 .ToArray();
-            _assemblies.Add(entryAssembly);
+            if (!projectReferencedAssemblies.Contains(entryAssembly))
+            {
+                _assemblies.Add(entryAssembly);
+            }
             _assemblies.AddRange(projectReferencedAssemblies);
             DefinedTypes = [.. _assemblies.SelectMany(_ => _.DefinedTypes)];
 
