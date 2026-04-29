@@ -10,6 +10,7 @@ export * from './PropertyAccessor';
 export * from './PropertyAccessorDescriptor';
 export * from './PropertyPathResolverProxyHandler';
 export * from './TimeSpan';
+export * from './ValueMap';
 export * from './fieldDecorator';
 export * from './derivedTypeDecorator';
 export * from './JsonSerializer';
