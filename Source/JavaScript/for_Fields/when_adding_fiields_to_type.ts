@@ -21,9 +21,9 @@ describe('when adding fields to type', () => {
     const secondFieldType = Number;
     const thirdFieldType = MyOtherType;
 
-    Fields.addFieldToType(MyType, firstField, firstFieldType, false, []);
-    Fields.addFieldToType(MyType, secondField, secondFieldType, false, [MyOtherType, MyThirdType]);
-    Fields.addFieldToType(MyType, thirdField, thirdFieldType, true, []);
+    Fields.addFieldToType(MyType, firstField, firstFieldType, false, [], []);
+    Fields.addFieldToType(MyType, secondField, secondFieldType, false, [MyOtherType, MyThirdType], [String, Number]);
+    Fields.addFieldToType(MyType, thirdField, thirdFieldType, true, [], []);
 
     const fields = Fields.getFieldsForType(MyType);
 
@@ -35,6 +35,7 @@ describe('when adding fields to type', () => {
     it('should have correct type for second field', () => fields[1].type.should.equal(secondFieldType));
     it('should not consider second field as enumerable', () => fields[1].enumerable.should.be.false);
     it('should have 2 derivatives for second field', () => fields[1].derivatives.length.should.equal(2));
+    it('should have 2 generic arguments for second field', () => fields[1].genericArguments.length.should.equal(2));
     it('should hold third field', () => fields[2].name.should.equal(thirdField));
     it('should have correct type for third field', () => fields[2].type.should.equal(thirdFieldType));
     it('should consider third field as enumerable', () => fields[2].enumerable.should.be.true);

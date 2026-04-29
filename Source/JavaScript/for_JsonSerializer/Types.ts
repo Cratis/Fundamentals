@@ -4,6 +4,7 @@
 import { field } from '../fieldDecorator';
 import { derivedType } from '../derivedTypeDecorator';
 import { Guid } from '../Guid';
+import { ValueMap } from '../ValueMap';
 
 export class OtherType {
     @field(Number)
@@ -41,6 +42,14 @@ export class SecondDerivative implements ITargetType {
     secondDerivativeProperty!: number;
 }
 
+export class MapKeyType {
+    @field(Guid)
+    keyId!: Guid;
+
+    @field(String)
+    keyName!: string;
+}
+
 export class TopLevel {
     @field(Number)
     someNumber!: number;
@@ -68,4 +77,7 @@ export class TopLevel {
 
     @field(Object, true, [FirstDerivative, SecondDerivative])
     collectionOfDerivedTypes!: ITargetType[];
+
+    @field(ValueMap, { genericArguments: [MapKeyType, OtherType] })
+    complexKeyMap!: ValueMap<MapKeyType, OtherType>;
 }
