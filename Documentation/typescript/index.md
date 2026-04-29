@@ -11,6 +11,10 @@ The Fundamentals frontend package provides JavaScript/TypeScript equivalents and
 | Topic | Description |
 | ------- | ----------- |
 | [GUID](./guid.md) | GUID creation, manipulation, and utility functions for unique identifiers. |
+| [Constructor](./constructor.md) | Runtime constructor type alias for class-based APIs and metadata-driven tooling. |
+| [PropertyAccessor](./property_accessor.md) | Property accessor function type for typed property selection and path utilities. |
+| [TimeSpan](./time_span.md) | .NET-compatible time interval parsing, formatting, and JSON serialization. |
+| [ValueMap](./value_map.md) | A value-based map for complex object keys with stable lookup semantics. |
 | [Serialization](./serialization/index.md) | Type-safe JSON serialization and deserialization system with polymorphic support and runtime type preservation. |
 
 ## Installation

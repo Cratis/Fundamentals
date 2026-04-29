@@ -1,12 +1,14 @@
-# ValueMap
+# ValueMap Serialization
 
-`ValueMap<TKey, TValue>` is a map implementation for complex keys where key equality is based on value content instead of object reference identity.
+This page describes how `ValueMap<TKey, TValue>` is serialized and deserialized with `JsonSerializer`.
 
-## Why ValueMap
+For general `ValueMap` behavior and API, see [ValueMap](../value_map.md).
 
-When dictionaries with complex keys are serialized from the backend, key objects are represented as JSON property names. During frontend deserialization you often create new key instances for lookups, which do not match by reference.
+## Why This Matters
 
-`ValueMap` solves this by comparing object keys by value.
+When dictionaries with complex keys are serialized from the backend, key objects are represented as JSON property names. During frontend deserialization, you often create new key instances for lookups, which do not match by reference.
+
+`ValueMap` with `JsonSerializer` and `@field` metadata ensures these entries are reconstructed as typed keys and values.
 
 ## Field Metadata and Generic Arguments
 
@@ -33,19 +35,27 @@ class Projection {
 
 ## Behavior
 
-- Map keys are deserialized using the first generic argument.
-- Map values are deserialized using the second generic argument.
+- Keys are deserialized using the first generic argument.
+- Values are deserialized using the second generic argument.
 - Lookup with a new key instance works when key content is equal.
 
 ## Example
 
 ```typescript
+import { JsonSerializer } from '@cratis/fundamentals';
+
 const projection = JsonSerializer.deserialize(Projection, json);
 
 const key = new AccountKey();
 key.tenant = 'tenant-a';
 
 const summary = projection.accounts.get(key);
+
+projection.accounts.set(key, { balance: 1200 });
+
+for (const [accountKey, accountSummary] of projection.accounts.entries()) {
+    console.log(accountKey.tenant, accountSummary.balance);
+}
 ```
 
 ## Backend Interop

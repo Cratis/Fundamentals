@@ -2,6 +2,14 @@
   href: index.md
 - name: GUID
   href: guid.md
+- name: Constructor
+  href: constructor.md
+- name: PropertyAccessor
+  href: property_accessor.md
+- name: TimeSpan
+  href: time_span.md
+- name: ValueMap
+  href: value_map.md
 - name: Serialization
   href: serialization/toc.yml
   topicHref: serialization/index.md
