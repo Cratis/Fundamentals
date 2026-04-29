@@ -2,5 +2,7 @@
   href: serialization.md
 - name: Derived Types
   href: derived_types.md
+- name: Complex Key Dictionaries
+  href: complex_key_dictionaries.md
 - name: Date & Time Only
   href: date_and_time_only.md

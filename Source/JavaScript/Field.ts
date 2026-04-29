@@ -7,6 +7,11 @@ import { Constructor } from './Constructor';
  * Represents a field on a type.
  */
  export class Field {
-    constructor(readonly name: string, readonly type: Constructor, readonly enumerable: boolean, readonly derivatives: Constructor[]) {
+    constructor(
+        readonly name: string,
+        readonly type: Constructor,
+        readonly enumerable: boolean,
+        readonly derivatives: Constructor[],
+        readonly genericArguments: Constructor[]) {
     }
 }

@@ -7,6 +7,7 @@ import { Field } from './Field';
 import { Fields } from './Fields';
 import { Guid } from './Guid';
 import { TimeSpan } from './TimeSpan';
+import { ValueMap } from './ValueMap';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -18,7 +19,15 @@ const typeConverters: Map<Constructor, typeSerializer> = new Map<Constructor, ty
     [Boolean, (value: boolean) => value],
     [Date, (value: Date) => value.toISOString()],
     [Guid, (value: Guid) => value?.toString() ?? ''],
-    [TimeSpan, (value: TimeSpan) => value?.toString() ?? '']
+    [TimeSpan, (value: TimeSpan) => value?.toString() ?? ''],
+    [ValueMap, (value: ValueMap<any, any>) => {
+        const converted: any = {};
+        for (const [key, mapValue] of value.entries()) {
+            converted[serializeMapKey(key)] = convertTypesOnInstance(mapValue);
+        }
+
+        return converted;
+    }]
 ]);
 
 const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
@@ -49,6 +58,10 @@ const deserializeValueFromType = (type: Constructor, value: any) => {
 };
 
 const deserializeValueFromField = (field: Field, value: any) => {
+    if (field.type === ValueMap) {
+        return deserializeValueMapFromField(field, value);
+    }
+
     if (typeSerializers.has(field.type)) {
         return typeSerializers.get(field.type)!(value);
     } else {
@@ -60,6 +73,80 @@ const deserializeValueFromField = (field: Field, value: any) => {
 
         return JsonSerializer.deserialize(type, JSON.stringify(value));
     }
+};
+
+const serializeMapKey = (key: any): string => {
+    if (key === undefined || key === null) {
+        return '';
+    }
+
+    if (typeof key === 'string') {
+        return key;
+    }
+
+    if (typeof key === 'number' || typeof key === 'boolean' || typeof key === 'bigint') {
+        return key.toString();
+    }
+
+    if (key instanceof Date) {
+        return key.toISOString();
+    }
+
+    return JsonSerializer.serialize(key);
+};
+
+const deserializeMapKey = (keyType: Constructor, key: string): any => {
+    if (keyType === String) {
+        return key;
+    }
+
+    if (keyType === Number) {
+        return Number(key);
+    }
+
+    if (keyType === Boolean) {
+        return key.toLowerCase() === 'true';
+    }
+
+    if (keyType === Date) {
+        return new Date(key);
+    }
+
+    if (typeSerializers.has(keyType)) {
+        return typeSerializers.get(keyType)!(key);
+    }
+
+    return JsonSerializer.deserialize(keyType, key);
+};
+
+const deserializeMapValue = (valueType: Constructor | undefined, value: any): any => {
+    if (!valueType) {
+        return value;
+    }
+
+    if (typeSerializers.has(valueType)) {
+        return typeSerializers.get(valueType)!(value);
+    }
+
+    return JsonSerializer.deserialize(valueType, JSON.stringify(value));
+};
+
+const deserializeValueMapFromField = (field: Field, value: any): ValueMap<any, any> => {
+    const valueMap = new ValueMap<any, any>();
+    const keyType = field.genericArguments[0];
+    const valueType = field.genericArguments[1];
+
+    if (!value || !keyType) {
+        return valueMap;
+    }
+
+    for (const key of Object.keys(value)) {
+        const deserializedKey = deserializeMapKey(keyType, key);
+        const deserializedValue = deserializeMapValue(valueType, value[key]);
+        valueMap.set(deserializedKey, deserializedValue);
+    }
+
+    return valueMap;
 };
 
 const convertTypesOnInstance = (instance: any) => {

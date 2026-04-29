@@ -47,6 +47,7 @@ public static class Globals
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Converters =
             {
+                new ComplexKeyDictionaryJsonConverterFactory(),
                 new EnumConverterFactory(),
                 new EnumerableConceptAsJsonConverterFactory(),
                 new ConceptAsJsonConverterFactory(),
