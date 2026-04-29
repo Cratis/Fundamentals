@@ -6,3 +6,5 @@
   href: field_decorator.md
 - name: Derived Types
   href: derived_types.md
+- name: ValueMap
+  href: value_map.md

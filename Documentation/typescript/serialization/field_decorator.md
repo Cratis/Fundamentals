@@ -42,15 +42,17 @@ export class User {
 
 ### Decorator Parameters
 
-The `@field` decorator accepts three parameters:
+The `@field` decorator supports positional parameters and an options object.
 
 ```typescript
 @field(targetType: Constructor, enumerable?: boolean, derivatives?: Constructor[])
+@field(targetType: Constructor, { enumerable?: boolean, derivatives?: Constructor[], genericArguments?: Constructor[] })
 ```
 
 - **`targetType`**: The type constructor for the field (String, Number, Date, custom classes, etc.)
 - **`enumerable`**: Set to `true` for arrays/collections (default: `false`)
 - **`derivatives`**: Array of possible derived types for polymorphic fields (default: `[]`)
+- **`genericArguments`**: Generic type metadata for specialized types such as `ValueMap<TKey, TValue>`
 
 ## Field Types
 
