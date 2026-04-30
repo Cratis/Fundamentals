@@ -1,3 +1,6 @@
+---
+uid: Fundamentals.Concepts
+---
 # Concepts
 
 To express a domain in a better way rather than representing input parameters, fields, or properties as primitives such as `int`, `string`, or `Guid`,
