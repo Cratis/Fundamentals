@@ -5,7 +5,7 @@ namespace Cratis.Serialization.for_DerivedTypes;
 
 public class when_initializing_without_target_type : given.derived_types
 {
-    [DerivedType("fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6")]
+    [DerivedType("known-type")]
     record DerivedType { }
 
     Exception result;

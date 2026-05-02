@@ -7,7 +7,7 @@ public class when_getting_known_derived_type_that_matches : given.derived_types
 {
     interface ITargetType;
 
-    [DerivedType("fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6")]
+    [DerivedType("known-type")]
     record DerivedType : ITargetType { }
 
     DerivedTypes derived_types;
@@ -17,7 +17,7 @@ public class when_getting_known_derived_type_that_matches : given.derived_types
 
     void Establish() => derived_types = new DerivedTypes(types.Object);
 
-    void Because() => result = derived_types.GetDerivedTypeFor(typeof(ITargetType), "fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6");
+    void Because() => result = derived_types.GetDerivedTypeFor(typeof(ITargetType), "known-type");
 
     [Fact] void should_return_derived_type() => result.ShouldEqual(typeof(DerivedType));
 }

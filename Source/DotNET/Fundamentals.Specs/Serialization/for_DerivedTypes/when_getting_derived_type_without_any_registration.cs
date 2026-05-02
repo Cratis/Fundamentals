@@ -10,7 +10,7 @@ public class when_getting_derived_type_without_any_registration : given.derived_
 
     void Establish() => derived_types = new DerivedTypes(types.Object);
 
-    void Because() => result = Catch.Exception(() => _ = derived_types.GetDerivedTypeFor(typeof(object), "7ece19d8-2312-4335-a49e-3da5e88e2941"));
+    void Because() => result = Catch.Exception(() => _ = derived_types.GetDerivedTypeFor(typeof(object), "unknown-type"));
 
     [Fact] void should_throw_missing_derived_type_for_target_type() => result.ShouldBeOfExactType<MissingDerivedTypeForTargetType>();
 }
