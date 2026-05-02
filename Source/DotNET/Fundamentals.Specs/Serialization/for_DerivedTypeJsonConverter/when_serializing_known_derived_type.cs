@@ -8,7 +8,7 @@ namespace Cratis.Serialization.for_DerivedTypeJsonConverterFactory;
 
 public class when_serializing_known_derived_type : Specification
 {
-    const string derived_type_id = "230fbbd7-6e87-43c8-a3e5-af69b8fd759d";
+    const string derived_type_id = "my-derived-type";
     const string json = $"{{\"someValue\":42,\"{DerivedTypeJsonConverter<object>.DerivedTypeIdProperty}\":\"{derived_type_id}\"}}";
     interface ITargetType;
 

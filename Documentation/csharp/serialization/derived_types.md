@@ -92,9 +92,7 @@ When serialized, derived types include a special `_derivedTypeId` property:
 
 ## Uniqueness Requirements
 
-Derived type IDs must be **unique per interface** to enable proper polymorphic deserialization. While you can use any string format, using descriptive identifiers is recommended for readability:
-
-**Good approach** - Descriptive and unique:
+Derived type IDs must be **unique per interface** to enable proper polymorphic deserialization. The identifier is an arbitrary string — use whatever format makes sense for your domain:
 
 ```csharp
 [DerivedType("credit-card")]
@@ -104,17 +102,7 @@ public class CreditCard : IPaymentMethod { }
 public class PayPal : IPaymentMethod { }
 ```
 
-**Alternative approach** - Using GUIDs for maximum uniqueness:
-
-```csharp
-[DerivedType("550e8400-e29b-41d4-a716-446655440001")]
-public class CreditCard : IPaymentMethod { }
-
-[DerivedType("550e8400-e29b-41d4-a716-446655440002")]
-public class PayPal : IPaymentMethod { }
-```
-
-> **Note on GUIDs**: While GUIDs guarantee uniqueness, they sacrifice readability. If using GUIDs, ensure they are stored in shared constants to maintain consistency across your codebase and frontend services.
+Descriptive strings are strongly preferred — they make the serialized JSON readable and debugging straightforward.
 
 ## Advanced Scenarios
 
@@ -126,7 +114,7 @@ If a derived type implements multiple interfaces, you must specify which interfa
 public interface IPaymentMethod { }
 public interface IRefundable { }
 
-[DerivedType("550e8400-e29b-41d4-a716-446655440001", typeof(IPaymentMethod))]
+[DerivedType("credit-card", typeof(IPaymentMethod))]
 public class CreditCard : IPaymentMethod, IRefundable
 {
     // Implementation
@@ -141,7 +129,7 @@ The system automatically resolves target types based on implemented interfaces. 
 
 The system enforces several validation rules:
 
-1. **Unique Identifiers**: Each derived type must have a unique GUID identifier
+1. **Unique Identifiers**: Each derived type must have a unique string identifier
 2. **Single Target Type**: A derived type can only represent one target interface
 3. **Interface Implementation**: Derived types must implement their declared target interface
 

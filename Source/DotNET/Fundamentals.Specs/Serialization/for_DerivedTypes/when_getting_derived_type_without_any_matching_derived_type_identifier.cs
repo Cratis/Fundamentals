@@ -7,7 +7,7 @@ public class when_getting_derived_type_without_any_matching_derived_type_identif
 {
     interface ITargetType;
 
-    [DerivedType("fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6")]
+    [DerivedType("known-type")]
     record DerivedType : ITargetType { }
 
     DerivedTypes derived_types;
@@ -17,7 +17,7 @@ public class when_getting_derived_type_without_any_matching_derived_type_identif
 
     void Establish() => derived_types = new DerivedTypes(types.Object);
 
-    void Because() => result = Catch.Exception(() => _ = derived_types.GetDerivedTypeFor(typeof(ITargetType), "7ece19d8-2312-4335-a49e-3da5e88e2941"));
+    void Because() => result = Catch.Exception(() => _ = derived_types.GetDerivedTypeFor(typeof(ITargetType), "unknown-type"));
 
     [Fact] void should_throw_missing_derived_type_for_target_type() => result.ShouldBeOfExactType<MissingDerivedTypeForTargetType>();
 }

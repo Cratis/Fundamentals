@@ -7,7 +7,7 @@ public class when_initializing_with_type_with_target_type_but_no_target_types_im
 {
     interface ITarget;
 
-    [DerivedType("fc13ac34-b69b-4438-8ebc-bc91bb5e2ee6", typeof(ITarget))]
+    [DerivedType("known-type", typeof(ITarget))]
     record DerivedType { }
 
     Exception result;
