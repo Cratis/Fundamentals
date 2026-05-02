@@ -8,7 +8,7 @@ namespace Cratis.Serialization;
 /// <remarks>
 /// Initializes a new instance of the <see cref="DerivedTypeAttribute"/> class.
 /// </remarks>
-/// <param name="identifier">String representation of a <see cref="Guid"/>.</param>
+/// <param name="identifier">Arbitrary string that uniquely identifies the derived type.</param>
 /// <param name="targetType">Optional target type the derived type is for.</param>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public sealed class DerivedTypeAttribute(string identifier, Type? targetType = default) : Attribute

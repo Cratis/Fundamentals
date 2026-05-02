@@ -8,18 +8,18 @@ namespace Cratis.Serialization;
 /// <summary>
 /// The unique identifier identifying a derived type.
 /// </summary>
-/// <param name="id">The string representation of a <see cref="Guid"/> that identifies the type uniquely.</param>
-public record DerivedTypeId(Guid id) : ConceptAs<Guid>(id)
+/// <param name="id">The arbitrary string that identifies the type uniquely.</param>
+public record DerivedTypeId(string id) : ConceptAs<string>(id)
 {
     /// <summary>
-    /// Implicitly convert from <see cref="Guid"/> to <see cref="DerivedTypeId"/>.
+    /// Implicitly convert from a string to <see cref="DerivedTypeId"/>.
     /// </summary>
-    /// <param name="id"><see cref="Guid"/> to convert from.</param>
-    public static implicit operator DerivedTypeId(Guid id) => new(id);
+    /// <param name="id">String to convert from.</param>
+    public static implicit operator DerivedTypeId(string id) => new(id);
 
     /// <summary>
-    /// Implicitly convert from a string representation of a <see cref="Guid"/> to <see cref="DerivedTypeId"/>.
+    /// Implicitly convert from <see cref="DerivedTypeId"/> to string.
     /// </summary>
-    /// <param name="id">String <see cref="Guid"/> to convert from.</param>
-    public static implicit operator DerivedTypeId(string id) => new(Guid.Parse(id));
+    /// <param name="id"><see cref="DerivedTypeId"/> to convert from.</param>
+    public static implicit operator string(DerivedTypeId id) => id.Value;
 }

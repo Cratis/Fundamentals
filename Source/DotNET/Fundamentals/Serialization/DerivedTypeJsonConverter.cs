@@ -33,7 +33,7 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
 
         if (document.RootElement.TryGetProperty(DerivedTypeIdProperty, out var value))
         {
-            var derivedTypeId = (DerivedTypeId)value.GetGuid();
+            var derivedTypeId = (DerivedTypeId)value.GetString()!;
             var derivedType = _derivedTypes.GetDerivedTypeFor(typeToConvert, derivedTypeId);
             var instance = document.Deserialize(derivedType, options);
             return (T)instance!;
