@@ -82,12 +82,9 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
         foreach (var (contract, implementors) in contractsAndImplementors)
         {
             var implementingTypes = GetImplementingTypesFor(contract);
-            foreach (var implementor in implementors.Where(IsImplementation))
+            foreach (var implementor in implementors.Where(i => IsImplementation(i) && !implementingTypes.Contains(i)))
             {
-                if (!implementingTypes.Contains(implementor))
-                {
-                    implementingTypes.Add(implementor);
-                }
+                implementingTypes.Add(implementor);
             }
         }
     }
