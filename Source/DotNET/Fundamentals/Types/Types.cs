@@ -27,10 +27,18 @@ public class Types : ITypes
     /// Initializes a new instance of <see cref="Types"/>.
     /// </summary>
     /// <remarks>
-    /// This will automatically set up <see cref="Types"/> using the <see cref="ProjectReferencedAssemblies"/> and <see cref="PackageReferencedAssemblies"/> providers.
+    /// This will automatically set up <see cref="Types"/> using generated providers when available,
+    /// and otherwise use the <see cref="ProjectReferencedAssemblies"/> and <see cref="PackageReferencedAssemblies"/> providers.
     /// </remarks>
     public Types()
-        : this([ProjectReferencedAssemblies.Instance, PackageReferencedAssemblies.Instance])
+        : this(
+            GeneratedTypeDiscoveryRegistry.Providers.Any()
+                ? GeneratedTypeDiscoveryRegistry.Providers
+                :
+                [
+                    ProjectReferencedAssemblies.Instance,
+                    PackageReferencedAssemblies.Instance
+                ])
     {
     }
 
@@ -40,10 +48,40 @@ public class Types : ITypes
     /// <param name="assemblyProviders">Collection of assembly providers.</param>
     public Types(IEnumerable<ICanProvideAssembliesForDiscovery> assemblyProviders)
     {
-        assemblyProviders.ForEach(_ => _.Initialize());
-        var assemblies = assemblyProviders.SelectMany(_ => _.Assemblies).Distinct();
+        var providers = assemblyProviders.ToArray();
+
+        providers.ForEach(_ => _.Initialize());
+        var assemblies = providers.SelectMany(_ => _.Assemblies).Distinct();
         _assemblies.AddRange(assemblies);
-        All = assemblyProviders.SelectMany(_ => _.DefinedTypes).Distinct();
+        All = providers.SelectMany(_ => _.DefinedTypes).Distinct();
+
+        var allProvidersHavePrecomputedMappings = providers.Length > 0 && providers.All(_ => _ is ICanProvideContractToImplementorsForDiscovery);
+        if (allProvidersHavePrecomputedMappings)
+        {
+            var contractsAndImplementors = new Dictionary<Type, HashSet<Type>>();
+
+            foreach (var provider in providers.OfType<ICanProvideContractToImplementorsForDiscovery>())
+            {
+                foreach (var (contract, implementors) in provider.ContractsAndImplementors)
+                {
+                    if (!contractsAndImplementors.TryGetValue(contract, out var currentImplementors))
+                    {
+                        currentImplementors = [];
+                        contractsAndImplementors[contract] = currentImplementors;
+                    }
+
+                    foreach (var implementor in implementors)
+                    {
+                        currentImplementors.Add(implementor);
+                    }
+                }
+            }
+
+            _contractToImplementorsMap.Feed(contractsAndImplementors.ToDictionary(_ => _.Key, _ => _.Value.AsEnumerable()));
+            _contractToImplementorsMap.FeedTypes(All);
+            return;
+        }
+
         _contractToImplementorsMap.Feed(All);
     }
 

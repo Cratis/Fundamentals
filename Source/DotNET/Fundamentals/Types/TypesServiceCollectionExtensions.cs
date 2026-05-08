@@ -18,11 +18,17 @@ public static class TypesServiceCollectionExtensions
     /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
     public static IServiceCollection AddTypeDiscovery(this IServiceCollection services, IEnumerable<ICanProvideAssembliesForDiscovery>? assemblyProviders = default)
     {
-        assemblyProviders ??=
-        [
-            ProjectReferencedAssemblies.Instance,
-            PackageReferencedAssemblies.Instance
-        ];
+        if (assemblyProviders is null)
+        {
+            var generatedProviders = GeneratedTypeDiscoveryRegistry.Providers.ToArray();
+            assemblyProviders = generatedProviders.Length > 0
+                ? generatedProviders
+                :
+                [
+                    ProjectReferencedAssemblies.Instance,
+                    PackageReferencedAssemblies.Instance
+                ];
+        }
 
         var types = assemblyProviders is null ? new Types() : new Types(assemblyProviders);
         services.AddSingleton<ITypes>(types);

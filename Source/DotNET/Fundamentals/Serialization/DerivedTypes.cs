@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Cratis.DependencyInjection;
 using Cratis.Reflection;
@@ -72,6 +73,7 @@ public class DerivedTypes : IDerivedTypes
     /// <inheritdoc/>
     public bool HasDerivatives(Type type) => _targetTypeToDerivedType.ContainsKey(type);
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Derived type interface inspection is retained for compatibility fallback behavior.")]
     Type GetTargetTypeFrom(Type derivedType)
     {
         var attribute = derivedType.GetCustomAttribute<DerivedTypeAttribute>()!;
