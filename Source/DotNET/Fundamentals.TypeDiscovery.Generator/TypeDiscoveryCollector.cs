@@ -28,10 +28,8 @@ internal static class TypeDiscoveryCollector
         {
             var implementorExpression = implementor.GetTypeOfExpression();
 
-            foreach (var contract in implementor.GetAllBaseAndImplementingSymbols())
+            foreach (var contractExpression in implementor.GetAllBaseAndImplementingSymbols().Select(c => c.GetTypeOfExpression()))
             {
-                var contractExpression = contract.GetTypeOfExpression();
-
                 if (!contractsAndImplementors.TryGetValue(contractExpression, out var mapped))
                 {
                     mapped = [];
