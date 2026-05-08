@@ -12,16 +12,16 @@ public class and_two_classes_implement_the_same_interface : Specification
     (string ServiceExpression, string ImplementationExpression, string LifetimeExpression)[] _result;
 
     void Establish() =>
-        _symbols = CompilationFactory.GetNamedTypes(
-            """
-            namespace App;
-            public interface IFoo { }
-            public class Foo : IFoo { }
-            public class AnotherFoo : IFoo { }
-            """)
-            .ToArray();
+        _symbols =
+        [
+            .. CompilationFactory.GetNamedTypes(
+                "namespace App;\n" +
+                "public interface IFoo { }\n" +
+                "public class Foo : IFoo { }\n" +
+                "public class AnotherFoo : IFoo { }")
+        ];
 
-    void Because() => _result = TypeDiscoveryCollector.GetConventionServiceBindings(_symbols).ToArray();
+    void Because() => _result = [.. TypeDiscoveryCollector.GetConventionServiceBindings(_symbols)];
 
     [Fact] void should_produce_no_bindings() => _result.ShouldBeEmpty();
 }

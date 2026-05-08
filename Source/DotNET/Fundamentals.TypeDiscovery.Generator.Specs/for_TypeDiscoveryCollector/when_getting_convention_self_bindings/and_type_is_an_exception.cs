@@ -12,10 +12,9 @@ public class and_type_is_an_exception : Specification
     (string ImplementationExpression, string LifetimeExpression)[] _result;
 
     void Establish() =>
-        _symbols = CompilationFactory.GetNamedTypes("namespace App { public class MyError : System.Exception { } }")
-            .ToArray();
+        _symbols = [.. CompilationFactory.GetNamedTypes("namespace App { public class MyError : System.Exception { } }")];
 
-    void Because() => _result = TypeDiscoveryCollector.GetConventionSelfBindings(_symbols).ToArray();
+    void Because() => _result = [.. TypeDiscoveryCollector.GetConventionSelfBindings(_symbols)];
 
     [Fact] void should_not_include_the_exception_type() => _result.Select(e => e.ImplementationExpression).ShouldNotContain("global::App.MyError");
 }

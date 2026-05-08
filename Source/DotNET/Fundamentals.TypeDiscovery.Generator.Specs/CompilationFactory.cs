@@ -29,9 +29,7 @@ static class CompilationFactory
     public static ImmutableArray<INamedTypeSymbol> GetNamedTypes(string source, params Assembly[] additionalAssemblies)
     {
         var compilation = CreateCompilation(source, additionalAssemblies);
-        return compilation.Assembly.GlobalNamespace
-            .GetAllNamedTypes()
-            .ToImmutableArray();
+        return [.. compilation.Assembly.GlobalNamespace.GetAllNamedTypes()];
     }
 
     /// <summary>
@@ -43,16 +41,18 @@ static class CompilationFactory
     public static CSharpCompilation CreateCompilation(string source, params Assembly[] additionalAssemblies)
     {
         var syntaxTree = CSharpSyntaxTree.ParseText(source);
-        var references = _defaultAssemblies
-            .Concat(additionalAssemblies)
-            .Distinct()
-            .Select(static asm => MetadataReference.CreateFromFile(asm.Location))
-            .Cast<MetadataReference>()
-            .ToArray();
+        SyntaxTree[] syntaxTrees = [syntaxTree];
+        MetadataReference[] references =
+        [
+            .. _defaultAssemblies
+                .Concat(additionalAssemblies)
+                .Distinct()
+                .Select(static asm => (MetadataReference)MetadataReference.CreateFromFile(asm.Location))
+        ];
 
         return CSharpCompilation.Create(
             "TestAssembly",
-            [syntaxTree],
+            syntaxTrees,
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
     }

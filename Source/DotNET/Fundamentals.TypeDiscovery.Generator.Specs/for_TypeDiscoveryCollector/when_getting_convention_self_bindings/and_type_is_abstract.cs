@@ -12,10 +12,9 @@ public class and_type_is_abstract : Specification
     (string ImplementationExpression, string LifetimeExpression)[] _result;
 
     void Establish() =>
-        _symbols = CompilationFactory.GetNamedTypes("namespace App { public abstract class Base { } }")
-            .ToArray();
+        _symbols = [.. CompilationFactory.GetNamedTypes("namespace App { public abstract class Base { } }")];
 
-    void Because() => _result = TypeDiscoveryCollector.GetConventionSelfBindings(_symbols).ToArray();
+    void Because() => _result = [.. TypeDiscoveryCollector.GetConventionSelfBindings(_symbols)];
 
     [Fact] void should_not_include_the_abstract_type() => _result.Select(e => e.ImplementationExpression).ShouldNotContain("global::App.Base");
 }

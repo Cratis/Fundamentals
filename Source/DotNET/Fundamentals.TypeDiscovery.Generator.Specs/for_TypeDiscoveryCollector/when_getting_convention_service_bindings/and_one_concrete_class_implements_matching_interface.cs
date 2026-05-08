@@ -12,15 +12,15 @@ public class and_one_concrete_class_implements_matching_interface : Specificatio
     (string ServiceExpression, string ImplementationExpression, string LifetimeExpression)[] _result;
 
     void Establish() =>
-        _symbols = CompilationFactory.GetNamedTypes(
-            """
-            namespace App;
-            public interface IFoo { }
-            public class Foo : IFoo { }
-            """)
-            .ToArray();
+        _symbols =
+        [
+            .. CompilationFactory.GetNamedTypes(
+                "namespace App;\n" +
+                "public interface IFoo { }\n" +
+                "public class Foo : IFoo { }")
+        ];
 
-    void Because() => _result = TypeDiscoveryCollector.GetConventionServiceBindings(_symbols).ToArray();
+    void Because() => _result = [.. TypeDiscoveryCollector.GetConventionServiceBindings(_symbols)];
 
     [Fact] void should_have_one_binding() => _result.Length.ShouldEqual(1);
     [Fact] void should_map_the_interface_as_service() => _result[0].ServiceExpression.ShouldEqual("global::App.IFoo");

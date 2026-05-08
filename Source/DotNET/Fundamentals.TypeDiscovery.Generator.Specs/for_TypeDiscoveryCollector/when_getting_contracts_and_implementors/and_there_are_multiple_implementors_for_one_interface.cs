@@ -12,14 +12,14 @@ public class and_there_are_multiple_implementors_for_one_interface : Specificati
     System.Collections.Immutable.ImmutableArray<string> _implementors;
 
     void Establish() =>
-        _symbols = CompilationFactory.GetNamedTypes(
-            """
-            namespace App;
-            public interface IHandler { }
-            public class HandlerA : IHandler { }
-            public class HandlerB : IHandler { }
-            """)
-            .ToArray();
+        _symbols =
+        [
+            .. CompilationFactory.GetNamedTypes(
+                "namespace App;\n" +
+                "public interface IHandler { }\n" +
+                "public class HandlerA : IHandler { }\n" +
+                "public class HandlerB : IHandler { }")
+        ];
 
     void Because() =>
         _implementors = TypeDiscoveryCollector.GetContractsAndImplementors(_symbols)

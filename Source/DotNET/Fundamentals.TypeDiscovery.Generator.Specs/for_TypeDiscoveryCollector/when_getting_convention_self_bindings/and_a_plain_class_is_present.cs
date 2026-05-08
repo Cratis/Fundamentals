@@ -12,10 +12,9 @@ public class and_a_plain_class_is_present : Specification
     (string ImplementationExpression, string LifetimeExpression)[] _result;
 
     void Establish() =>
-        _symbols = CompilationFactory.GetNamedTypes("namespace App { public class MyService { } }")
-            .ToArray();
+        _symbols = [.. CompilationFactory.GetNamedTypes("namespace App { public class MyService { } }")];
 
-    void Because() => _result = TypeDiscoveryCollector.GetConventionSelfBindings(_symbols).ToArray();
+    void Because() => _result = [.. TypeDiscoveryCollector.GetConventionSelfBindings(_symbols)];
 
     [Fact] void should_include_the_class() => _result.Select(e => e.ImplementationExpression).ShouldContain("global::App.MyService");
 }

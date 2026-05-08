@@ -12,15 +12,15 @@ public class and_there_is_one_implementor_per_interface : Specification
     (string ContractExpression, System.Collections.Immutable.ImmutableArray<string> ImplementorExpressions)[] _result;
 
     void Establish() =>
-        _symbols = CompilationFactory.GetNamedTypes(
-            """
-            namespace App;
-            public interface IFoo { }
-            public class Foo : IFoo { }
-            """)
-            .ToArray();
+        _symbols =
+        [
+            .. CompilationFactory.GetNamedTypes(
+                "namespace App;\n" +
+                "public interface IFoo { }\n" +
+                "public class Foo : IFoo { }")
+        ];
 
-    void Because() => _result = TypeDiscoveryCollector.GetContractsAndImplementors(_symbols).ToArray();
+    void Because() => _result = [.. TypeDiscoveryCollector.GetContractsAndImplementors(_symbols)];
 
     [Fact] void should_include_the_interface_as_a_contract() => _result.Select(e => e.ContractExpression).ShouldContain("global::App.IFoo");
     [Fact] void should_map_the_class_as_the_implementor() =>

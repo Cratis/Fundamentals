@@ -12,15 +12,15 @@ public class and_interface_name_does_not_match_convention : Specification
     (string ServiceExpression, string ImplementationExpression, string LifetimeExpression)[] _result;
 
     void Establish() =>
-        _symbols = CompilationFactory.GetNamedTypes(
-            """
-            namespace App;
-            public interface IBar { }
-            public class Foo : IBar { }
-            """)
-            .ToArray();
+        _symbols =
+        [
+            .. CompilationFactory.GetNamedTypes(
+                "namespace App;\n" +
+                "public interface IBar { }\n" +
+                "public class Foo : IBar { }")
+        ];
 
-    void Because() => _result = TypeDiscoveryCollector.GetConventionServiceBindings(_symbols).ToArray();
+    void Because() => _result = [.. TypeDiscoveryCollector.GetConventionServiceBindings(_symbols)];
 
     [Fact] void should_produce_no_bindings() => _result.ShouldBeEmpty();
 }

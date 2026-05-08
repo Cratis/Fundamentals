@@ -12,10 +12,9 @@ public class and_type_has_constructor_with_primitive_parameter : Specification
     (string ImplementationExpression, string LifetimeExpression)[] _result;
 
     void Establish() =>
-        _symbols = CompilationFactory.GetNamedTypes("namespace App { public class MyService { public MyService(string name) { } } }")
-            .ToArray();
+        _symbols = [.. CompilationFactory.GetNamedTypes("namespace App { public class MyService { public MyService(string name) { } } }")];
 
-    void Because() => _result = TypeDiscoveryCollector.GetConventionSelfBindings(_symbols).ToArray();
+    void Because() => _result = [.. TypeDiscoveryCollector.GetConventionSelfBindings(_symbols)];
 
     [Fact] void should_not_include_the_type() => _result.Select(e => e.ImplementationExpression).ShouldNotContain("global::App.MyService");
 }

@@ -26,7 +26,7 @@ internal static class TypeSymbolExtensions
     /// Covers all C# built-in value types, strings, nullable wrappers, and common value-type primitives.
     /// </summary>
     /// <param name="type">The type to check.</param>
-    /// <returns><c>true</c> if the type is primitive-like; otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the type is primitive-like; otherwise <see langword="false"/>.</returns>
     public static bool IsPrimitiveLike(this ITypeSymbol type)
     {
         if (type is INamedTypeSymbol namedType && namedType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)

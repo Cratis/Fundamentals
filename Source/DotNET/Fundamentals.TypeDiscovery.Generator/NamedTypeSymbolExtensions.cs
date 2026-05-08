@@ -20,7 +20,7 @@ internal static class NamedTypeSymbolExtensions
     /// (i.e. it is not an error, implicit, anonymous, or private type).
     /// </summary>
     /// <param name="type">The type to check.</param>
-    /// <returns><c>true</c> if the type can be referenced; otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the type can be referenced; otherwise <see langword="false"/>.</returns>
     public static bool CanBeReferencedFromGeneratedCode(this INamedTypeSymbol type) =>
         type.TypeKind is not TypeKind.Error &&
         !type.IsImplicitlyDeclared &&
@@ -32,7 +32,7 @@ internal static class NamedTypeSymbolExtensions
     /// Returns whether the type is a concrete implementation — not an interface or abstract class.
     /// </summary>
     /// <param name="type">The type to check.</param>
-    /// <returns><c>true</c> if the type is a concrete implementation; otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the type is a concrete implementation; otherwise <see langword="false"/>.</returns>
     public static bool IsImplementation(this INamedTypeSymbol type) =>
         type.TypeKind is not TypeKind.Interface &&
         !type.IsAbstract;
@@ -53,7 +53,7 @@ internal static class NamedTypeSymbolExtensions
     /// Returns whether the type inherits from <c>System.Exception</c>.
     /// </summary>
     /// <param name="type">The type to check.</param>
-    /// <returns><c>true</c> if the type is an exception type; otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the type is an exception type; otherwise <see langword="false"/>.</returns>
     public static bool IsExceptionType(this INamedTypeSymbol type)
     {
         var current = type.BaseType;
@@ -76,7 +76,7 @@ internal static class NamedTypeSymbolExtensions
     /// and should therefore be excluded from all DI convention discovery.
     /// </summary>
     /// <param name="type">The type to check.</param>
-    /// <returns><c>true</c> if the type should be ignored; otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the type should be ignored; otherwise <see langword="false"/>.</returns>
     public static bool ShouldIgnoreConvention(this INamedTypeSymbol type) =>
         type.GetAttributes().Any(_ => _.AttributeClass?.ToDisplayString() == IgnoreConventionAttributeFullName);
 
@@ -85,7 +85,7 @@ internal static class NamedTypeSymbolExtensions
     /// and should therefore be excluded from DI self-binding convention discovery.
     /// </summary>
     /// <param name="type">The type to check.</param>
-    /// <returns><c>true</c> if the type is in a system namespace; otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the type is in a system namespace; otherwise <see langword="false"/>.</returns>
     public static bool IsInSystemOrMicrosoftNamespace(this INamedTypeSymbol type)
     {
         var ns = type.ContainingNamespace.ToDisplayString();
@@ -97,7 +97,7 @@ internal static class NamedTypeSymbolExtensions
     /// and therefore cannot be resolved from a DI container.
     /// </summary>
     /// <param name="type">The type to check.</param>
-    /// <returns><c>true</c> if any public constructor has an unresolvable parameter; otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if any public constructor has an unresolvable parameter; otherwise <see langword="false"/>.</returns>
     public static bool HasConstructorWithUnresolvableParameters(this INamedTypeSymbol type) =>
         type.InstanceConstructors
             .Any(ctor => ctor.DeclaredAccessibility == Accessibility.Public &&
@@ -108,7 +108,7 @@ internal static class NamedTypeSymbolExtensions
     /// Records are excluded from self-binding because they typically represent data, not services.
     /// </summary>
     /// <param name="type">The type to check.</param>
-    /// <returns><c>true</c> if any public constructor has a record parameter; otherwise <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if any public constructor has a record parameter; otherwise <see langword="false"/>.</returns>
     public static bool HasConstructorWithRecordTypes(this INamedTypeSymbol type) =>
         type.InstanceConstructors
             .Any(ctor => ctor.DeclaredAccessibility == Accessibility.Public &&
