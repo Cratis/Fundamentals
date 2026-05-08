@@ -3,4 +3,8 @@
 
 namespace TypeDiscovery;
 
-internal interface ISomeInterface;
+[Cratis.DependencyInjection.Scoped]
+internal sealed class ScopedSelfBinding
+{
+    public string Describe() => "Registered through AddSelfBindings";
+}

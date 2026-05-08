@@ -27,6 +27,26 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
         AddTypesToAllTypes(types);
     }
 
+    /// <summary>
+    /// Feed the map with precomputed contract to implementor mappings.
+    /// </summary>
+    /// <param name="contractsAndImplementors">Precomputed mappings.</param>
+    public void Feed(IDictionary<Type, IEnumerable<Type>> contractsAndImplementors)
+    {
+        MapContractsAndImplementors(contractsAndImplementors);
+        AddTypesToAllTypes(contractsAndImplementors.Keys);
+        AddTypesToAllTypes(contractsAndImplementors.Values.SelectMany(_ => _));
+    }
+
+    /// <summary>
+    /// Feed only the type index, without calculating contract mappings.
+    /// </summary>
+    /// <param name="types"><see cref="IEnumerable{Type}">Types</see> to feed with.</param>
+    public void FeedTypes(IEnumerable<Type> types)
+    {
+        AddTypesToAllTypes(types);
+    }
+
     /// <inheritdoc/>
     public IEnumerable<Type> GetImplementorsFor<T>()
     {
@@ -55,6 +75,21 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
                 if (!implementingTypes.Contains(implementor)) implementingTypes.Add(implementor);
             }
         });
+    }
+
+    void MapContractsAndImplementors(IDictionary<Type, IEnumerable<Type>> contractsAndImplementors)
+    {
+        foreach (var (contract, implementors) in contractsAndImplementors)
+        {
+            var implementingTypes = GetImplementingTypesFor(contract);
+            foreach (var implementor in implementors.Where(IsImplementation))
+            {
+                if (!implementingTypes.Contains(implementor))
+                {
+                    implementingTypes.Add(implementor);
+                }
+            }
+        }
     }
 
     bool IsImplementation(Type type) => !type.IsInterface && !type.IsAbstract;

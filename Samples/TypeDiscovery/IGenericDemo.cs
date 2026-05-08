@@ -3,4 +3,7 @@
 
 namespace TypeDiscovery;
 
-internal interface ISomeInterface;
+internal interface IGenericDemo<T>
+{
+    string GetValueTypeName();
+}

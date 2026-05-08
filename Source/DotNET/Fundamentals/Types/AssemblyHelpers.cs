@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Cratis.Types;
@@ -37,6 +38,7 @@ public static class AssemblyHelpers
     /// </summary>
     /// <param name="name">Name of assembly to resolve.</param>
     /// <returns>Assembly instance of found, null if not.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Fallback file-based assembly resolution is used when generated discovery metadata is unavailable.")]
     public static Assembly? ResolveFromFile(string name)
     {
         try

@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Microsoft.Extensions.DependencyModel;
 
@@ -36,6 +37,8 @@ public class PackageReferencedAssemblies : ICanProvideAssembliesForDiscovery
     public IEnumerable<Type> DefinedTypes { get; private set; } = [];
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("SingleFile", "IL3002", Justification = "Fallback provider is used when generated discovery metadata is unavailable.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Fallback provider is used when generated discovery metadata is unavailable.")]
     public void Initialize()
     {
         lock (_lock)

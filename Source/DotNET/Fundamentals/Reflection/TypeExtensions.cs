@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Reflection;
 
@@ -294,6 +295,7 @@ public static class TypeExtensions
     /// <param name="type"><see cref="Type"/> to check.</param>
     /// <param name="interfaceType">Interface to check for.</param>
     /// <returns>True if the type implements the interface, false if not.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based interface checks are used by compatibility fallback paths when generated metadata is unavailable.")]
     public static bool HasInterface(this Type type, Type interfaceType)
     {
         bool DoesGenericParametersMatch(Type typeToCheck)
@@ -380,6 +382,7 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="type"><see cref="Type"/> to get for.</param>
     /// <returns>All base and implementing <see cref="Type">types</see>.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based base/interface discovery is used by compatibility fallback paths when generated metadata is unavailable.")]
     public static IEnumerable<Type> AllBaseAndImplementingTypes(this Type type)
     {
         return type.BaseTypes()
@@ -415,6 +418,7 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="type">Type to check.</param>
     /// <returns>True if record, false if not.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based record checks are used by compatibility fallback paths when generated metadata is unavailable.")]
     public static bool IsRecord(this Type type) => type.GetTypeInfo().DeclaredProperties.Any(x => x.Name == "EqualityContract");
 
     /// <summary>

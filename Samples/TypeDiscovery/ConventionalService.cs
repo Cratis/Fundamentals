@@ -3,4 +3,7 @@
 
 namespace TypeDiscovery;
 
-internal interface ISomeInterface;
+internal sealed class ConventionalService : IConventionalService
+{
+    public string Describe() => "Registered through AddBindingsByConvention";
+}

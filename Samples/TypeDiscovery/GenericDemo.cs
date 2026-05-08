@@ -3,4 +3,7 @@
 
 namespace TypeDiscovery;
 
-internal interface ISomeInterface;
+internal sealed class GenericDemo : IGenericDemo<int>
+{
+    public string GetValueTypeName() => nameof(Int32);
+}

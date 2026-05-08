@@ -14,4 +14,18 @@
         <PackageReference Include="OneOf" />
         <PackageReference Include="OneOf.SourceGenerator" />
     </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Fundamentals.TypeDiscovery.Generator/Fundamentals.TypeDiscovery.Generator.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"
+                          PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)..\Fundamentals.TypeDiscovery.Generator\bin\$(Configuration)\netstandard2.0\Cratis.Fundamentals.TypeDiscovery.Generator.dll"
+              Pack="true"
+              PackagePath="analyzers/dotnet/cs"
+              Visible="false" />
+    </ItemGroup>
 </Project>

@@ -1,8 +1,10 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Cratis.Reflection;
+using Cratis.Types;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Cratis.DependencyInjection;
@@ -20,6 +22,89 @@ public static class ServiceCollectionExtensions
     /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
     /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
     public static IServiceCollection AddBindingsByConvention(this IServiceCollection services)
+    {
+        return TryAddGeneratedBindingsByConvention(services)
+            ? services
+            : AddBindingsByConventionUsingReflectionFallback(services);
+    }
+
+    /// <summary>
+    /// Add self bindings for types that are not already registered.
+    /// </summary>
+    /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
+    /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
+    public static IServiceCollection AddSelfBindings(this IServiceCollection services)
+    {
+        return TryAddGeneratedSelfBindings(services)
+            ? services
+            : AddSelfBindingsUsingReflectionFallback(services);
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
+    static bool TryAddGeneratedBindingsByConvention(IServiceCollection services)
+    {
+        var generatedBindings = GeneratedTypeDiscoveryRegistry.Providers
+            .OfType<ICanProvideConventionsForDependencyInjection>()
+            .SelectMany(_ => _.ConventionServiceBindings)
+            .ToArray();
+
+        if (generatedBindings.Length == 0)
+        {
+            return false;
+        }
+
+        generatedBindings.ToList().ForEach(binding =>
+        {
+            if (services.Any(_ => _.ServiceType == binding.ServiceType) || binding.ImplementationType.IsAbstract)
+            {
+                return;
+            }
+
+            _ = binding.Lifetime switch
+            {
+                ServiceLifetime.Singleton => services.AddSingleton(binding.ServiceType, binding.ImplementationType),
+                ServiceLifetime.Scoped => services.AddScoped(binding.ServiceType, binding.ImplementationType),
+                _ => services.AddTransient(binding.ServiceType, binding.ImplementationType)
+            };
+        });
+
+        return true;
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
+    static bool TryAddGeneratedSelfBindings(IServiceCollection services)
+    {
+        var generatedBindings = GeneratedTypeDiscoveryRegistry.Providers
+            .OfType<ICanProvideConventionsForDependencyInjection>()
+            .SelectMany(_ => _.SelfBindings)
+            .ToArray();
+
+        if (generatedBindings.Length == 0)
+        {
+            return false;
+        }
+
+        generatedBindings.ToList().ForEach(binding =>
+        {
+            if (services.Any(s => s.ServiceType == binding.ImplementationType))
+            {
+                return;
+            }
+
+            _ = binding.Lifetime switch
+            {
+                ServiceLifetime.Singleton => services.AddSingleton(binding.ImplementationType, binding.ImplementationType),
+                ServiceLifetime.Scoped => services.AddScoped(binding.ImplementationType, binding.ImplementationType),
+                _ => services.AddTransient(binding.ImplementationType, binding.ImplementationType)
+            };
+        });
+
+        return true;
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based convention scanning is a compatibility fallback when generated metadata is unavailable.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Reflection-based convention scanning is a compatibility fallback when generated metadata is unavailable.")]
+    static IServiceCollection AddBindingsByConventionUsingReflectionFallback(IServiceCollection services)
     {
         var types = Types.Types.Instance;
 
@@ -64,12 +149,9 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>
-    /// Add self bindings for types that are not already registered.
-    /// </summary>
-    /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
-    /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
-    public static IServiceCollection AddSelfBindings(this IServiceCollection services)
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "Reflection-based convention scanning is a compatibility fallback when generated metadata is unavailable.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based convention scanning is a compatibility fallback when generated metadata is unavailable.")]
+    static IServiceCollection AddSelfBindingsUsingReflectionFallback(IServiceCollection services)
     {
         const TypeAttributes staticType = TypeAttributes.Abstract | TypeAttributes.Sealed;
 
@@ -97,15 +179,18 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based convention scanning is a compatibility fallback when generated metadata is unavailable.")]
     static bool ShouldIgnoreConvention(Type type) =>
         type.HasAttribute<IgnoreConventionAttribute>();
 
     static bool ShouldIgnoreNamespace(string namespaceToCheck) =>
         _namespacesToIgnoreForSelfBinding.Any(namespaceToCheck.StartsWith);
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based convention scanning is a compatibility fallback when generated metadata is unavailable.")]
     static bool HasConstructorWithUnresolvableParameters(Type type) =>
         type.GetConstructors().Any(_ => _.GetParameters().Any(p => p.ParameterType.IsAPrimitiveType()));
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based convention scanning is a compatibility fallback when generated metadata is unavailable.")]
     static bool HasConstructorWithRecordTypes(Type type) =>
         type.GetConstructors().Any(_ => _.GetParameters().Any(p => p.ParameterType.IsRecord()));
 
