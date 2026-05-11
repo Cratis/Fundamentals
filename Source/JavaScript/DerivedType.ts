@@ -4,11 +4,22 @@
 import { Constructor } from './Constructor';
 
 export class DerivedType {
-    static set(target: Constructor, identifier: string) {
+    static set(target: Constructor, identifier: string, targetType?: Constructor) {
         Reflect.defineMetadata('derivedType', identifier, target);
+        if (targetType) {
+            const existing: Constructor[] = Reflect.getOwnMetadata('derivedTypes', targetType) ?? [];
+            if (!existing.includes(target)) {
+                existing.push(target);
+                Reflect.defineMetadata('derivedTypes', existing, targetType);
+            }
+        }
     }
 
     static get(target: Constructor): string {
         return Reflect.getOwnMetadata('derivedType', target);
+    }
+
+    static getDerivedTypesFor(targetType: Constructor): Constructor[] {
+        return Reflect.getOwnMetadata('derivedTypes', targetType) ?? [];
     }
 }

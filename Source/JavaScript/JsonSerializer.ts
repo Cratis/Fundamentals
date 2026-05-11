@@ -66,9 +66,10 @@ const deserializeValueFromField = (field: Field, value: any) => {
         return typeSerializers.get(field.type)!(value);
     } else {
         let type = field.type;
-        if (field.derivatives.length > 0 && value[JsonSerializer.DerivedTypeIdProperty]) {
+        if (value[JsonSerializer.DerivedTypeIdProperty]) {
             const derivedTypeId = value[JsonSerializer.DerivedTypeIdProperty];
-            type = field.derivatives.find(_ => DerivedType.get(_) == derivedTypeId) || type;
+            const candidates = [...field.derivatives, ...DerivedType.getDerivedTypesFor(field.type)];
+            type = candidates.find(_ => DerivedType.get(_) == derivedTypeId) || type;
         }
 
         return JsonSerializer.deserialize(type, JSON.stringify(value));
@@ -156,6 +157,11 @@ const convertTypesOnInstance = (instance: any) => {
 
     const properties = Object.getOwnPropertyNames(instance);
     const converted: any = {};
+
+    const derivedTypeId = DerivedType.get(instance.constructor);
+    if (derivedTypeId) {
+        converted[JsonSerializer.DerivedTypeIdProperty] = derivedTypeId;
+    }
     properties.forEach(property => {
         let value = instance[property];
         if (value !== undefined) {
