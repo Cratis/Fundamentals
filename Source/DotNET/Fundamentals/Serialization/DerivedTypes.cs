@@ -76,19 +76,17 @@ public class DerivedTypes : IDerivedTypes
     {
         var attribute = derivedType.GetCustomAttribute<DerivedTypeAttribute>()!;
         var targetType = attribute.TargetType;
-        var interfaces = derivedType.GetInterfaces().Where(_ => !_.Namespace?.StartsWith("System") ?? true).ToArray();
 
-        if (targetType is null)
+        if (targetType is not null)
         {
-            ThrowIfAmbiguousTargetTypeForDerivedType(derivedType, interfaces);
-            ThrowIfMissingTargetTypeForDerivedType(derivedType, interfaces);
-            targetType = interfaces[0];
+            ThrowIfTargetTypeMismatchesForDerivedType(derivedType, targetType);
+            return targetType;
         }
 
+        var interfaces = derivedType.GetInterfaces().Where(_ => !_.Namespace?.StartsWith("System") ?? true).ToArray();
+        ThrowIfAmbiguousTargetTypeForDerivedType(derivedType, interfaces);
         ThrowIfMissingTargetTypeForDerivedType(derivedType, interfaces);
-        ThrowIfTargetTypeMismatchesForDerivedType(derivedType, targetType, interfaces);
-
-        return targetType;
+        return interfaces[0];
     }
 
     void ThrowIfMissingDerivedTypeOrMissingIdentifier(Type targetType, DerivedTypeId derivedTypeId)
@@ -126,9 +124,9 @@ public class DerivedTypes : IDerivedTypes
         }
     }
 
-    void ThrowIfTargetTypeMismatchesForDerivedType(Type derivedType, Type? targetType, Type[] interfaces)
+    void ThrowIfTargetTypeMismatchesForDerivedType(Type derivedType, Type targetType)
     {
-        if (!interfaces.Any(_ => _ == targetType))
+        if (!derivedType.IsAssignableTo(targetType))
         {
             throw new TargetTypeMismatchForDerivedType(derivedType);
         }
