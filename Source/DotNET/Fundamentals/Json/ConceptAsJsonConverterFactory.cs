@@ -18,6 +18,7 @@ public class ConceptAsJsonConverterFactory : JsonConverterFactory
 
     /// <inheritdoc/>
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Uses MakeGenericType on ConceptAsJsonConverter<T> which is registered at startup.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "ConceptAsJsonConverter<T> has a public parameterless constructor that is always preserved.")]
     [UnconditionalSuppressMessage("Trimming", "IL2071", Justification = "ConceptAsJsonConverter<T> has a public parameterless constructor that is always preserved.")]
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {

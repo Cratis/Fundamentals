@@ -20,6 +20,7 @@ public class EnumConverterFactory : JsonConverterFactory
 
     /// <inheritdoc/>
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Uses MakeGenericType on EnumConverter<T>; enum types are always preserved.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "EnumConverter<T> has a public parameterless constructor that is always preserved.")]
     [UnconditionalSuppressMessage("Trimming", "IL2071", Justification = "EnumConverter<T> has a public parameterless constructor that is always preserved.")]
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {

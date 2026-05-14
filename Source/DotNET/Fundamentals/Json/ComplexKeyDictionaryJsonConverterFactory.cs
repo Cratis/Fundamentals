@@ -29,6 +29,7 @@ public class ComplexKeyDictionaryJsonConverterFactory : JsonConverterFactory
     /// <inheritdoc/>
     [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Dictionary interfaces are BCL types that are always preserved by the runtime.")]
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Uses MakeGenericType on ComplexKeyDictionaryJsonConverter<,,>; types are always preserved.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "ComplexKeyDictionaryJsonConverter<,,> has a public parameterless constructor that is always preserved.")]
     [UnconditionalSuppressMessage("Trimming", "IL2071", Justification = "ComplexKeyDictionaryJsonConverter<,,> has a public parameterless constructor that is always preserved.")]
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {

@@ -412,6 +412,7 @@ public static class TypeExtensions
     /// <param name="type"><see cref="Type"/> to get from.</param>
     /// <returns>The <see cref="ITypeInfo"/>.</returns>
     [RequiresDynamicCode("Uses MakeGenericType to construct TypeInfo<T> at runtime.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "TypeInfo<T> members are preserved when the type is known at compile time.")]
     [UnconditionalSuppressMessage("Trimming", "IL2071", Justification = "TypeInfo<T> members are preserved when the type is known at compile time.")]
     public static ITypeInfo GetTypeInfoDetails(this Type type)
     {
