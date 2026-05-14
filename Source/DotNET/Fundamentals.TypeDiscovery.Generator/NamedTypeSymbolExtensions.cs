@@ -35,7 +35,8 @@ internal static class NamedTypeSymbolExtensions
     /// <returns><see langword="true"/> if the type is a concrete implementation; otherwise <see langword="false"/>.</returns>
     public static bool IsImplementation(this INamedTypeSymbol type) =>
         type.TypeKind is not TypeKind.Interface &&
-        !type.IsAbstract;
+        !type.IsAbstract &&
+        type.Arity == 0;
 
     /// <summary>
     /// Returns the C# <c>typeof()</c> argument expression for this type.
