@@ -33,15 +33,22 @@ public class DerivedTypes : IDerivedTypes
     /// <param name="types"><see cref="ITypes"/> representing all types in the system.</param>
     public DerivedTypes(ITypes types)
     {
-        var derivedTypes = types.All.Where(_ => _.HasAttribute<DerivedTypeAttribute>());
+        var derivedTypes = types.All.Where(_ => _.HasAttribute<DerivedTypeAttribute>()).ToArray();
         ThrowIfAmbiguousDerivedTypeIdentifiers(derivedTypes);
 
-        _targetTypeToDerivedType = derivedTypes
-            .GroupBy(GetTargetTypeFrom)
-            .ToDictionary(_ => _.Key, _ => _.Select(dt => new DerivedTypeAndIdentifier(dt, _.Key, dt.GetCustomAttribute<DerivedTypeAttribute>()!.Identifier)));
+        var registrations = derivedTypes
+            .SelectMany(GetRegistrationsFrom)
+            .ToArray();
 
-        _derivedTypeToTargetType = _targetTypeToDerivedType
-            .SelectMany(_ => _.Value)
+        _targetTypeToDerivedType = registrations
+            .GroupBy(_ => _.TargetType)
+            .ToDictionary(
+                _ => _.Key,
+                _ => _.GroupBy(registration => registration.DerivedType)
+                      .Select(group => new DerivedTypeAndIdentifier(group.Key, _.Key, group.First().Identifier)));
+
+        _derivedTypeToTargetType = registrations
+            .Where(_ => _.IsPrimaryTarget)
             .ToDictionary(_ => _.DerivedType, _ => _.TargetType);
     }
 
@@ -73,22 +80,43 @@ public class DerivedTypes : IDerivedTypes
     /// <inheritdoc/>
     public bool HasDerivatives(Type type) => _targetTypeToDerivedType.ContainsKey(type);
 
-    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Derived type interface inspection is retained for compatibility fallback behavior.")]
-    Type GetTargetTypeFrom(Type derivedType)
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Derived type interface and inheritance inspection is retained for compatibility fallback behavior.")]
+    IEnumerable<Registration> GetRegistrationsFrom(Type derivedType)
     {
         var attribute = derivedType.GetCustomAttribute<DerivedTypeAttribute>()!;
-        var targetType = attribute.TargetType;
+        var primaryTargetType = attribute.TargetType;
 
-        if (targetType is not null)
+        if (primaryTargetType is not null)
         {
-            ThrowIfTargetTypeMismatchesForDerivedType(derivedType, targetType);
-            return targetType;
+            var interfaces = derivedType.GetInterfaces().Where(_ => !_.Namespace?.StartsWith("System") ?? true).ToArray();
+            ThrowIfMissingTargetTypeForDerivedType(derivedType, interfaces);
+            ThrowIfTargetTypeMismatchesForDerivedType(derivedType, primaryTargetType);
+        }
+        else
+        {
+            var interfaces = derivedType.GetInterfaces().Where(_ => !_.Namespace?.StartsWith("System") ?? true).ToArray();
+            ThrowIfAmbiguousTargetTypeForDerivedType(derivedType, interfaces);
+            ThrowIfMissingTargetTypeForDerivedType(derivedType, interfaces);
+            primaryTargetType = interfaces[0];
         }
 
-        var interfaces = derivedType.GetInterfaces().Where(_ => !_.Namespace?.StartsWith("System") ?? true).ToArray();
-        ThrowIfAmbiguousTargetTypeForDerivedType(derivedType, interfaces);
-        ThrowIfMissingTargetTypeForDerivedType(derivedType, interfaces);
-        return interfaces[0];
+        var registrations = new List<Registration>
+        {
+            new(derivedType, primaryTargetType, attribute.Identifier, true)
+        };
+
+        var currentBaseType = derivedType.BaseType;
+        while (currentBaseType is not null && currentBaseType != typeof(object))
+        {
+            if (!currentBaseType.Namespace?.StartsWith("System") ?? true)
+            {
+                registrations.Add(new(derivedType, currentBaseType, attribute.Identifier, false));
+            }
+
+            currentBaseType = currentBaseType.BaseType;
+        }
+
+        return registrations;
     }
 
     void ThrowIfMissingDerivedTypeOrMissingIdentifier(Type targetType, DerivedTypeId derivedTypeId)
@@ -134,5 +162,6 @@ public class DerivedTypes : IDerivedTypes
         }
     }
 
+    sealed record Registration(Type DerivedType, Type TargetType, DerivedTypeId Identifier, bool IsPrimaryTarget);
     sealed record DerivedTypeAndIdentifier(Type DerivedType, Type TargetType, DerivedTypeId Identifier);
 }

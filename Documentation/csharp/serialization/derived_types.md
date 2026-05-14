@@ -15,7 +15,10 @@ The DerivedTypes system consists of several key components:
 
 ### Target Types and Derived Types
 
-- **Target Type**: The interface or base class that defines the contract (e.g., `IPaymentMethod`)
+- **Primary Target Type**: The type used as the canonical registration key for a derived type.
+    By default this is the inferred non-system interface (or the explicit `targetType` if provided).
+- **Additional Target Types**: Non-system base classes are registered automatically so lookup can resolve
+    by base class without requiring explicit `targetType`.
 - **Derived Type**: The concrete implementation decorated with `[DerivedType]` (e.g., `CreditCard`, `PayPal`)
 
 ### Unique Identifiers
@@ -123,7 +126,13 @@ public class CreditCard : IPaymentMethod, IRefundable
 
 ### Target Type Resolution
 
-The system automatically resolves target types based on implemented interfaces. If a class implements only one interface decorated with derived types, that interface becomes the target type automatically.
+The system resolves a primary target type automatically from implemented non-system interfaces.
+If a class implements exactly one non-system interface, that interface becomes the primary target.
+If `targetType` is provided on `[DerivedType(..., targetType)]`, that value is used as the primary target.
+
+In addition to the primary target, the system now also registers the derived type for all non-system base
+classes in its inheritance chain. This means polymorphic deserialization can work when the property is typed
+as either an interface or a base class.
 
 ### Validation Rules
 
@@ -132,6 +141,7 @@ The system enforces several validation rules:
 1. **Unique Identifiers**: Each derived type must have a unique string identifier
 2. **Single Target Type**: A derived type can only represent one target interface
 3. **Interface Implementation**: Derived types must implement their declared target interface
+4. **Base Class Compatibility**: Derived types are also registered for non-system base classes automatically
 
 ## Error Handling
 

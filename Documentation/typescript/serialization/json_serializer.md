@@ -72,6 +72,16 @@ const payment = JsonSerializer.deserialize(Payment, json);
 console.log(payment.method instanceof CreditCard); // ✅ true
 ```
 
+The runtime resolution flow is:
+
+1. Read `_derivedTypeId` from the payload.
+2. Build candidates from both `field.derivatives` and `DerivedType.getDerivedTypesFor(field.type)`.
+3. Match candidate identifier and deserialize into the matching constructor.
+
+This makes class inheritance work with runtime-only registration from `@derivedType`.
+For interface-only polymorphism, include explicit derivatives on `@field` (or use `@derivedType`
+with an explicit `targetType` constructor).
+
 ### 4. Proper Type Conversion
 
 Complex types like `Date` and `Guid` are properly converted during deserialization:
