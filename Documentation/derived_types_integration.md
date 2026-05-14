@@ -8,6 +8,17 @@ The DerivedTypes system creates a bridge between strongly-typed C# classes and T
 
 ## Shared Concepts
 
+### Target Type Resolution Across Stacks
+
+- **Backend (.NET):** `[DerivedType]` resolves a primary target from interface inference (or explicit
+    `targetType`) and also auto-registers the derived type for non-system base classes.
+- **Frontend (TypeScript):** `@derivedType` registers identifiers on the concrete type and runtime
+    prototype chain constructors, and `JsonSerializer` resolves candidates from both
+    `field.derivatives` and `DerivedType.getDerivedTypesFor(field.type)`.
+
+This means polymorphic fields typed as base classes work end-to-end without requiring explicit target
+type wiring in most cases. Interface-only fields still need explicit runtime candidates.
+
 ### Unique Type Identifiers
 
 Both backend and frontend use unique string identifiers that must match exactly:
@@ -305,6 +316,15 @@ import 'reflect-metadata';
 ```
 
 ## Best Practices for Full-Stack Integration
+
+### Prefer Concrete Base Types for Polymorphic Properties
+
+When your domain has a stable base class, prefer using that base class as the property type.
+This gives runtime constructors on both stacks, which simplifies polymorphic resolution and reduces
+manual derivative wiring.
+
+Use interface-typed properties when needed, and then provide explicit derivative candidates in
+frontend field metadata and explicit target type where ambiguity exists.
 
 ### 1. Synchronized Type Definitions
 

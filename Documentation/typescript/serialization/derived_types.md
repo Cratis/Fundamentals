@@ -24,6 +24,20 @@ The frontend uses TypeScript decorators and reflect-metadata to store type infor
 - **Field Metadata**: Information about properties including their types and possible derivatives
 - **Runtime Type Resolution**: Dynamic instantiation of correct classes during deserialization
 
+### Runtime Resolution Behavior
+
+At runtime, the deserializer resolves derived types from two candidate sources:
+
+- `field.derivatives` provided by `@field(..., derivatives)`
+- Runtime registrations from `DerivedType.getDerivedTypesFor(field.type)`
+
+The runtime registrations are populated by the `@derivedType` decorator by walking the prototype chain.
+Because of this, class-based hierarchies (base class + subclasses) are discovered automatically.
+
+For interface-shaped polymorphism, remember that TypeScript interfaces are erased at runtime.
+In those cases, use explicit `field.derivatives`, or pass `targetType` to `@derivedType` so the
+type is registered against a concrete runtime constructor.
+
 ### Decorator-Based Configuration
 
 Unlike the backend's attribute-based approach, the frontend uses decorators to mark classes and fields with metadata.
@@ -105,6 +119,10 @@ export class Order {
     @field(Object, true, [CreditCard, PayPal])
     alternativePayments!: IPaymentMethod[];
 }
+
+If `paymentMethod` is typed as a concrete base class (instead of interface-only shape), runtime
+registration from `@derivedType` can often resolve the correct subtype without an explicit derivatives list.
+Keeping the list is still valid and can be useful for clarity.
 ```
 
 ## Serialization and Deserialization
