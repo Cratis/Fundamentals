@@ -22,7 +22,7 @@ public static class TypesServiceCollectionExtensions
         {
             var generatedProviders = GeneratedTypeDiscoveryRegistry.Providers.ToArray();
             assemblyProviders = generatedProviders.Length > 0
-                ? generatedProviders
+                ? [.. generatedProviders, PackageReferencedAssemblies.Instance]
                 :
                 [
                     ProjectReferencedAssemblies.Instance,

@@ -33,7 +33,7 @@ public class Types : ITypes
     public Types()
         : this(
             GeneratedTypeDiscoveryRegistry.Providers.Any()
-                ? GeneratedTypeDiscoveryRegistry.Providers
+                ? [.. GeneratedTypeDiscoveryRegistry.Providers, PackageReferencedAssemblies.Instance]
                 :
                 [
                     ProjectReferencedAssemblies.Instance,
