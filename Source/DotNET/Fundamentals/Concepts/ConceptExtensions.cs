@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Cratis.Reflection;
 
@@ -47,6 +48,7 @@ public static class ConceptExtensions
     /// <param name="conceptObject">The concept as an object.</param>
     /// <returns>The value of the primitive type on which the concept is based.</returns>
     /// <exception cref="TypeIsNotAConcept">Thrown if type is not a concept.</exception>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "ConceptAs<T>.Value is a well-known property that is always preserved.")]
     public static object GetConceptValue(this object conceptObject)
     {
         if (!IsConcept(conceptObject)) throw new TypeIsNotAConcept(conceptObject.GetType());

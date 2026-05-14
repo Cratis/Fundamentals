@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -12,6 +13,7 @@ namespace Cratis.Json;
 public class TypeJsonConverter : JsonConverter<Type>
 {
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2057", Justification = "The type string in the JSON payload is expected to resolve to a type preserved by the application.")]
     public override Type Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var value = reader.GetString() ?? throw new JsonException("Expected string");

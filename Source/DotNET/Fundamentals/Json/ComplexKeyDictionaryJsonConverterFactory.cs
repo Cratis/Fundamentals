@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Cratis.Reflection;
@@ -13,6 +14,7 @@ namespace Cratis.Json;
 public class ComplexKeyDictionaryJsonConverterFactory : JsonConverterFactory
 {
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Dictionary interfaces are BCL types that are always preserved by the runtime.")]
     public override bool CanConvert(Type typeToConvert)
     {
         if (!typeToConvert.IsDictionary())
@@ -25,6 +27,10 @@ public class ComplexKeyDictionaryJsonConverterFactory : JsonConverterFactory
     }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Dictionary interfaces are BCL types that are always preserved by the runtime.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Uses MakeGenericType on ComplexKeyDictionaryJsonConverter<,,>; types are always preserved.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "ComplexKeyDictionaryJsonConverter<,,> has a public parameterless constructor that is always preserved.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2071", Justification = "ComplexKeyDictionaryJsonConverter<,,> has a public parameterless constructor that is always preserved.")]
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
         var keyType = GetDictionaryKeyType(typeToConvert);
@@ -33,6 +39,7 @@ public class ComplexKeyDictionaryJsonConverterFactory : JsonConverterFactory
         return (JsonConverter)Activator.CreateInstance(converterType)!;
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Dictionary interfaces are BCL types that are always preserved by the runtime.")]
     static Type GetDictionaryKeyType(Type typeToConvert)
     {
         if (typeToConvert.IsGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(IDictionary<,>))
@@ -43,6 +50,7 @@ public class ComplexKeyDictionaryJsonConverterFactory : JsonConverterFactory
         return typeToConvert.GetKeyType();
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Dictionary interfaces are BCL types that are always preserved by the runtime.")]
     static Type GetDictionaryValueType(Type typeToConvert)
     {
         if (typeToConvert.IsGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(IDictionary<,>))
@@ -74,6 +82,8 @@ public class ComplexKeyDictionaryJsonConverterFactory : JsonConverterFactory
         where TKey : notnull
     {
         /// <inheritdoc/>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Dictionary JSON deserialization uses generic type parameters that are preserved.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Dictionary JSON deserialization uses generic type parameters that are safe for AOT.")]
         public override TDictionary Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var document = JsonDocument.ParseValue(ref reader);
@@ -90,6 +100,8 @@ public class ComplexKeyDictionaryJsonConverterFactory : JsonConverterFactory
         }
 
         /// <inheritdoc/>
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Dictionary JSON serialization uses generic type parameters that are preserved.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Dictionary JSON serialization uses generic type parameters that are safe for AOT.")]
         public override void Write(Utf8JsonWriter writer, TDictionary value, JsonSerializerOptions options)
         {
             if (value is null)
@@ -111,6 +123,7 @@ public class ComplexKeyDictionaryJsonConverterFactory : JsonConverterFactory
             writer.WriteEndObject();
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "The dictionary type to create is preserved by the converter factory.")]
         static IDictionary<TKey, TValue> CreateDictionary(Type typeToConvert)
         {
             if (typeToConvert.IsInterface || typeToConvert.IsAbstract)

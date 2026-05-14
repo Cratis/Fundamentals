@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -15,6 +16,8 @@ public abstract class DictionaryJsonConverter<TKey, TValue> : JsonConverter<IDic
     where TKey : notnull
 {
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Dictionary JSON deserialization uses well-known types that are preserved.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Dictionary JSON deserialization uses well-known types that are safe for AOT.")]
     public override IDictionary<TKey, TValue>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var document = JsonDocument.ParseValue(ref reader);
@@ -23,6 +26,8 @@ public abstract class DictionaryJsonConverter<TKey, TValue> : JsonConverter<IDic
     }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Dictionary JSON serialization uses well-known types that are preserved.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Dictionary JSON serialization uses well-known types that are safe for AOT.")]
     public override void Write(Utf8JsonWriter writer, IDictionary<TKey, TValue> value, JsonSerializerOptions options)
     {
         if (value is null) return;

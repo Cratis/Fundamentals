@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Reflection;
 using System.Text.Json;
@@ -27,6 +28,8 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     readonly IDerivedTypes _derivedTypes = derivedTypes;
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON deserialization uses types registered at startup that are preserved.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON deserialization uses types registered at startup that are safe for AOT.")]
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var document = JsonDocument.ParseValue(ref reader);
@@ -42,6 +45,9 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON serialization uses types registered at startup that are preserved.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Derived type JSON serialization accesses well-known type properties that are preserved.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON serialization uses types registered at startup that are safe for AOT.")]
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         switch (value)

@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using Cratis.Serialization;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -54,7 +55,7 @@ public static class NamingPolicyCollectionExtensions
     /// <typeparam name="T">Type of <see cref="INamingPolicy"/> to use.</typeparam>
     /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
     /// <returns><see cref="IServiceCollection"/> for continuing build.</returns>
-    public static IServiceCollection AddNamingPolicy<T>(this IServiceCollection services)
+    public static IServiceCollection AddNamingPolicy<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IServiceCollection services)
         where T : class, INamingPolicy =>
         services
             .AddSingleton<INamingPolicy, T>();

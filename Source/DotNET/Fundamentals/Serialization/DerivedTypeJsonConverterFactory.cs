@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -21,6 +22,7 @@ public class DerivedTypeJsonConverterFactory(IDerivedTypes derivedTypes) : JsonC
     public override bool CanConvert(Type typeToConvert) => _derivedTypes.HasDerivatives(typeToConvert);
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Uses MakeGenericType on DerivedTypeJsonConverter<T> which is registered at startup.")]
     public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
         Activator.CreateInstance(typeof(DerivedTypeJsonConverter<>).MakeGenericType(typeToConvert), _derivedTypes) as JsonConverter;
 }

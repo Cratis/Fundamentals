@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Cratis.Reflection;
@@ -9,7 +10,7 @@ namespace Cratis.Reflection;
 /// Represents an implementation of <see cref="ITypeInfo"/>.
 /// </summary>
 /// <typeparam name="T">Type it holds info for.</typeparam>
-public class TypeInfo<T> : ITypeInfo
+public class TypeInfo<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] T> : ITypeInfo
 {
     /// <summary>
     /// Gets a singleton instance of the TypeInfo.

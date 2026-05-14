@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cratis.Reflection;
 
@@ -15,6 +16,7 @@ public static class DictionaryExtensions
     /// </summary>
     /// <param name="type">Type to check.</param>
     /// <returns>True if it is, false if not.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Dictionary interfaces are BCL types that are always preserved by the runtime.")]
     public static bool IsDictionary(this Type type) =>
         (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>)) ||
         type.GetInterfaces().Any(_ => _.IsGenericType && _.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -24,6 +26,7 @@ public static class DictionaryExtensions
     /// </summary>
     /// <param name="type">Dictionary type to get from.</param>
     /// <returns>Type of key.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Dictionary interfaces are BCL types that are always preserved by the runtime.")]
     public static Type GetKeyType(this Type type)
     {
         var dictionaryInterface = Array.Find(type.GetInterfaces(), _ => _.IsGenericType && _.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -37,6 +40,7 @@ public static class DictionaryExtensions
     /// </summary>
     /// <param name="type">Dictionary type to get from.</param>
     /// <returns>Type of key.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Dictionary interfaces are BCL types that are always preserved by the runtime.")]
     public static Type GetValueType(this Type type)
     {
         var dictionaryInterface = Array.Find(type.GetInterfaces(), _ => _.IsGenericType && _.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -50,6 +54,8 @@ public static class DictionaryExtensions
     /// </summary>
     /// <param name="enumerable"><see cref="IEnumerable"/> which is a dictionary to get from.</param>
     /// <returns>A collection of key value pairs of string type.</returns>
+    [RequiresDynamicCode("Uses MakeGenericType to construct KeyValuePair<,> at runtime.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Dictionary interfaces are BCL types that are always preserved by the runtime.")]
     public static IEnumerable<KeyValuePair<string, object>> GetKeyValuePairs(this IEnumerable enumerable)
     {
         var dictionaryType = enumerable.GetType();

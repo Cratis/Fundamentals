@@ -103,6 +103,7 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="asyncEnumerableType">The <see cref="Type"/> to get from.</param>
     /// <returns>The element type.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "IAsyncEnumerable<T> is a BCL interface; its interface implementations are preserved by the runtime.")]
     public static Type GetAsyncEnumerableElementType(this Type asyncEnumerableType)
     {
         if (asyncEnumerableType.IsGenericType && asyncEnumerableType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
@@ -250,6 +251,7 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="type"><see cref="Type"/> to get settable properties for.</param>
     /// <returns>Settable <see cref="PropertyInfo">properties</see>.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection on public properties is used by compatibility paths; callers are responsible for preserving required types.")]
     public static PropertyInfo[] GetSettableProperties(this Type type)
     {
         return [.. type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite)];
@@ -263,6 +265,7 @@ public static class TypeExtensions
     /// <remarks>
     /// https://stackoverflow.com/questions/906499/getting-type-t-from-ienumerablet.
     /// </remarks>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "IEnumerable<T> is a BCL interface; its interface implementations are preserved by the runtime.")]
     public static Type GetEnumerableElementType(this Type enumerableType)
     {
         if (enumerableType.IsArray)
@@ -345,6 +348,7 @@ public static class TypeExtensions
     /// <param name="type"><see cref="Type"/> to check.</param>
     /// <param name="openGenericType">Open generic <see cref="Type"/> to check for.</param>
     /// <returns>True if type implements the open generic <see cref="Type"/>.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection on interface implementations is used by compatibility paths.")]
     public static bool ImplementsOpenGeneric(this Type type, Type openGenericType)
     {
         var openGenericTypeInfo = openGenericType.GetTypeInfo();
@@ -396,6 +400,7 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="type"><see cref="Type"/> to check.</param>
     /// <returns>True if there are public properties (get or set), false otherwise.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection on public properties is used by compatibility paths; callers are responsible for preserving required types.")]
     public static bool HasVisibleProperties(this Type type)
     {
         return type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Length > 0;
@@ -406,6 +411,9 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="type"><see cref="Type"/> to get from.</param>
     /// <returns>The <see cref="ITypeInfo"/>.</returns>
+    [RequiresDynamicCode("Uses MakeGenericType to construct TypeInfo<T> at runtime.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "TypeInfo<T> members are preserved when the type is known at compile time.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2071", Justification = "TypeInfo<T> members are preserved when the type is known at compile time.")]
     public static ITypeInfo GetTypeInfoDetails(this Type type)
     {
         var typeInfoType = typeof(TypeInfo<>).MakeGenericType(type);

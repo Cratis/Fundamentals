@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Cratis.Concepts;
@@ -33,6 +34,7 @@ public static class ConceptMap
     /// </summary>
     /// <param name="type">Type to get for.</param>
     /// <returns><see cref="PropertyInfo"/> for the concept type.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "ConceptAs<T>.Value is a well-known property that is always preserved.")]
     public static PropertyInfo GetValuePropertyInfo(Type type)
     {
         if (_valuePropertyCache.TryGetValue(type, out var value)) return value;

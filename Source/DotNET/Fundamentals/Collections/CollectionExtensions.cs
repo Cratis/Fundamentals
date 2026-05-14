@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Cratis.Reflection;
 
@@ -49,6 +50,10 @@ public static class CollectionExtensions
     /// having to enumerate it.
     /// If no other options are available, it will enumerate it.
     /// </remarks>
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "The enumerable's runtime type implements IEnumerable<> which is a BCL interface always preserved.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "IEnumerable<> interface is a BCL type whose members are preserved by the runtime.")]
+    [UnconditionalSuppressMessage("AOT", "IL2060", Justification = "MakeGenericMethod is called on Enumerable.Count which is a well-known BCL method.")]
+    [RequiresDynamicCode("Uses MakeGenericMethod to invoke Enumerable.Count<T> at runtime.")]
     public static int CountElements(this IEnumerable enumerable)
     {
         var type = enumerable.GetType();

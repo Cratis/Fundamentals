@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -26,6 +27,7 @@ public static class MethodCalls
     /// <typeparam name="T2">Type of second parameter.</typeparam>
     /// <typeparam name="T3">Type of third parameter.</typeparam>
     /// <returns>The result from the method call.</returns>
+    [RequiresDynamicCode("Uses MakeGenericMethod to invoke generic methods at runtime.")]
     public static TOut CallGenericMethod<TOut, T, T1, T2, T3>(this T target, Expression<Func<T, Func<T1, T2, T3, TOut>>> method, T1 param1, T2 param2, T3 param3, params Type[] genericArguments)
     {
         return CallGenericMethod<T, TOut>(target, method, [param1!, param2!, param3!], genericArguments);
@@ -44,6 +46,7 @@ public static class MethodCalls
     /// <typeparam name="T1">Type of first parameter.</typeparam>
     /// <typeparam name="T2">Type of second parameter.</typeparam>
     /// <returns>The result from the method call.</returns>
+    [RequiresDynamicCode("Uses MakeGenericMethod to invoke generic methods at runtime.")]
     public static TOut CallGenericMethod<TOut, T, T1, T2>(this T target, Expression<Func<T, Func<T1, T2, TOut>>> method, T1 param1, T2 param2, params Type[] genericArguments)
     {
         return CallGenericMethod<T, TOut>(target, method, [param1!, param2!], genericArguments);
@@ -60,6 +63,7 @@ public static class MethodCalls
     /// <typeparam name="T">Type of target.</typeparam>
     /// <typeparam name="T1">Type of parameter.</typeparam>
     /// <returns>The result from the method call.</returns>
+    [RequiresDynamicCode("Uses MakeGenericMethod to invoke generic methods at runtime.")]
     public static TOut CallGenericMethod<TOut, T, T1>(this T target, Expression<Func<T, Func<T1, TOut>>> method, T1 param, params Type[] genericArguments)
     {
         return CallGenericMethod<T, TOut>(target, method, [param!], genericArguments);
@@ -74,11 +78,14 @@ public static class MethodCalls
     /// <typeparam name="TOut">Output type.</typeparam>
     /// <typeparam name="T">Type of target.</typeparam>
     /// <returns>The result from the method call.</returns>
+    [RequiresDynamicCode("Uses MakeGenericMethod to invoke generic methods at runtime.")]
     public static TOut CallGenericMethod<TOut, T>(this T target, Expression<Func<T, Func<TOut>>> method, params Type[] genericArguments)
     {
         return CallGenericMethod<T, TOut>(target, method, [], genericArguments);
     }
 
+    [RequiresDynamicCode("Uses MakeGenericMethod to invoke generic methods at runtime.")]
+    [UnconditionalSuppressMessage("AOT", "IL2060", Justification = "MakeGenericMethod is called on a user-supplied MethodInfo; callers are responsible for ensuring native code availability.")]
     static TOut CallGenericMethod<T, TOut>(this T target, Expression method, object[] parameters, Type[] genericArguments)
     {
         var lambda = method as LambdaExpression;
