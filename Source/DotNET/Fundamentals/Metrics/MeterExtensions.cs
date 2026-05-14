@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Cratis.Metrics;
@@ -30,6 +31,7 @@ public static class MeterExtensions
     /// <typeparam name="T">Type the scope is for.</typeparam>
     /// <returns>A new <see cref="IMeterScope{T}"/>.</returns>
     /// <exception cref="ArgumentNullException">The exception that is thrown when tags is null.</exception>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "The tags object's runtime type properties are accessed for metric tagging; callers are responsible for preserving the type.")]
     public static IMeterScope<T> BeginScope<T>(this IMeter<T> meter, object tags)
     {
         ArgumentNullException.ThrowIfNull(tags);

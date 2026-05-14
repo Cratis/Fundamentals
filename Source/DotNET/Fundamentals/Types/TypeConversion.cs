@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
@@ -24,7 +25,9 @@ public static class TypeConversion
     /// <param name="type">Type to convert to.</param>
     /// <param name="value">Input value.</param>
     /// <returns>Converted instance.</returns>
-    public static object Convert(Type type, object value)
+    [RequiresUnreferencedCode("Deserializes JSON elements to the target type; the type's members may be trimmed.")]
+    [RequiresDynamicCode("Uses MakeGenericMethod to invoke JsonValue.GetValue<T> at runtime.")]
+    public static object Convert([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type type, object value)
     {
         if (value is null)
         {

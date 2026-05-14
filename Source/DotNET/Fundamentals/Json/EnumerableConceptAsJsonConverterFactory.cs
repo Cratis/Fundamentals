@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Cratis.Concepts;
@@ -21,6 +22,7 @@ public class EnumerableConceptAsJsonConverterFactory : JsonConverterFactory
         typeToConvert.GetGenericArguments()[0].IsConcept();
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Uses MakeGenericType on EnumerableConceptAsJsonConverter<T>; concept types are always preserved.")]
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
         var enumerableConverterType = typeof(EnumerableConceptAsJsonConverter<>).MakeGenericType(typeToConvert.GetGenericArguments()[0]);

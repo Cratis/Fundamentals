@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Cratis.Concepts;
@@ -103,6 +104,8 @@ public class ConceptAsJsonConverter<T> : JsonConverter<T>
     }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Concept JSON serialization uses well-known concept types whose members are preserved.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Concept JSON serialization uses well-known concept types that are safe for AOT.")]
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         var actualValue = value?.GetConceptValue();

@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Nodes;
 using Cratis.Concepts;
 
@@ -131,6 +132,8 @@ public static class JsonValueExtensions
     /// </summary>
     /// <param name="input">Input value.</param>
     /// <returns>Converted <see cref="JsonValue"/>.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "All JsonValue.Create<T> calls use well-known BCL types that are never trimmed.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "All JsonValue.Create<T> calls use well-known BCL types that are safe for AOT.")]
     public static JsonValue? ToJsonValue(this object? input)
     {
         if (input is null)

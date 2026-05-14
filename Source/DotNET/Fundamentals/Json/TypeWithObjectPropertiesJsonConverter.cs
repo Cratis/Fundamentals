@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -24,6 +25,10 @@ public abstract class TypeWithObjectPropertiesJsonConverter<TTarget> : JsonConve
     protected abstract IEnumerable<string> ObjectProperties { get; }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Type resolution and JSON deserialization use types stored in the JSON payload that are preserved at startup.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2057", Justification = "The type string in the JSON payload is expected to resolve to a type preserved by the application.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Properties set after deserialization are well-known named properties preserved by callers.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Type resolution and JSON deserialization use types stored in the JSON payload that are safe for AOT.")]
     public override TTarget? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var node = JsonElement.ParseValue(ref reader);
@@ -77,6 +82,9 @@ public abstract class TypeWithObjectPropertiesJsonConverter<TTarget> : JsonConve
     }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization uses types stored in the JSON payload that are preserved at startup.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "The runtime type's properties are accessed via well-known property names; the type is preserved by callers.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "JSON serialization uses types stored in the JSON payload that are safe for AOT.")]
     public override void Write(Utf8JsonWriter writer, TTarget value, JsonSerializerOptions options)
     {
         var type = value?.GetType();

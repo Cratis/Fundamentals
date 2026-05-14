@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Cratis.Reflection;
@@ -15,10 +16,9 @@ public static class TypeConstructorExtensions
     /// </summary>
     /// <param name="type">Type to check.</param>
     /// <returns>true if it has a default constructor, false if not.</returns>
-    public static bool HasDefaultConstructor(this Type type)
+    public static bool HasDefaultConstructor([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] this Type type)
     {
-        return type.GetTypeInfoDetails().HasDefaultConstructor ||
-            type.GetConstructors().Any(c => c.GetParameters().Length == 0);
+        return type.IsValueType || type.GetConstructors().Any(c => c.GetParameters().Length == 0);
     }
 
     /// <summary>
@@ -26,7 +26,7 @@ public static class TypeConstructorExtensions
     /// </summary>
     /// <param name="type">Type to check.</param>
     /// <returns>true if it has a non default constructor, false if not.</returns>
-    public static bool HasNonDefaultConstructor(this Type type)
+    public static bool HasNonDefaultConstructor([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] this Type type)
     {
         return type.GetConstructors().Any(c => c.GetParameters().Length > 0);
     }
@@ -36,7 +36,7 @@ public static class TypeConstructorExtensions
     /// </summary>
     /// <param name="type">Type to get from.</param>
     /// <returns>The default <see cref="ConstructorInfo"/>.</returns>
-    public static ConstructorInfo GetDefaultConstructor(this Type type)
+    public static ConstructorInfo GetDefaultConstructor([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] this Type type)
     {
         return type.GetConstructors().Single(c => c.GetParameters().Length == 0);
     }
@@ -46,7 +46,7 @@ public static class TypeConstructorExtensions
     /// </summary>
     /// <param name="type">Type to get from.</param>
     /// <returns>The <see cref="ConstructorInfo"/> for the constructor.</returns>
-    public static ConstructorInfo GetNonDefaultConstructor(this Type type)
+    public static ConstructorInfo GetNonDefaultConstructor([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] this Type type)
     {
         return type.GetConstructors().Single(c => c.GetParameters().Length > 0);
     }
@@ -57,7 +57,7 @@ public static class TypeConstructorExtensions
     /// <param name="type">Type to get from.</param>
     /// <param name="parameterTypes">Types for matching the parameters.</param>
     /// <returns>The <see cref="ConstructorInfo"/> for the constructor.</returns>
-    public static ConstructorInfo GetNonDefaultConstructor(this Type type, Type[] parameterTypes)
+    public static ConstructorInfo GetNonDefaultConstructor([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] this Type type, Type[] parameterTypes)
     {
         return type.GetTypeInfo().GetConstructor(parameterTypes)!;
     }
@@ -69,7 +69,7 @@ public static class TypeConstructorExtensions
     /// </summary>
     /// <param name="type">Type to get from.</param>
     /// <returns>The <see cref="ConstructorInfo"/> for the constructor.</returns>
-    public static ConstructorInfo GetNonDefaultConstructorWithGreatestNumberOfParameters(this Type type)
+    public static ConstructorInfo GetNonDefaultConstructorWithGreatestNumberOfParameters([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] this Type type)
     {
         return type.GetTypeInfo()
                         .DeclaredConstructors.Where(c => c.GetParameters().Length > 0)

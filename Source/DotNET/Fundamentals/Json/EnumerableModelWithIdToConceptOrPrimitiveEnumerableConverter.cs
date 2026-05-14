@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Cratis.Concepts;
@@ -77,6 +78,9 @@ public class EnumerableModelWithIdToConceptOrPrimitiveEnumerableConverter<T, TEl
     {
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "TypeConversion operates on the generic TElement type which is always preserved.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2087", Justification = "TypeConversion operates on the generic TElement type which is always preserved.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "TypeConversion.Convert uses MakeGenericMethod on well-known BCL types for TElement.")]
     TElement ReadValue(ref Utf8JsonReader reader, JsonSerializerOptions options)
     {
         var elementType = typeof(TElement);

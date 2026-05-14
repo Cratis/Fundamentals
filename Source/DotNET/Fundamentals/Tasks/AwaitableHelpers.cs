@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Cratis.Tasks;
@@ -23,6 +24,7 @@ public static class AwaitableHelpers
     /// </remarks>
     /// <param name="maybeAwaitable">The <see cref="object"/> that is maybe awaitable.</param>
     /// <returns>A <see cref="ValueTask{T}"/> with a tuple of a boolean indicating whether the object was awaitable and the nullable result object.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "ValueTask<T> and Task<T> are BCL types whose members are preserved by the runtime.")]
     public static async ValueTask<(bool IsAwaitable, object? Result)> AwaitIfNeeded(object? maybeAwaitable)
     {
         if (maybeAwaitable is null)
@@ -54,6 +56,7 @@ public static class AwaitableHelpers
         return (false, maybeAwaitable);
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Task<T> is a BCL type whose Result property is preserved by the runtime.")]
     static object? GetResultFromAwaitableIfPresent(object task, string resultPropertyName)
     {
         var resultProperty = task.GetType().GetProperty(resultPropertyName);
