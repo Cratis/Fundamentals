@@ -17,7 +17,7 @@ internal static class NamedTypeSymbolExtensions
 
     /// <summary>
     /// Returns whether the type can safely be referenced from generated code
-    /// (i.e. it is not an error, implicit, anonymous, or private type).
+    /// (i.e. it is not an error, implicit, anonymous, file-local, or private type).
     /// </summary>
     /// <param name="type">The type to check.</param>
     /// <returns><see langword="true"/> if the type can be referenced; otherwise <see langword="false"/>.</returns>
@@ -25,6 +25,7 @@ internal static class NamedTypeSymbolExtensions
         type.TypeKind is not TypeKind.Error &&
         !type.IsImplicitlyDeclared &&
         !type.IsAnonymousType &&
+        !type.IsFileLocal &&
         type.CanBeReferencedByName &&
         type.DeclaredAccessibility is not Accessibility.Private;
 
