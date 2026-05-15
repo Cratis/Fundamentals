@@ -3,6 +3,7 @@
 
 using System.Reflection;
 using Cratis.Collections;
+using Cratis.DependencyInjection;
 
 namespace Cratis.Types;
 
@@ -87,6 +88,19 @@ public class Types : ITypes
                 .SelectMany(static p => p.DefinedTypes)
                 .Distinct();
             _contractToImplementorsMap.Feed(nonPrecomputedTypes);
+
+            // Also map contracts for DI-registered types not captured in the precomputed map.
+            // Types from referenced Cratis.* assemblies (e.g. Arc's QueryPerformerProvider
+            // implementing IQueryPerformerProvider) are registered as self-bindings or service-binding
+            // implementations but lack contract mappings because the precomputed map only covers the
+            // local assembly. Feeding them here uses targeted reflection so IInstancesOf<T> can
+            // discover them without falling back to a full assembly scan.
+            var diRegisteredImplementations = providers
+                .OfType<ICanProvideConventionsForDependencyInjection>()
+                .SelectMany(static p => p.SelfBindings.Select(static b => b.ImplementationType)
+                    .Concat(p.ConventionServiceBindings.Select(static b => b.ImplementationType)))
+                .Distinct();
+            _contractToImplementorsMap.Feed(diRegisteredImplementations);
 
             _contractToImplementorsMap.FeedTypes(All);
             return;
