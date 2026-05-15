@@ -10,7 +10,7 @@ env:
   DOTNET_VERSION: "10.0.x"
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited, synchronize, reopened]
     branches:
       - "**"
