@@ -47,10 +47,15 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
         // These packages do not ship their own generated provider, so their I<X>/X pairs
         // would otherwise be invisible once the generated path is taken (bypassing the
         // reflection fallback that previously discovered them).
+        // Assemblies that themselves reference Microsoft.CodeAnalysis are Roslyn analyzer
+        // packages (e.g. Cratis.Metrics.Roslyn). Their types cannot be instantiated at
+        // runtime without CodeAnalysis.dll in the output, so they are excluded.
         var packageSymbols = compilation.References
             .Select(r => compilation.GetAssemblyOrModuleSymbol(r) as IAssemblySymbol)
             .Where(static a => a?.Name.StartsWith("Cratis", StringComparison.Ordinal) is true)
             .Cast<IAssemblySymbol>()
+            .Where(static a => !a.Modules.Any(static m => m.ReferencedAssemblies.Any(
+                static r => r.Name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal))))
             .SelectMany(static a => a.GlobalNamespace.GetAllNamedTypes())
             .Where(static s =>
                 s.DeclaredAccessibility == Accessibility.Public &&
