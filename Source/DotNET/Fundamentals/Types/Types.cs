@@ -33,7 +33,7 @@ public class Types : ITypes
     public Types()
         : this(
             GeneratedTypeDiscoveryRegistry.Providers.Any()
-                ? [.. GeneratedTypeDiscoveryRegistry.Providers, PackageReferencedAssemblies.Instance]
+                ? GeneratedTypeDiscoveryRegistry.Providers
                 :
                 [
                     ProjectReferencedAssemblies.Instance,
@@ -55,12 +55,12 @@ public class Types : ITypes
         _assemblies.AddRange(assemblies);
         All = providers.SelectMany(_ => _.DefinedTypes).Distinct();
 
-        var allProvidersHavePrecomputedMappings = providers.Length > 0 && providers.All(_ => _ is ICanProvideContractToImplementorsForDiscovery);
-        if (allProvidersHavePrecomputedMappings)
+        var precomputedProviders = providers.OfType<ICanProvideContractToImplementorsForDiscovery>().ToArray();
+        if (precomputedProviders.Length > 0)
         {
             var contractsAndImplementors = new Dictionary<Type, HashSet<Type>>();
 
-            foreach (var provider in providers.OfType<ICanProvideContractToImplementorsForDiscovery>())
+            foreach (var provider in precomputedProviders)
             {
                 foreach (var (contract, implementors) in provider.ContractsAndImplementors)
                 {
@@ -78,6 +78,16 @@ public class Types : ITypes
             }
 
             _contractToImplementorsMap.Feed(contractsAndImplementors.ToDictionary(_ => _.Key, _ => _.Value.AsEnumerable()));
+
+            // For any providers that don't have precomputed mappings (e.g. a plain assembly provider
+            // passed explicitly alongside generated providers), scan their types by reflection so that
+            // their implementations are still discoverable.
+            var nonPrecomputedTypes = providers
+                .Where(static p => p is not ICanProvideContractToImplementorsForDiscovery)
+                .SelectMany(static p => p.DefinedTypes)
+                .Distinct();
+            _contractToImplementorsMap.Feed(nonPrecomputedTypes);
+
             _contractToImplementorsMap.FeedTypes(All);
             return;
         }

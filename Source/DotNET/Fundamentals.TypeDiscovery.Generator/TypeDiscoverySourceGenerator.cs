@@ -22,9 +22,15 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
 
     static void Execute(SourceProductionContext context, Compilation compilation)
     {
+        // The synthesized Program class for top-level statements is the entry-point container. It
+        // cannot be meaningfully referenced from generated code, and its unqualified global-namespace
+        // name conflicts with Program classes in referenced assemblies, producing CS0436.
+        var entryPointContainerType = compilation.GetEntryPoint(CancellationToken.None)?.ContainingType;
+
         var symbols = compilation.Assembly.GlobalNamespace
             .GetAllNamedTypes()
-            .Where(static s => s.CanBeReferencedFromGeneratedCode())
+            .Where(s => s.CanBeReferencedFromGeneratedCode() &&
+                        !SymbolEqualityComparer.Default.Equals(s, entryPointContainerType))
             .ToImmutableArray();
 
         var namedTypes = symbols
