@@ -38,10 +38,10 @@ Methods defined on your classes are immediately available on deserialized object
 export class User {
     @field(String)
     name!: string;
-    
+
     @field(Number)
     age!: number;
-    
+
     getDisplayName(): string {
         return `${this.name} (${this.age})`;
     }
@@ -90,10 +90,10 @@ Complex types like `Date` and `Guid` are properly converted during deserializati
 export class Order {
     @field(String)
     orderId!: string;
-    
+
     @field(Date)
     createdAt!: Date;
-    
+
     @field(Guid)
     customerId!: Guid;
 }
@@ -169,10 +169,10 @@ Ensure all serializable properties are decorated:
 export class Product {
     @field(String)
     name!: string;
-    
+
     @field(Number)
     price!: number;
-    
+
     @field(Date)
     createdAt!: Date;
 }
@@ -203,10 +203,10 @@ The `JsonSerializer` automatically handles nested typed objects:
 export class Order {
     @field(String)
     orderId!: string;
-    
+
     @field(Customer) // Nested typed object
     customer!: Customer;
-    
+
     @field(Product, true) // Array of typed objects
     items!: Product[];
 }

@@ -88,10 +88,10 @@ import { field } from '@cratis/fundamentals';
 export class CreditCard implements IPaymentMethod {
     @field(Number)
     amount!: number;
-    
+
     @field(String)
     cardNumber!: string;
-    
+
     @field(String)
     expiryDate!: string;
 }
@@ -100,7 +100,7 @@ export class CreditCard implements IPaymentMethod {
 export class PayPal implements IPaymentMethod {
     @field(Number)
     amount!: number;
-    
+
     @field(String)
     email!: string;
 }
@@ -112,10 +112,10 @@ export class PayPal implements IPaymentMethod {
 export class Order {
     @field(String)
     orderId!: string;
-    
+
     @field(Object, false, [CreditCard, PayPal])
     paymentMethod!: IPaymentMethod;
-    
+
     @field(Object, true, [CreditCard, PayPal])
     alternativePayments!: IPaymentMethod[];
 }
@@ -166,10 +166,10 @@ The `_derivedTypeId` property is automatically:
 export class ShoppingCart {
     @field(String)
     cartId!: string;
-    
+
     @field(Order, true)
     orders!: Order[];
-    
+
     @field(Object, false, [CreditCard, PayPal])
     defaultPayment!: IPaymentMethod;
 }
@@ -268,13 +268,13 @@ Decorate all serializable properties:
 export class CreditCard implements IPaymentMethod {
     @field(Number)
     amount!: number;
-    
+
     @field(String)
     cardNumber!: string;
-    
+
     // ❌ This won't be serialized without @field
     private internalId: string = '';
-    
+
     // ✅ Private fields that should be serialized need @field too
     @field(String)
     private securityCode!: string;

@@ -41,7 +41,7 @@ public class CreditCard : IPaymentMethod
 export class CreditCard implements IPaymentMethod {
     @field(Number)
     amount!: number;
-    
+
     @field(String)
     cardNumber!: string;
 }
@@ -85,14 +85,14 @@ public class PaymentController : ControllerBase
     {
         // request.PaymentMethod will be properly deserialized to CreditCard or PayPal
         var result = _paymentService.ProcessPayment(request.PaymentMethod);
-        
+
         return Ok(new PaymentResult
         {
             Success = result.Success,
             PaymentMethod = request.PaymentMethod // Will serialize with _derivedTypeId
         });
     }
-    
+
     [HttpGet("methods")]
     public ActionResult<IEnumerable<IPaymentMethod>> GetAvailablePaymentMethods()
     {
@@ -153,10 +153,10 @@ export interface IPaymentMethod {
 export class CreditCard implements IPaymentMethod {
     @field(Number)
     amount!: number;
-    
+
     @field(String)
     cardNumber!: string;
-    
+
     @field(String)
     expiryDate!: string;
 }
@@ -165,7 +165,7 @@ export class CreditCard implements IPaymentMethod {
 export class PayPal implements IPaymentMethod {
     @field(Number)
     amount!: number;
-    
+
     @field(String)
     email!: string;
 }
@@ -173,7 +173,7 @@ export class PayPal implements IPaymentMethod {
 export class PaymentRequest {
     @field(String)
     orderId!: string;
-    
+
     @field(Object, false, [CreditCard, PayPal])
     paymentMethod!: IPaymentMethod;
 }
@@ -181,7 +181,7 @@ export class PaymentRequest {
 export class PaymentResult {
     @field(Boolean)
     success!: boolean;
-    
+
     @field(Object, false, [CreditCard, PayPal])
     paymentMethod!: IPaymentMethod;
 }
@@ -195,26 +195,26 @@ class PaymentService {
         const request = new PaymentRequest();
         request.orderId = '12345';
         request.paymentMethod = paymentMethod;
-        
+
         // Serialize with type information
         const json = JsonSerializer.serialize(request);
-        
+
         const response = await fetch('/api/payment/process', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: json
         });
-        
+
         const responseJson = await response.text();
-        
+
         // Deserialize with proper types
         return JsonSerializer.deserialize(PaymentResult, responseJson);
     }
-    
+
     async getAvailablePaymentMethods(): Promise<IPaymentMethod[]> {
         const response = await fetch('/api/payment/methods');
         const json = await response.text();
-        
+
         // Each item will be properly typed as CreditCard or PayPal
         return JsonSerializer.deserializeArray(Object, json)
             .map(item => {
@@ -253,7 +253,7 @@ sequenceDiagram
     participant Network
     participant Backend
     participant DerivedTypeConverter
-    
+
     Frontend->>JsonSerializer: serialize(creditCard)
     JsonSerializer->>JsonSerializer: Add _derivedTypeId from @derivedType
     JsonSerializer->>Network: JSON with type info
@@ -273,7 +273,7 @@ sequenceDiagram
     participant Network
     participant JsonSerializer
     participant Frontend
-    
+
     Backend->>DerivedTypeConverter: Serialize PaymentResult
     DerivedTypeConverter->>DerivedTypeConverter: Add _derivedTypeId from [DerivedType]
     DerivedTypeConverter->>Network: JSON with type info
@@ -453,16 +453,16 @@ describe('Payment integration', () => {
         const originalCard = new CreditCard();
         originalCard.amount = 99.99;
         originalCard.cardNumber = '1234';
-        
+
         // Serialize for backend
         const json = JsonSerializer.serialize(originalCard);
-        
+
         // Simulate backend processing (you might use a real API in integration tests)
         const backendResponse = await simulateBackendProcessing(json);
-        
+
         // Deserialize backend response
         const result = JsonSerializer.deserialize(PaymentResult, backendResponse);
-        
+
         // Verify type preservation
         expect(result.paymentMethod instanceof CreditCard).toBe(true);
         expect((result.paymentMethod as CreditCard).cardNumber).toBe('1234');

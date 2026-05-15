@@ -214,7 +214,7 @@ public void should_serialize_and_deserialize_credit_card()
     var original = new CreditCard { Amount = 99.99m, CardNumber = "1234" };
     var json = JsonSerializer.Serialize<IPaymentMethod>(original, options);
     var deserialized = JsonSerializer.Deserialize<IPaymentMethod>(json, options);
-    
+
     deserialized.ShouldBeOfExactType<CreditCard>();
     ((CreditCard)deserialized).CardNumber.ShouldEqual("1234");
 }
@@ -235,12 +235,12 @@ You can inject `IDerivedTypes` into your services to programmatically work with 
 public class PaymentService
 {
     private readonly IDerivedTypes _derivedTypes;
-    
+
     public PaymentService(IDerivedTypes derivedTypes)
     {
         _derivedTypes = derivedTypes;
     }
-    
+
     public bool SupportsPaymentType(Type paymentType)
     {
         return _derivedTypes.IsDerivedType(paymentType);
