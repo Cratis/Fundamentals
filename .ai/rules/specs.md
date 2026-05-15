@@ -52,21 +52,6 @@ The `and_`, `with_`, `without_`, `having_`, `given_` prepositions work **both** 
 - `having_*` — possession or state-based conditions
 - `given_*` — precondition scenarios
 
-**Critical naming rule — `for_` is only for the top-level class folder:**
-`for_` belongs **only** at the top level — `for_<ClassName>` names the class under test. Never nest a second `for_` folder inside a `for_` folder to represent a method or member. Methods and behaviors become `when_<action>` folders, and their outcomes become `and_*` / `with_*` / `without_*` files or sub-folders.
-
-```
-# ❌ Wrong — nested for_ folder tries to name a method
-for_Changeset/
-└── for_HasChanges/
-    └── when_there_are_differences.cs
-
-# ✅ Correct — method context baked into the when_ folder
-for_Changeset/
-└── when_checking_if_has_changes/
-    └── and_there_are_differences.cs
-```
-
 **Critical naming rule — never embed `when` in a spec file or folder name:**
 `when` belongs **only** in `when_<behavior>` folder names. A spec file, spec class, or non-`when_` folder must **never** contain the word `when` anywhere in it. If the name starts with a preposition (`with_`, `and_`, etc.) but also contains `_when_` somewhere in the middle (e.g. `with_a_registered_migration_when_appending_a_generation_1_event`), you have two "whens" in the sentence — which is always wrong.
 
