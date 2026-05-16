@@ -9,20 +9,22 @@ namespace Cratis.Fundamentals.TypeDiscovery.Generator.for_TypeDiscoveryCollector
 public class and_there_are_multiple_implementors_for_one_interface : Specification
 {
     INamedTypeSymbol[] _symbols;
+    IAssemblySymbol _assembly;
     System.Collections.Immutable.ImmutableArray<string> _implementors;
 
-    void Establish() =>
-        _symbols =
-        [
-            .. CompilationFactory.GetNamedTypes(
-                "namespace App;\n" +
-                "public interface IHandler { }\n" +
-                "public class HandlerA : IHandler { }\n" +
-                "public class HandlerB : IHandler { }")
-        ];
+    void Establish()
+    {
+        var compilation = CompilationFactory.CreateCompilation(
+            "namespace App;\n" +
+            "public interface IHandler { }\n" +
+            "public class HandlerA : IHandler { }\n" +
+            "public class HandlerB : IHandler { }");
+        _assembly = compilation.Assembly;
+        _symbols = [.. compilation.Assembly.GlobalNamespace.GetAllNamedTypes()];
+    }
 
     void Because() =>
-        _implementors = TypeDiscoveryCollector.GetContractsAndImplementors(_symbols)
+        _implementors = TypeDiscoveryCollector.GetContractsAndImplementors(_symbols, _assembly)
             .Single(e => e.ContractExpression == "global::App.IHandler")
             .ImplementorExpressions;
 
