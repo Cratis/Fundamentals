@@ -16,14 +16,20 @@ internal static class TypeDiscoveryCollector
     /// Builds the contract-to-implementors map for all concrete types in <paramref name="symbols"/>.
     /// Each entry maps a contract type expression to the expressions of all types that implement it.
     /// Contracts from external assemblies that are not <see langword="public"/> are excluded to prevent CS0122
-    /// errors in the generated code.
+    /// errors in the generated code. Contracts whose FQDN appears in more than one referenced assembly are
+    /// excluded to prevent CS0433 errors in the generated code.
     /// </summary>
     /// <param name="symbols">The set of named type symbols from the assembly.</param>
     /// <param name="currentAssembly">The assembly into which generated code will be emitted.</param>
+    /// <param name="ambiguousFqdns">
+    /// Optional set of fully-qualified type name expressions that exist in more than one referenced assembly.
+    /// Contracts whose expression appears in this set are omitted from the output to avoid CS0433.
+    /// </param>
     /// <returns>One entry per contract with its ordered list of implementors.</returns>
     public static IEnumerable<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> GetContractsAndImplementors(
         IEnumerable<INamedTypeSymbol> symbols,
-        IAssemblySymbol currentAssembly)
+        IAssemblySymbol currentAssembly,
+        HashSet<string>? ambiguousFqdns = null)
     {
         var implementors = symbols.Where(s => s.IsImplementation()).ToArray();
         var contractsAndImplementors = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
@@ -32,7 +38,9 @@ internal static class TypeDiscoveryCollector
         {
             var implementorExpression = implementor.GetTypeOfExpression();
 
-            foreach (var contractExpression in implementor.GetAllBaseAndImplementingSymbols(currentAssembly).Select(c => c.GetTypeOfExpression()))
+            foreach (var contractExpression in implementor.GetAllBaseAndImplementingSymbols(currentAssembly)
+                .Select(c => c.GetTypeOfExpression())
+                .Where(fqdn => ambiguousFqdns?.Contains(fqdn) is not true))
             {
                 if (!contractsAndImplementors.TryGetValue(contractExpression, out var mapped))
                 {
