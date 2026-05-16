@@ -15,11 +15,15 @@ internal static class TypeDiscoveryCollector
     /// <summary>
     /// Builds the contract-to-implementors map for all concrete types in <paramref name="symbols"/>.
     /// Each entry maps a contract type expression to the expressions of all types that implement it.
+    /// Contracts from external assemblies that are not <see langword="public"/> are excluded to prevent CS0122
+    /// errors in the generated code.
     /// </summary>
     /// <param name="symbols">The set of named type symbols from the assembly.</param>
+    /// <param name="currentAssembly">The assembly into which generated code will be emitted.</param>
     /// <returns>One entry per contract with its ordered list of implementors.</returns>
     public static IEnumerable<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> GetContractsAndImplementors(
-        IEnumerable<INamedTypeSymbol> symbols)
+        IEnumerable<INamedTypeSymbol> symbols,
+        IAssemblySymbol currentAssembly)
     {
         var implementors = symbols.Where(s => s.IsImplementation()).ToArray();
         var contractsAndImplementors = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
@@ -28,7 +32,7 @@ internal static class TypeDiscoveryCollector
         {
             var implementorExpression = implementor.GetTypeOfExpression();
 
-            foreach (var contractExpression in implementor.GetAllBaseAndImplementingSymbols().Select(c => c.GetTypeOfExpression()))
+            foreach (var contractExpression in implementor.GetAllBaseAndImplementingSymbols(currentAssembly).Select(c => c.GetTypeOfExpression()))
             {
                 if (!contractsAndImplementors.TryGetValue(contractExpression, out var mapped))
                 {

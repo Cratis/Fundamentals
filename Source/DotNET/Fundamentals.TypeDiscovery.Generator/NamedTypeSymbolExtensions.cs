@@ -30,6 +30,32 @@ internal static class NamedTypeSymbolExtensions
         type.DeclaredAccessibility is not Accessibility.Private;
 
     /// <summary>
+    /// Returns whether the type is declared entirely within auto-generated source files
+    /// produced by another source generator (files whose path ends with <c>.g.cs</c>).
+    /// Such types must be excluded from the type-discovery output to prevent CS0436
+    /// conflicts when the same type name is also imported from a referenced assembly.
+    /// </summary>
+    /// <param name="type">The type to check.</param>
+    /// <returns><see langword="true"/> if every declaring syntax reference is in a <c>.g.cs</c> file; otherwise <see langword="false"/>.</returns>
+    public static bool IsFromSourceGenerator(this INamedTypeSymbol type) =>
+        type.DeclaringSyntaxReferences.Length > 0 &&
+        type.DeclaringSyntaxReferences.All(
+            r => r.SyntaxTree.FilePath.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Returns whether the type is accessible from code generated into <paramref name="assembly"/>.
+    /// Types from the same assembly may be <see langword="internal"/> or more visible.
+    /// Types from external assemblies must be <see langword="public"/>.
+    /// </summary>
+    /// <param name="type">The type to check.</param>
+    /// <param name="assembly">The assembly into which generated code will be emitted.</param>
+    /// <returns><see langword="true"/> if the type is accessible; otherwise <see langword="false"/>.</returns>
+    public static bool IsAccessibleFromAssembly(this INamedTypeSymbol type, IAssemblySymbol assembly) =>
+        SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, assembly)
+            ? type.DeclaredAccessibility is not Accessibility.Private
+            : type.DeclaredAccessibility is Accessibility.Public;
+
+    /// <summary>
     /// Returns whether the type is a concrete implementation — not an interface or abstract class.
     /// </summary>
     /// <param name="type">The type to check.</param>
@@ -140,17 +166,20 @@ internal static class NamedTypeSymbolExtensions
     /// <summary>
     /// Returns all base types and implemented interface types for the given type,
     /// including their open-generic forms where applicable.
-    /// Excludes <c>System.Object</c> and the type itself.
+    /// Excludes <c>System.Object</c>, the type itself, and any contracts that are not
+    /// accessible from generated code emitted into <paramref name="currentAssembly"/>
+    /// (i.e. internal types from external assemblies are excluded to prevent CS0122).
     /// </summary>
     /// <param name="type">The type to inspect.</param>
+    /// <param name="currentAssembly">The assembly into which generated code will be emitted.</param>
     /// <returns>The set of all contracts the type fulfils.</returns>
-    public static IEnumerable<INamedTypeSymbol> GetAllBaseAndImplementingSymbols(this INamedTypeSymbol type) =>
+    public static IEnumerable<INamedTypeSymbol> GetAllBaseAndImplementingSymbols(this INamedTypeSymbol type, IAssemblySymbol currentAssembly) =>
         type.GetBaseTypes()
             .Concat(type.AllInterfaces)
             .SelectMany(GetThisAndMaybeOpenType)
             .Where(t => !SymbolEqualityComparer.Default.Equals(t, type) && t.SpecialType != SpecialType.System_Object)
             .Distinct(NamedTypeSymbolComparer.Instance)
-            .Where(t => t.CanBeReferencedFromGeneratedCode());
+            .Where(t => t.IsAccessibleFromAssembly(currentAssembly));
 
     /// <summary>
     /// Enumerates the type itself and all of its base types up the inheritance chain.
