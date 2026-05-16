@@ -27,10 +27,37 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
         // name conflicts with Program classes in referenced assemblies, producing CS0436.
         var entryPointContainerType = compilation.GetEntryPoint(CancellationToken.None)?.ContainingType;
 
+        // Group all public types from every referenced assembly by their fully-qualified name so we can
+        // detect two categories of conflict before emitting typeof() expressions:
+        //   CS0436 — a type in the current assembly shares a FQDN with a type in a referenced assembly.
+        //   CS0433 — a FQDN appears in more than one referenced assembly (ambiguous reference).
+        var referencedTypesByFqdn = compilation.References
+            .Select(r => compilation.GetAssemblyOrModuleSymbol(r) as IAssemblySymbol)
+            .Where(static a => a is not null)
+            .Cast<IAssemblySymbol>()
+            .SelectMany(static a => a.GlobalNamespace.GetAllNamedTypes()
+                .Where(static s => s.DeclaredAccessibility == Accessibility.Public)
+                .Select(s => (Fqdn: s.GetTypeOfExpression(), AssemblyName: a.Name)))
+            .ToLookup(static x => x.Fqdn, StringComparer.Ordinal);
+
+        // FQDNs present in any referenced assembly — used to suppress CS0436 for current-assembly types.
+        var referencedFqdns = new HashSet<string>(
+            referencedTypesByFqdn.Select(static g => g.Key),
+            StringComparer.Ordinal);
+
+        // FQDNs present in more than one referenced assembly — used to suppress CS0433 for contracts
+        // and convention bindings that the compiler cannot resolve unambiguously.
+        var ambiguousFqdns = new HashSet<string>(
+            referencedTypesByFqdn
+                .Where(static g => g.Select(static x => x.AssemblyName).Distinct(StringComparer.Ordinal).Count() > 1)
+                .Select(static g => g.Key),
+            StringComparer.Ordinal);
+
         var symbols = compilation.Assembly.GlobalNamespace
             .GetAllNamedTypes()
             .Where(s => s.CanBeReferencedFromGeneratedCode() &&
                         !s.IsFromSourceGenerator() &&
+                        !referencedFqdns.Contains(s.GetTypeOfExpression()) &&
                         !SymbolEqualityComparer.Default.Equals(s, entryPointContainerType))
             .ToImmutableArray();
 
@@ -40,7 +67,7 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
             .OrderBy(static name => name, StringComparer.Ordinal)
             .ToImmutableArray();
 
-        var contractsAndImplementors = TypeDiscoveryCollector.GetContractsAndImplementors(symbols, compilation.Assembly)
+        var contractsAndImplementors = TypeDiscoveryCollector.GetContractsAndImplementors(symbols, compilation.Assembly, ambiguousFqdns)
             .OrderBy(static e => e.ContractExpression, StringComparer.Ordinal)
             .ToImmutableArray();
 
@@ -58,12 +85,13 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
             .Where(static a => !a.Modules.Any(static m => m.ReferencedAssemblies.Any(
                 static r => r.Name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal))))
             .SelectMany(static a => a.GlobalNamespace.GetAllNamedTypes())
-            .Where(static s =>
+            .Where(s =>
                 s.DeclaredAccessibility == Accessibility.Public &&
                 !s.IsImplicitlyDeclared &&
                 !s.IsAnonymousType &&
                 !s.IsFileLocal &&
-                s.CanBeReferencedByName)
+                s.CanBeReferencedByName &&
+                !ambiguousFqdns.Contains(s.GetTypeOfExpression()))
             .ToImmutableArray();
 
         var conventionServiceBindings = TypeDiscoveryCollector.GetConventionServiceBindings(symbols)
