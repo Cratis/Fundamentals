@@ -30,6 +30,7 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
         var symbols = compilation.Assembly.GlobalNamespace
             .GetAllNamedTypes()
             .Where(s => s.CanBeReferencedFromGeneratedCode() &&
+                        !s.IsFromSourceGenerator() &&
                         !SymbolEqualityComparer.Default.Equals(s, entryPointContainerType))
             .ToImmutableArray();
 
@@ -39,7 +40,7 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
             .OrderBy(static name => name, StringComparer.Ordinal)
             .ToImmutableArray();
 
-        var contractsAndImplementors = TypeDiscoveryCollector.GetContractsAndImplementors(symbols)
+        var contractsAndImplementors = TypeDiscoveryCollector.GetContractsAndImplementors(symbols, compilation.Assembly)
             .OrderBy(static e => e.ContractExpression, StringComparer.Ordinal)
             .ToImmutableArray();
 

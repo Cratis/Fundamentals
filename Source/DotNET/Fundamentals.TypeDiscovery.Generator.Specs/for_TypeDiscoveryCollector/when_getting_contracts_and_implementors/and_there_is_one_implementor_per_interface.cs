@@ -9,18 +9,20 @@ namespace Cratis.Fundamentals.TypeDiscovery.Generator.for_TypeDiscoveryCollector
 public class and_there_is_one_implementor_per_interface : Specification
 {
     INamedTypeSymbol[] _symbols;
+    IAssemblySymbol _assembly;
     (string ContractExpression, System.Collections.Immutable.ImmutableArray<string> ImplementorExpressions)[] _result;
 
-    void Establish() =>
-        _symbols =
-        [
-            .. CompilationFactory.GetNamedTypes(
-                "namespace App;\n" +
-                "public interface IFoo { }\n" +
-                "public class Foo : IFoo { }")
-        ];
+    void Establish()
+    {
+        var compilation = CompilationFactory.CreateCompilation(
+            "namespace App;\n" +
+            "public interface IFoo { }\n" +
+            "public class Foo : IFoo { }");
+        _assembly = compilation.Assembly;
+        _symbols = [.. compilation.Assembly.GlobalNamespace.GetAllNamedTypes()];
+    }
 
-    void Because() => _result = [.. TypeDiscoveryCollector.GetContractsAndImplementors(_symbols)];
+    void Because() => _result = [.. TypeDiscoveryCollector.GetContractsAndImplementors(_symbols, _assembly)];
 
     [Fact] void should_include_the_interface_as_a_contract() => _result.Select(e => e.ContractExpression).ShouldContain("global::App.IFoo");
     [Fact] void should_map_the_class_as_the_implementor() =>
