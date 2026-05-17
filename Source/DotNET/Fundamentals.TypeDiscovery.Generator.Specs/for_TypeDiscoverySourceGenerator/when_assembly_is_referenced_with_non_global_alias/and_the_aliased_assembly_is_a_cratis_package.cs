@@ -23,12 +23,18 @@ public class and_the_aliased_assembly_is_a_cratis_package : Specification
         // When referenced globally the generator would normally produce convention bindings for them.
         // When referenced with a non-global alias, those types must be excluded.
         using var pkgStream = new MemoryStream();
-        CSharpCompilation.Create(
+        var emitResult = CSharpCompilation.Create(
             "Cratis.Packages",
             [CSharpSyntaxTree.ParseText("namespace Cratis.Packages { public interface IMyService { } public class MyService : IMyService { } }")],
             [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
             .Emit(pkgStream);
+
+        if (!emitResult.Success)
+        {
+            throw new InvalidOperationException("Failed to emit in-memory Cratis.Packages assembly.");
+        }
+
         pkgStream.Position = 0;
 
         var aliasedPkgRef = MetadataReference.CreateFromStream(

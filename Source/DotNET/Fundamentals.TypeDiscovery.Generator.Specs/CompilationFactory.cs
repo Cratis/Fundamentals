@@ -56,33 +56,4 @@ static class CompilationFactory
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
     }
-
-    /// <summary>
-    /// Creates a Roslyn <see cref="CSharpCompilation"/> for the given source text where one of the
-    /// additional assemblies is referenced with a non-global C# alias (simulating
-    /// <c>&lt;Aliases&gt;SomeAlias&lt;/Aliases&gt;</c> in a project file).
-    /// </summary>
-    /// <param name="source">The C# source text to compile.</param>
-    /// <param name="aliasedAssembly">The assembly to reference with a non-global alias.</param>
-    /// <param name="alias">The alias to apply to <paramref name="aliasedAssembly"/>.</param>
-    /// <returns>A <see cref="CSharpCompilation"/> with the aliased reference.</returns>
-    public static CSharpCompilation CreateCompilationWithAliasedReference(string source, Assembly aliasedAssembly, string alias)
-    {
-        var syntaxTree = CSharpSyntaxTree.ParseText(source);
-        var aliasedReference = MetadataReference.CreateFromFile(
-            aliasedAssembly.Location,
-            new MetadataReferenceProperties(aliases: [alias]));
-        MetadataReference[] references =
-        [
-            .. _defaultAssemblies
-                .Select(static asm => (MetadataReference)MetadataReference.CreateFromFile(asm.Location)),
-            aliasedReference
-        ];
-
-        return CSharpCompilation.Create(
-            "TestAssembly",
-            [syntaxTree],
-            references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
-    }
 }
