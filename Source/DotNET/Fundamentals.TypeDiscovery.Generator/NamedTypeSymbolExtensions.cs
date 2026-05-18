@@ -17,7 +17,8 @@ internal static class NamedTypeSymbolExtensions
 
     /// <summary>
     /// Returns whether the type can safely be referenced from generated code
-    /// (i.e. it is not an error, implicit, anonymous, file-local, or private type).
+    /// (i.e. it is not an error, implicit, anonymous, file-local, or private type,
+    /// not a protected nested type, and not nested within a generic outer type).
     /// </summary>
     /// <param name="type">The type to check.</param>
     /// <returns><see langword="true"/> if the type can be referenced; otherwise <see langword="false"/>.</returns>
@@ -27,7 +28,9 @@ internal static class NamedTypeSymbolExtensions
         !type.IsAnonymousType &&
         !type.IsFileLocal &&
         type.CanBeReferencedByName &&
-        type.DeclaredAccessibility is not Accessibility.Private;
+        type.DeclaredAccessibility is not Accessibility.Private &&
+        !type.IsProtectedNestedType() &&
+        !type.IsNestedInGenericType();
 
     /// <summary>
     /// Returns whether the type is declared entirely within auto-generated source files
@@ -41,6 +44,41 @@ internal static class NamedTypeSymbolExtensions
         type.DeclaringSyntaxReferences.Length > 0 &&
         type.DeclaringSyntaxReferences.All(
             r => r.SyntaxTree.FilePath.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Returns whether the type is a protected nested type.
+    /// Protected nested types are only accessible from subclasses of the containing type;
+    /// generated code at namespace level cannot reference them, causing CS0122.
+    /// </summary>
+    /// <param name="type">The type to check.</param>
+    /// <returns><see langword="true"/> if the type is a protected nested type; otherwise <see langword="false"/>.</returns>
+    public static bool IsProtectedNestedType(this INamedTypeSymbol type) =>
+        type.ContainingType is not null &&
+        type.DeclaredAccessibility is Accessibility.Protected or Accessibility.ProtectedAndFriend or Accessibility.ProtectedOrFriend;
+
+    /// <summary>
+    /// Returns whether the type is nested within a type that has unbound type parameters.
+    /// The fully-qualified name of such a nested type includes the outer type's type parameter
+    /// names, which are unresolvable symbols in generated code, causing CS0246.
+    /// </summary>
+    /// <param name="type">The type to check.</param>
+    /// <returns><see langword="true"/> if any containing type has type parameters; otherwise <see langword="false"/>.</returns>
+    public static bool IsNestedInGenericType(this INamedTypeSymbol type)
+    {
+        var containing = type.ContainingType;
+
+        while (containing is not null)
+        {
+            if (containing.Arity > 0)
+            {
+                return true;
+            }
+
+            containing = containing.ContainingType;
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Returns whether the type is accessible from code generated into <paramref name="assembly"/>.
