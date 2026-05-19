@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Cratis.Reflection;
 using Cratis.Types;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +44,8 @@ public static class ServiceCollectionExtensions
     [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
     static bool TryAddGeneratedBindingsByConvention(IServiceCollection services)
     {
+        EnsureGeneratedTypeDiscoveryProvidersAreRegistered();
+
         var generatedBindings = GeneratedTypeDiscoveryRegistry.Providers
             .OfType<ICanProvideConventionsForDependencyInjection>()
             .SelectMany(_ => _.ConventionServiceBindings)
@@ -74,6 +77,8 @@ public static class ServiceCollectionExtensions
     [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
     static bool TryAddGeneratedSelfBindings(IServiceCollection services)
     {
+        EnsureGeneratedTypeDiscoveryProvidersAreRegistered();
+
         var generatedBindings = GeneratedTypeDiscoveryRegistry.Providers
             .OfType<ICanProvideConventionsForDependencyInjection>()
             .SelectMany(_ => _.SelfBindings)
@@ -207,5 +212,67 @@ public static class ServiceCollectionExtensions
         }
 
         return ServiceLifetime.Transient;
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Referenced assemblies must be visited to run module initializers that register generated providers.")]
+    static void EnsureGeneratedTypeDiscoveryProvidersAreRegistered()
+    {
+        var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+        var assemblies = new HashSet<Assembly>(loadedAssemblies);
+        var visitedAssemblyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var assemblyNamesToLoad = new Queue<AssemblyName>();
+
+        void EnqueueReferencesFor(Assembly assembly)
+        {
+            foreach (var referencedAssemblyName in assembly.GetReferencedAssemblies().Where(_ => visitedAssemblyNames.Add(_.FullName)))
+            {
+                assemblyNamesToLoad.Enqueue(referencedAssemblyName);
+            }
+        }
+
+        foreach (var loadedAssembly in loadedAssemblies)
+        {
+            EnqueueReferencesFor(loadedAssembly);
+        }
+        if (Assembly.GetEntryAssembly() is { } entryAssembly)
+        {
+            _ = assemblies.Add(entryAssembly);
+            EnqueueReferencesFor(entryAssembly);
+        }
+
+        while (assemblyNamesToLoad.TryDequeue(out var assemblyName))
+        {
+            var assembly = assemblies.SingleOrDefault(_ => AssemblyName.ReferenceMatchesDefinition(_.GetName(), assemblyName));
+
+            if (assembly is null)
+            {
+                try
+                {
+                    assembly = Assembly.Load(assemblyName);
+                }
+                catch (FileNotFoundException)
+                {
+                    continue;
+                }
+                catch (FileLoadException)
+                {
+                    continue;
+                }
+                catch (BadImageFormatException)
+                {
+                    continue;
+                }
+            }
+
+            if (assemblies.Add(assembly))
+            {
+                EnqueueReferencesFor(assembly);
+            }
+        }
+
+        foreach (var assembly in assemblies.Where(static _ => !_.IsDynamic))
+        {
+            RuntimeHelpers.RunModuleConstructor(assembly.ManifestModule.ModuleHandle);
+        }
     }
 }
