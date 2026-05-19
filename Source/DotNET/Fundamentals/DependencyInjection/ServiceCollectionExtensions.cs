@@ -233,7 +233,10 @@ public static class ServiceCollectionExtensions
             }
         }
 
-        loadedAssemblies.ToList().ForEach(EnqueueReferencesFor);
+        foreach (var loadedAssembly in loadedAssemblies)
+        {
+            EnqueueReferencesFor(loadedAssembly);
+        }
         if (Assembly.GetEntryAssembly() is { } entryAssembly)
         {
             _ = assemblies.Add(entryAssembly);
@@ -270,9 +273,9 @@ public static class ServiceCollectionExtensions
             }
         }
 
-        assemblies
-            .Where(static _ => !_.IsDynamic)
-            .ToList()
-            .ForEach(_ => RuntimeHelpers.RunModuleConstructor(_.ManifestModule.ModuleHandle));
+        foreach (var assembly in assemblies.Where(static _ => !_.IsDynamic))
+        {
+            RuntimeHelpers.RunModuleConstructor(assembly.ManifestModule.ModuleHandle);
+        }
     }
 }
