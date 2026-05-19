@@ -25,11 +25,15 @@ internal static class TypeDiscoveryCollector
     /// Optional set of fully-qualified type name expressions that exist in more than one referenced assembly.
     /// Contracts whose expression appears in this set are omitted from the output to avoid CS0433.
     /// </param>
+    /// <param name="globallyAccessibleAssemblyIdentities">
+    /// Optional set of referenced assembly identities that are visible through <c>global::</c>.
+    /// </param>
     /// <returns>One entry per contract with its ordered list of implementors.</returns>
     public static IEnumerable<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> GetContractsAndImplementors(
         IEnumerable<INamedTypeSymbol> symbols,
         IAssemblySymbol currentAssembly,
-        HashSet<string>? ambiguousFqdns = null)
+        HashSet<string>? ambiguousFqdns = null,
+        HashSet<string>? globallyAccessibleAssemblyIdentities = null)
     {
         var implementors = symbols.Where(s => s.IsImplementation()).ToArray();
         var contractsAndImplementors = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
@@ -38,7 +42,7 @@ internal static class TypeDiscoveryCollector
         {
             var implementorExpression = implementor.GetTypeOfExpression();
 
-            foreach (var contractExpression in implementor.GetAllBaseAndImplementingSymbols(currentAssembly)
+            foreach (var contractExpression in implementor.GetAllBaseAndImplementingSymbols(currentAssembly, globallyAccessibleAssemblyIdentities)
                 .Select(c => c.GetTypeOfExpression())
                 .Where(fqdn => ambiguousFqdns?.Contains(fqdn) is not true))
             {
@@ -63,7 +67,25 @@ internal static class TypeDiscoveryCollector
     /// <param name="symbols">The set of named type symbols from the assembly.</param>
     /// <returns>One entry per discovered convention binding.</returns>
     public static IEnumerable<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> GetConventionServiceBindings(
-        IEnumerable<INamedTypeSymbol> symbols)
+        IEnumerable<INamedTypeSymbol> symbols) =>
+        GetConventionServiceBindings(symbols, null);
+
+    /// <summary>
+    /// Returns all <c>I&lt;X&gt;</c> / <c>&lt;X&gt;</c> convention service bindings
+    /// where exactly one implementation of the interface exists in the same namespace.
+    /// When <paramref name="currentAssembly"/> is provided, contracts from non-global aliased
+    /// references are excluded because generated code cannot refer to them via <c>global::</c>.
+    /// </summary>
+    /// <param name="symbols">The set of named type symbols from the assembly.</param>
+    /// <param name="currentAssembly">The assembly into which generated code will be emitted.</param>
+    /// <param name="globallyAccessibleAssemblyIdentities">
+    /// Optional set of globally accessible referenced assembly identities.
+    /// </param>
+    /// <returns>One entry per discovered convention binding.</returns>
+    public static IEnumerable<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> GetConventionServiceBindings(
+        IEnumerable<INamedTypeSymbol> symbols,
+        IAssemblySymbol? currentAssembly,
+        HashSet<string>? globallyAccessibleAssemblyIdentities = null)
     {
         var allTypes = symbols.ToArray();
 
@@ -77,7 +99,8 @@ internal static class TypeDiscoveryCollector
             var conventionInterfaces = implementation.AllInterfaces
                 .Where(i =>
                     i.ContainingNamespace.ToDisplayString() == implementation.ContainingNamespace.ToDisplayString() &&
-                    i.MetadataName == $"I{implementation.MetadataName}")
+                    i.MetadataName == $"I{implementation.MetadataName}" &&
+                    (currentAssembly is null || i.IsAccessibleFromAssembly(currentAssembly, globallyAccessibleAssemblyIdentities)))
                 .ToArray();
 
             if (conventionInterfaces.Length != 1)
