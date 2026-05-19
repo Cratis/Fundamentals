@@ -57,6 +57,7 @@ public class and_interface_matches_convention : Specification
     }
 
     [Fact] void should_not_report_diagnostics() => _result.Diagnostics.ShouldBeEmpty();
+    [Fact] void should_generate_exactly_one_source_tree() => _result.GeneratedTrees.Length.ShouldEqual(1);
     [Fact] void should_produce_generated_source() => _generatedSource.ShouldNotBeEmpty();
     [Fact] void should_include_the_local_implementation_type() => _generatedSource.ShouldContain("typeof(global::App.Foo)");
     [Fact] void should_not_include_the_aliased_contract_type() => _generatedSource.ShouldNotContain("typeof(global::App.IFoo)");

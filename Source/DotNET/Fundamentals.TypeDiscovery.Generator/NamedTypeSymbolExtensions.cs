@@ -94,11 +94,25 @@ internal static class NamedTypeSymbolExtensions
     public static bool IsAccessibleFromAssembly(
         this INamedTypeSymbol type,
         IAssemblySymbol assembly,
-        HashSet<string>? globallyAccessibleAssemblyIdentities = null) =>
-        SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, assembly)
-            ? type.DeclaredAccessibility is not Accessibility.Private
-            : type.DeclaredAccessibility is Accessibility.Public &&
-              globallyAccessibleAssemblyIdentities?.Contains(type.ContainingAssembly.Identity.ToString()) != false;
+        HashSet<string>? globallyAccessibleAssemblyIdentities = null)
+    {
+        if (SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, assembly))
+        {
+            return type.DeclaredAccessibility is not Accessibility.Private;
+        }
+
+        if (type.DeclaredAccessibility is not Accessibility.Public)
+        {
+            return false;
+        }
+
+        if (globallyAccessibleAssemblyIdentities is null)
+        {
+            return true;
+        }
+
+        return globallyAccessibleAssemblyIdentities.Contains(type.ContainingAssembly.Identity.ToString());
+    }
 
     /// <summary>
     /// Returns whether the type is a concrete implementation — not an interface or abstract class.

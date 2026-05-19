@@ -61,14 +61,14 @@ internal static class TypeDiscoveryCollector
     }
 
     /// <summary>
-    /// Returns all <c>I&lt;X&gt;</c> / <c>&lt;X&gt;</c> convention service bindings
-    /// where exactly one implementation of the interface exists in the same namespace.
+    /// Returns all <c>I&lt;X&gt;</c> / <c>&lt;X&gt;</c> convention service bindings without
+    /// applying referenced-assembly visibility filtering.
     /// </summary>
     /// <param name="symbols">The set of named type symbols from the assembly.</param>
     /// <returns>One entry per discovered convention binding.</returns>
     public static IEnumerable<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> GetConventionServiceBindings(
         IEnumerable<INamedTypeSymbol> symbols) =>
-        GetConventionServiceBindings(symbols, null);
+        GetConventionServiceBindings(symbols, currentAssembly: null, globallyAccessibleAssemblyIdentities: null);
 
     /// <summary>
     /// Returns all <c>I&lt;X&gt;</c> / <c>&lt;X&gt;</c> convention service bindings
@@ -79,7 +79,7 @@ internal static class TypeDiscoveryCollector
     /// <param name="symbols">The set of named type symbols from the assembly.</param>
     /// <param name="currentAssembly">The assembly into which generated code will be emitted.</param>
     /// <param name="globallyAccessibleAssemblyIdentities">
-    /// Optional set of globally accessible referenced assembly identities.
+    /// Optional set of referenced assembly identities that are visible through <c>global::</c>.
     /// </param>
     /// <returns>One entry per discovered convention binding.</returns>
     public static IEnumerable<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> GetConventionServiceBindings(
