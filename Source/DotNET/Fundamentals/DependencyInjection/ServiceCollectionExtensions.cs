@@ -224,12 +224,9 @@ public static class ServiceCollectionExtensions
 
         void EnqueueReferencesFor(Assembly assembly)
         {
-            foreach (var referencedAssemblyName in assembly.GetReferencedAssemblies())
+            foreach (var referencedAssemblyName in assembly.GetReferencedAssemblies().Where(_ => visitedAssemblyNames.Add(_.FullName)))
             {
-                if (visitedAssemblyNames.Add(referencedAssemblyName.FullName))
-                {
-                    assemblyNamesToLoad.Enqueue(referencedAssemblyName);
-                }
+                assemblyNamesToLoad.Enqueue(referencedAssemblyName);
             }
         }
 
