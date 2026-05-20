@@ -34,6 +34,13 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
         var globallyAccessibleReferences = compilation.References
             .Where(static r => r.Properties.Aliases.IsDefaultOrEmpty || r.Properties.Aliases.Contains("global"))
             .ToArray();
+        var globallyAccessibleAssemblyIdentities = new HashSet<string>(
+            globallyAccessibleReferences
+                .Select(r => compilation.GetAssemblyOrModuleSymbol(r) as IAssemblySymbol)
+                .Where(static a => a is not null)
+                .Cast<IAssemblySymbol>()
+                .Select(static a => a.Identity.ToString()),
+            StringComparer.Ordinal);
 
         // Group all public types from every referenced assembly by their fully-qualified name so we can
         // detect two categories of conflict before emitting typeof() expressions:
@@ -75,7 +82,11 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
             .OrderBy(static name => name, StringComparer.Ordinal)
             .ToImmutableArray();
 
-        var contractsAndImplementors = TypeDiscoveryCollector.GetContractsAndImplementors(symbols, compilation.Assembly, ambiguousFqdns)
+        var contractsAndImplementors = TypeDiscoveryCollector.GetContractsAndImplementors(
+                symbols,
+                compilation.Assembly,
+                ambiguousFqdns,
+                globallyAccessibleAssemblyIdentities)
             .OrderBy(static e => e.ContractExpression, StringComparer.Ordinal)
             .ToImmutableArray();
 
@@ -102,7 +113,10 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
                 !ambiguousFqdns.Contains(s.GetTypeOfExpression()))
             .ToImmutableArray();
 
-        var conventionServiceBindings = TypeDiscoveryCollector.GetConventionServiceBindings(symbols)
+        var conventionServiceBindings = TypeDiscoveryCollector.GetConventionServiceBindings(
+                symbols,
+                compilation.Assembly,
+                globallyAccessibleAssemblyIdentities)
             .Concat(TypeDiscoveryCollector.GetConventionServiceBindings(packageSymbols))
             .OrderBy(static e => e.ServiceExpression, StringComparer.Ordinal)
             .ThenBy(static e => e.ImplementationExpression, StringComparer.Ordinal)

@@ -87,11 +87,32 @@ internal static class NamedTypeSymbolExtensions
     /// </summary>
     /// <param name="type">The type to check.</param>
     /// <param name="assembly">The assembly into which generated code will be emitted.</param>
+    /// <param name="globallyAccessibleAssemblyIdentities">
+    /// Optional set of referenced assembly identities that are visible through <c>global::</c>.
+    /// </param>
     /// <returns><see langword="true"/> if the type is accessible; otherwise <see langword="false"/>.</returns>
-    public static bool IsAccessibleFromAssembly(this INamedTypeSymbol type, IAssemblySymbol assembly) =>
-        SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, assembly)
-            ? type.DeclaredAccessibility is not Accessibility.Private
-            : type.DeclaredAccessibility is Accessibility.Public;
+    public static bool IsAccessibleFromAssembly(
+        this INamedTypeSymbol type,
+        IAssemblySymbol assembly,
+        HashSet<string>? globallyAccessibleAssemblyIdentities = null)
+    {
+        if (SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, assembly))
+        {
+            return type.DeclaredAccessibility is not Accessibility.Private;
+        }
+
+        if (type.DeclaredAccessibility is not Accessibility.Public)
+        {
+            return false;
+        }
+
+        if (globallyAccessibleAssemblyIdentities is null)
+        {
+            return true;
+        }
+
+        return globallyAccessibleAssemblyIdentities.Contains(type.ContainingAssembly.Identity.ToString());
+    }
 
     /// <summary>
     /// Returns whether the type is a concrete implementation — not an interface or abstract class.
@@ -210,14 +231,20 @@ internal static class NamedTypeSymbolExtensions
     /// </summary>
     /// <param name="type">The type to inspect.</param>
     /// <param name="currentAssembly">The assembly into which generated code will be emitted.</param>
+    /// <param name="globallyAccessibleAssemblyIdentities">
+    /// Optional set of referenced assembly identities that are visible through <c>global::</c>.
+    /// </param>
     /// <returns>The set of all contracts the type fulfils.</returns>
-    public static IEnumerable<INamedTypeSymbol> GetAllBaseAndImplementingSymbols(this INamedTypeSymbol type, IAssemblySymbol currentAssembly) =>
+    public static IEnumerable<INamedTypeSymbol> GetAllBaseAndImplementingSymbols(
+        this INamedTypeSymbol type,
+        IAssemblySymbol currentAssembly,
+        HashSet<string>? globallyAccessibleAssemblyIdentities = null) =>
         type.GetBaseTypes()
             .Concat(type.AllInterfaces)
             .SelectMany(GetThisAndMaybeOpenType)
             .Where(t => !SymbolEqualityComparer.Default.Equals(t, type) && t.SpecialType != SpecialType.System_Object)
             .Distinct(NamedTypeSymbolComparer.Instance)
-            .Where(t => t.IsAccessibleFromAssembly(currentAssembly));
+            .Where(t => t.IsAccessibleFromAssembly(currentAssembly, globallyAccessibleAssemblyIdentities));
 
     /// <summary>
     /// Enumerates the type itself and all of its base types up the inheritance chain.

@@ -8,10 +8,14 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.DependencyModel" />
         <ProjectReference Include="../Fundamentals/Fundamentals.csproj" />
-        <ProjectReference Include="../Fundamentals.Specs.ModuleInitializerProbe/Fundamentals.Specs.ModuleInitializerProbe.csproj" />
+        <ProjectReference Include="../Fundamentals.Specs.ModuleInitializerProbe/Fundamentals.Specs.ModuleInitializerProbe.csproj"
+                          Condition="'$(TargetFramework)'=='net10.0'" />
         <ProjectReference Include="../Fundamentals.TypeDiscovery.Generator/Fundamentals.TypeDiscovery.Generator.csproj"
                           OutputItemType="Analyzer"
                           ReferenceOutputAssembly="false"
                           PrivateAssets="all" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)'!='net10.0'">
+        <Compile Remove="DependencyInjection/for_ServiceCollectionExtensions/when_adding_bindings_by_convention_for_assembly_loaded_before_module_initializer.cs" />
     </ItemGroup>
 </Project>
