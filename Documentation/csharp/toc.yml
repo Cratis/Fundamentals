@@ -10,6 +10,8 @@
   href: monads/toc.yml
 - name: Metrics
   href: metrics/toc.yml
+- name: Traces
+  href: traces/toc.yml
 - name: Serialization
   href: serialization/toc.yml
 - name: API Reference

@@ -11,9 +11,8 @@ public class when_not_using_a_using_declaration : Specification
 {
     ImmutableArray<Microsoft.CodeAnalysis.Diagnostic> _diagnostics;
 
-    void Establish()
-    {
-        var compilation = CompilationFactory.CreateCompilation(@"
+    void Because() => _diagnostics = AnalyzerRunner.Run(
+        @"
 using Cratis.Traces;
 
 namespace TestApp;
@@ -34,11 +33,8 @@ public class Consumer(IActivitySource<OrderService> source)
         var span = OrderTraces.ProcessOrder(_source, ""42"");
     }
 }
-");
-
-        var analyzer = new ActivityScopeUsingAnalyzer();
-        _diagnostics = compilation.WithAnalyzers([analyzer]).GetAnalyzerDiagnosticsAsync().GetAwaiter().GetResult();
-    }
+",
+        new ActivityScopeUsingAnalyzer());
 
     [Fact] void should_report_crt0001() => _diagnostics.Any(_ => _.Id == ActivityScopeUsingAnalyzer.DiagnosticId).ShouldBeTrue();
 }

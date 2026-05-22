@@ -10,9 +10,9 @@ public class when_generating_spans : Specification
     Microsoft.CodeAnalysis.GeneratorDriverRunResult _result;
     string _generatedSource = string.Empty;
 
-    void Establish()
+    void Because()
     {
-        var compilation = CompilationFactory.CreateCompilation(@"
+        _result = GeneratorRunner.Run(@"
 using Cratis.Traces;
 using System.Diagnostics;
 
@@ -29,11 +29,6 @@ static partial class OrderTraces
         string customerId);
 }
 ");
-
-        var generator = new MetricsSourceGenerator();
-        _result = CSharpGeneratorDriver.Create(generator)
-            .RunGenerators(compilation)
-            .GetRunResult();
         _generatedSource = _result.GeneratedTrees.Single().GetText().ToString();
     }
 

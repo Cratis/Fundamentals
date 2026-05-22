@@ -1,15 +1,11 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
-
 namespace Cratis.Metrics.Roslyn.Specs.for_ActivityScopeUsingAnalyzer;
 
-public class when_using_a_using_declaration : Specification
+public class when_assigned_to_a_field_without_using : Specification
 {
-    ImmutableArray<Microsoft.CodeAnalysis.Diagnostic> _diagnostics;
+    System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.Diagnostic> _diagnostics;
 
     void Because() => _diagnostics = AnalyzerRunner.Run(
         @"
@@ -27,14 +23,15 @@ public static class OrderTraces
 public class Consumer(IActivitySource<OrderService> source)
 {
     readonly IActivitySource<OrderService> _source = source;
+    IActivityScope<OrderService>? _scope;
 
     public void Process()
     {
-        using var span = OrderTraces.ProcessOrder(_source, ""42"");
+        _scope = OrderTraces.ProcessOrder(_source, ""42"");
     }
 }
 ",
         new ActivityScopeUsingAnalyzer());
 
-    [Fact] void should_not_report_crt0001() => _diagnostics.Any(_ => _.Id == ActivityScopeUsingAnalyzer.DiagnosticId).ShouldBeFalse();
+    [Fact] void should_report_crt0001() => _diagnostics.Any(_ => _.Id == ActivityScopeUsingAnalyzer.DiagnosticId).ShouldBeTrue();
 }
