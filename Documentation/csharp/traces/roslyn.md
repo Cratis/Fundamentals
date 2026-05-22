@@ -45,7 +45,7 @@ For each matching method, the generator:
 
 ## Getting Started
 
-Declare your spans in a partial class:
+Declare your spans in a partial class. Prefer extension methods so call sites stay close to the injected activity source:
 
 ```csharp
 using Cratis.Traces;
@@ -57,13 +57,13 @@ public static partial class OrderTraces
 {
     [Span("order.process", ActivityKind.Server)]
     internal static partial IActivityScope<OrderService> ProcessOrder(
-        IActivitySource<OrderService> source,
+        this IActivitySource<OrderService> source,
         string orderId,
         string customerId);
 
     [Span("order.validate")]
     internal static partial IActivityScope<OrderService> ValidateOrder(
-        IActivitySource<OrderService> source,
+        this IActivitySource<OrderService> source,
         string orderId);
 }
 ```
@@ -71,8 +71,8 @@ public static partial class OrderTraces
 Use the generated methods like this:
 
 ```csharp
-using var processScope = OrderTraces.ProcessOrder(_activitySource, order.Id, order.CustomerId);
-using var validationScope = OrderTraces.ValidateOrder(_activitySource, order.Id);
+using var processScope = _activitySource.ProcessOrder(order.Id, order.CustomerId);
+using var validationScope = _activitySource.ValidateOrder(order.Id);
 ```
 
 ## Method Signature Requirements
@@ -82,7 +82,7 @@ Every generated trace method must follow this pattern:
 ```csharp
 [Span("name", ActivityKind.Internal | ActivityKind.Server | ActivityKind.Client | ActivityKind.Producer | ActivityKind.Consumer)]
 static partial IActivityScope<TService> MethodName(
-    IActivitySource<TService> source,
+    this IActivitySource<TService> source,
     [tag parameters...]);
 ```
 
@@ -93,6 +93,7 @@ Rules:
 3. Every parameter after the first becomes a tag
 4. Methods must be `static partial`
 5. The containing class must be `static partial`
+6. Prefer marking the first parameter with `this` so the generated method becomes an extension method
 
 ### Tag naming
 
@@ -109,7 +110,7 @@ Given this declaration:
 ```csharp
 [Span("order.process", ActivityKind.Server)]
 internal static partial IActivityScope<OrderService> ProcessOrder(
-    IActivitySource<OrderService> source,
+    this IActivitySource<OrderService> source,
     string orderId,
     string customerId);
 ```
@@ -119,7 +120,7 @@ The generator emits code equivalent to:
 ```csharp
 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
 internal static partial IActivityScope<OrderService> ProcessOrder(
-    IActivitySource<OrderService> source,
+    this IActivitySource<OrderService> source,
     string orderId,
     string customerId)
 {
@@ -141,17 +142,17 @@ The package also includes analyzer `CRT0001`.
 This produces a diagnostic:
 
 ```csharp
-var scope = OrderTraces.ProcessOrder(_activitySource, order.Id, order.CustomerId);
+var scope = _activitySource.ProcessOrder(order.Id, order.CustomerId);
 ```
 
 These patterns are valid:
 
 ```csharp
-using var scope = OrderTraces.ProcessOrder(_activitySource, order.Id, order.CustomerId);
+using var scope = _activitySource.ProcessOrder(order.Id, order.CustomerId);
 ```
 
 ```csharp
-using (OrderTraces.ProcessOrder(_activitySource, order.Id, order.CustomerId))
+using (_activitySource.ProcessOrder(order.Id, order.CustomerId))
 {
     await Process(order);
 }
@@ -167,7 +168,7 @@ The method is missing the required first parameter.
 
 ```csharp
 [Span("order.process")]
-internal static partial IActivityScope<OrderService> ProcessOrder(string orderId);
+internal static partial IActivityScope<OrderService> ProcessOrder();
 ```
 
 ### TRACES002
@@ -194,4 +195,5 @@ internal static partial void ProcessOrder(IActivitySource<OrderService> source, 
 2. **Use names that describe work, not implementation details**
 3. **Prefer a small number of meaningful tags**
 4. **Use `ActivityKind` explicitly for public boundaries such as server and client spans**
-5. **Treat `CRT0001` as required, not optional**
+5. **Prefer extension methods on `IActivitySource<T>` for cleaner call sites**
+6. **Treat `CRT0001` as required, not optional**

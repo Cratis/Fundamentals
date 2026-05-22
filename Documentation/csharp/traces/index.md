@@ -65,7 +65,7 @@ public interface IActivityScope<T> : IDisposable
 Use `using` so the activity stops even when an exception is thrown:
 
 ```csharp
-using var scope = OrderTraces.ProcessOrder(_activitySource, orderId, customerId);
+using var scope = _activitySource.ProcessOrder(orderId, customerId);
 ```
 
 ### Ambient span relationships
@@ -73,9 +73,8 @@ using var scope = OrderTraces.ProcessOrder(_activitySource, orderId, customerId)
 `ActivitySource.StartActivity()` automatically uses `Activity.Current` as the parent. That means nested generated spans form a hierarchy without passing parent spans around manually.
 
 ```csharp
-using var orderScope = OrderTraces.ProcessOrder(_activitySource, order.Id, order.CustomerId);
-
-using var validationScope = OrderTraces.ValidateOrder(_activitySource, order.Id);
+using var orderScope = _activitySource.ProcessOrder(order.Id, order.CustomerId);
+using var validationScope = _activitySource.ValidateOrder(order.Id);
 ```
 
 ## Using Source Generation
@@ -85,7 +84,7 @@ The `Cratis.Metrics.Roslyn` package can implement your span methods at compile t
 1. Create a partial class
 2. Add `static partial` methods that return `IActivityScope<T>`
 3. Decorate them with `[Span]`
-4. Pass `IActivitySource<T>` as the first parameter
+4. Use `this IActivitySource<T>` as the first parameter so the generated spans become extension methods
 
 ```csharp
 using Cratis.Traces;
@@ -97,13 +96,13 @@ public static partial class OrderTraces
 {
     [Span("order.process", ActivityKind.Server)]
     internal static partial IActivityScope<OrderService> ProcessOrder(
-        IActivitySource<OrderService> source,
+        this IActivitySource<OrderService> source,
         string orderId,
         string customerId);
 
     [Span("order.validate")]
     internal static partial IActivityScope<OrderService> ValidateOrder(
-        IActivitySource<OrderService> source,
+        this IActivitySource<OrderService> source,
         string orderId);
 }
 ```
@@ -129,7 +128,7 @@ public class OrderService(IActivitySource<OrderService> activitySource)
 
     public async Task Process(Order order)
     {
-        using var processScope = OrderTraces.ProcessOrder(_activitySource, order.Id, order.CustomerId);
+        using var processScope = _activitySource.ProcessOrder(order.Id, order.CustomerId);
 
         await Validate(order);
         await Save(order);
@@ -137,7 +136,7 @@ public class OrderService(IActivitySource<OrderService> activitySource)
 
     async Task Validate(Order order)
     {
-        using var validationScope = OrderTraces.ValidateOrder(_activitySource, order.Id);
+        using var validationScope = _activitySource.ValidateOrder(order.Id);
         await Task.CompletedTask;
     }
 
@@ -155,7 +154,7 @@ public record Order(string Id, string CustomerId);
 If you need to add extra tags or status details, use the wrapped activity directly:
 
 ```csharp
-using var scope = OrderTraces.ProcessOrder(_activitySource, order.Id, order.CustomerId);
+using var scope = _activitySource.ProcessOrder(order.Id, order.CustomerId);
 
 scope.Activity?.SetTag("retry_count", retryCount);
 scope.Activity?.SetStatus(ActivityStatusCode.Ok);
@@ -167,7 +166,8 @@ scope.Activity?.SetStatus(ActivityStatusCode.Ok);
 2. **Keep span names stable** so dashboards and queries do not drift
 3. **Use low-cardinality tags** unless you explicitly need high-cardinality diagnostics
 4. **Create nested spans for meaningful sub-operations**, not every line of code
-5. **Keep trace declarations together** in a single partial class per area
+5. **Prefer extension-method span declarations** so call sites read as `_activitySource.ProcessOrder(...)`
+6. **Keep trace declarations together** in a single partial class per area
 
 ## See Also
 
