@@ -30,7 +30,15 @@ static partial class OrderTraces
         _generatedSource = _result.GeneratedTrees.Single().GetText().ToString();
     }
 
-    [Fact] void should_not_report_diagnostics() => _result.Diagnostics.ShouldBeEmpty();
-    [Fact] void should_preserve_the_extension_method_signature() => _generatedSource.ShouldContain("this IActivitySource<OrderService> source");
-    [Fact] void should_start_the_activity_from_the_extension_target() => _generatedSource.ShouldContain("var activity = source.ActualSource.StartActivity(\"order.process\", ActivityKind.Server);");
+    [Fact]
+    void should_not_report_diagnostics() => _result.Diagnostics.ShouldBeEmpty();
+
+    [Fact]
+    void should_preserve_the_extension_method_signature() => _generatedSource.ShouldContain("this IActivitySource<OrderService> source");
+
+    [Fact]
+    void should_start_the_activity_from_the_extension_target() => _generatedSource.ShouldContain("var activity = source.ActualSource.StartActivity(\"order.process\", ActivityKind.Server);");
+
+    [Fact]
+    void should_generate_tags_from_the_extension_method_parameters() => _generatedSource.ShouldContain("activity?.SetTag(\"order_id\", orderId);");
 }
