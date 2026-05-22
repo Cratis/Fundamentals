@@ -25,7 +25,7 @@ static partial class OrderTraces
     [Span(""order.process"", ActivityKind.Server)]
     internal static partial IActivityScope<OrderService> ProcessOrder(
         IActivitySource<OrderService> source,
-        string orderId,
+    string orderID,
         string customerId);
 }
 ");
@@ -39,6 +39,6 @@ static partial class OrderTraces
 
     [Fact] void should_not_report_diagnostics() => _result.Diagnostics.ShouldBeEmpty();
     [Fact] void should_start_activity_with_declared_name_and_kind() => _generatedSource.ShouldContain("StartActivity(\"order.process\", ActivityKind.Server)");
-    [Fact] void should_add_tags_from_additional_parameters() => _generatedSource.ShouldContain("SetTag(\"order_id\", orderId)");
+    [Fact] void should_add_tags_from_additional_parameters() => _generatedSource.ShouldContain("SetTag(\"order_id\", orderID)");
     [Fact] void should_return_an_activity_scope() => _generatedSource.ShouldContain("return new global::Cratis.Traces.ActivityScope<OrderService>(activity);");
 }

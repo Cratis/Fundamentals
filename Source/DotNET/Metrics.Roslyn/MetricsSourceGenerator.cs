@@ -394,7 +394,14 @@ public class MetricsSourceGenerator : IIncrementalGenerator
             var character = value[index];
             if (char.IsUpper(character))
             {
-                if (index > 0)
+                var hasPreviousCharacter = index > 0;
+                var previousCharacterIsLowerOrDigit = hasPreviousCharacter &&
+                                                      (char.IsLower(value[index - 1]) || char.IsDigit(value[index - 1]));
+                var previousCharacterIsUpperAndNextIsLower = hasPreviousCharacter &&
+                                                             char.IsUpper(value[index - 1]) &&
+                                                             index + 1 < value.Length &&
+                                                             char.IsLower(value[index + 1]);
+                if (previousCharacterIsLowerOrDigit || previousCharacterIsUpperAndNextIsLower)
                 {
                     builder.Append('_');
                 }
