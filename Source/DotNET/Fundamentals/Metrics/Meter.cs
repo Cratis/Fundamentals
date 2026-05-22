@@ -13,8 +13,8 @@ namespace Cratis.Metrics;
 /// Initializes a new instance of the <see cref="Meter{T}"/> class.
 /// </remarks>
 /// <param name="meter">The actual meter being used.</param>
-public class Meter<T>(Meter meter) : IMeter<T>
+public class Meter<T>(Meter? meter = null) : IMeter<T>
 {
     /// <inheritdoc/>
-    public Meter ActualMeter { get; } = meter;
+    public Meter ActualMeter { get; } = meter ?? new(typeof(T).FullName ?? typeof(T).Name);
 }

@@ -35,7 +35,7 @@ namespace {{Namespace}};
         var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
-            new("{{Name}}", {{name}}){{#unless @last}},{{/unless}}
+            new("{{Name}}", {{ValueExpression}}){{#unless @last}},{{/unless}}
             {{/Tags}}
         }));
 
@@ -73,7 +73,7 @@ namespace {{Namespace}};
         var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
-            new("{{Name}}", {{name}}){{#unless @last}},{{/unless}}
+            new("{{Name}}", {{ValueExpression}}){{#unless @last}},{{/unless}}
             {{/Tags}}
         }));
 
@@ -87,4 +87,16 @@ namespace {{Namespace}};
         {{MethodName}}Metric?.Record({{ValueParameter}}, tags);
     }
     {{/Gauges}}
+
+        {{#Spans}}
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
+        {{{MethodSignature}}}
+        {
+            var activity = {{SourceParameter}}.ActualSource.StartActivity("{{Name}}", {{Kind}});
+            {{#Tags}}
+            activity?.SetTag("{{Name}}", {{ValueExpression}});
+            {{/Tags}}
+            return new global::Cratis.Traces.ActivityScope<{{ServiceType}}>(activity);
+        }
+        {{/Spans}}
 }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <IsTestProject>true</IsTestProject>
+        <IsPackable>false</IsPackable>
+        <AssemblyName>Cratis.Metrics.Roslyn.Specs</AssemblyName>
+        <RootNamespace>Cratis.Metrics.Roslyn.Specs</RootNamespace>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>13</LangVersion>
+        <NoWarn>$(NoWarn);SA1600;MA0101;RCS1266</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="$(MSBuildThisFileDirectory)/../GlobalUsings.Specs.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Metrics.Roslyn/Metrics.Roslyn.csproj" />
+        <ProjectReference Include="../Fundamentals/Fundamentals.csproj" />
+        <PackageReference Include="handlebars.net" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    </ItemGroup>
+</Project>

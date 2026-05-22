@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
+using System.Text;
 using Cratis.Metrics.Roslyn.Templates;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -49,12 +50,12 @@ public class MetricsSourceGenerator : IIncrementalGenerator
             member is MethodDeclarationSyntax method &&
             method.Modifiers.Any(SyntaxKind.PartialKeyword) &&
             method.Modifiers.Any(SyntaxKind.StaticKeyword) &&
-            HasMetricsAttribute(method));
+            HasInstrumentationAttribute(method));
     }
 
-    static bool HasMetricsAttribute(MethodDeclarationSyntax method)
+    static bool HasInstrumentationAttribute(MethodDeclarationSyntax method)
     {
-        var metricsAttributes = new[] { "Counter", "Gauge" };
+        var metricsAttributes = new[] { "Counter", "Gauge", "Span" };
         return method.AttributeLists
             .SelectMany(list => list.Attributes)
             .Any(attr => metricsAttributes.Any(m => attr.Name.ToString().StartsWith(m)));
@@ -71,8 +72,9 @@ public class MetricsSourceGenerator : IIncrementalGenerator
 
         var counterAttribute = compilation.GetTypeByMetadataName("Cratis.Metrics.CounterAttribute`1");
         var gaugeAttribute = compilation.GetTypeByMetadataName("Cratis.Metrics.GaugeAttribute`1");
+        var spanAttribute = compilation.GetTypeByMetadataName("Cratis.Traces.SpanAttribute");
 
-        if (counterAttribute is null || gaugeAttribute is null) return;
+        if (counterAttribute is null || gaugeAttribute is null || spanAttribute is null) return;
 
         foreach (var candidate in candidates)
         {
@@ -100,20 +102,22 @@ public class MetricsSourceGenerator : IIncrementalGenerator
                     var attributes = methodSymbol.GetAttributes();
                     var methodSignature = $"{method.Modifiers} {method.ReturnType} {method.Identifier.ValueText}({method.ParameterList.Parameters})";
 
-                    ValidateFirstParameter(context, method, methodSignature);
+                    var scopeParameter = method.ParameterList.Parameters.Count > 0
+                        ? method.ParameterList.Parameters[0].Identifier.ValueText
+                        : string.Empty;
 
-                    var scopeParameter = method.ParameterList.Parameters[0].Identifier.ValueText;
-
-                    var type = method.ParameterList.Parameters[0].Type;
+                    var type = method.ParameterList.Parameters.FirstOrDefault()?.Type;
                     var isScoped = type?.ToString().StartsWith("IMeterScope") ?? false;
 
                     AddMetricIfAny(context, templateData.Counters, counterAttribute, method, methodSignature, attributes, isScoped, scopeParameter);
                     AddMetricIfAny(context, templateData.Gauges, gaugeAttribute, method, methodSignature, attributes, isScoped, scopeParameter, true);
+                    AddSpanIfAny(context, templateData.Spans, spanAttribute, method, methodSignature, attributes);
                 }
             }
 
             if (templateData.Counters.Count > 0 ||
-                templateData.Gauges.Count > 0)
+                templateData.Gauges.Count > 0 ||
+                templateData.Spans.Count > 0)
             {
                 var source = TemplateTypes.Metrics(templateData);
                 context.AddSource($"{candidate.Identifier.ValueText}.g.cs", source);
@@ -164,6 +168,15 @@ public class MetricsSourceGenerator : IIncrementalGenerator
         parameters.Select(parameter => new TagTemplateData
         {
             Name = parameter.Identifier.ValueText,
+            ValueExpression = parameter.Identifier.ValueText,
+            Type = parameter.Type!.ToString()
+        });
+
+    static IEnumerable<TagTemplateData> GetParametersAsSnakeCaseTags(IEnumerable<ParameterSyntax> parameters) =>
+        parameters.Select(parameter => new TagTemplateData
+        {
+            Name = ToSnakeCase(parameter.Identifier.ValueText),
+            ValueExpression = parameter.Identifier.ValueText,
             Type = parameter.Type!.ToString()
         });
 
@@ -219,6 +232,55 @@ public class MetricsSourceGenerator : IIncrementalGenerator
         }
     }
 
+    static void ValidateSpanSignature(SourceProductionContext context, MethodDeclarationSyntax method, string methodSignature)
+    {
+        if (method.ParameterList.Parameters.Count == 0)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                new DiagnosticDescriptor(
+                    "TRACES001",
+                    "Missing required first parameter representing the activity source",
+                    "Method '{0}' is missing an activity source parameter",
+                    "Traces",
+                    DiagnosticSeverity.Error,
+                    true),
+                method.GetLocation(),
+                methodSignature));
+
+            return;
+        }
+
+        var parameterType = method.ParameterList.Parameters[0].Type?.ToString() ?? string.Empty;
+        if (!parameterType.StartsWith("IActivitySource"))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                new DiagnosticDescriptor(
+                    "TRACES002",
+                    "First parameter must be an IActivitySource<>",
+                    "Method '{0}' must use IActivitySource<> as the first parameter",
+                    "Traces",
+                    DiagnosticSeverity.Error,
+                    true),
+                method.GetLocation(),
+                methodSignature));
+        }
+
+        var returnType = method.ReturnType.ToString();
+        if (!returnType.StartsWith("IActivityScope"))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                new DiagnosticDescriptor(
+                    "TRACES003",
+                    "Return type must be IActivityScope<>",
+                    "Method '{0}' must return IActivityScope<>",
+                    "Traces",
+                    DiagnosticSeverity.Error,
+                    true),
+                method.GetLocation(),
+                methodSignature));
+        }
+    }
+
     static void AddMetricIfAny(
         SourceProductionContext context,
         IList<MetricTemplateData> metrics,
@@ -233,6 +295,8 @@ public class MetricsSourceGenerator : IIncrementalGenerator
         var attribute = attributes.FirstOrDefault(_ => SymbolEqualityComparer.Default.Equals(_.AttributeClass?.OriginalDefinition, attributeToLookFor));
         if (attribute is not null)
         {
+            ValidateFirstParameter(context, method, methodSignature);
+
             var type = attribute.AttributeClass!.TypeArguments[0].ToString();
 
             var parameters = GetActualParameters(method);
@@ -261,5 +325,88 @@ public class MetricsSourceGenerator : IIncrementalGenerator
                         Tags = tags
                     });
         }
+    }
+
+    static void AddSpanIfAny(
+        SourceProductionContext context,
+        IList<SpanTemplateData> spans,
+        INamedTypeSymbol attributeToLookFor,
+        MethodDeclarationSyntax method,
+        string methodSignature,
+        ImmutableArray<AttributeData> attributes)
+    {
+        var attribute = attributes.FirstOrDefault(_ => SymbolEqualityComparer.Default.Equals(_.AttributeClass, attributeToLookFor));
+        if (attribute is null)
+        {
+            return;
+        }
+
+        ValidateSpanSignature(context, method, methodSignature);
+
+        if (method.ParameterList.Parameters.Count == 0)
+        {
+            return;
+        }
+
+        var sourceType = method.ParameterList.Parameters[0].Type?.ToString() ?? string.Empty;
+        var genericTypeStart = sourceType.IndexOf('<');
+        var genericTypeEnd = sourceType.LastIndexOf('>');
+        if (genericTypeStart < 0 || genericTypeEnd <= genericTypeStart)
+        {
+            return;
+        }
+
+        var serviceType = sourceType.Substring(genericTypeStart + 1, genericTypeEnd - genericTypeStart - 1);
+        var kind = attribute.ConstructorArguments.Length > 1 && attribute.ConstructorArguments[1].Value is int kindValue
+            ? kindValue switch
+            {
+                1 => "ActivityKind.Server",
+                2 => "ActivityKind.Client",
+                3 => "ActivityKind.Producer",
+                4 => "ActivityKind.Consumer",
+                _ => "ActivityKind.Internal"
+            }
+            : "ActivityKind.Internal";
+
+        spans.Add(
+            new SpanTemplateData
+            {
+                MethodName = method.Identifier.ValueText,
+                MethodSignature = methodSignature,
+                Name = attribute.ConstructorArguments[0].Value?.ToString() ?? string.Empty,
+                Kind = kind,
+                SourceParameter = method.ParameterList.Parameters[0].Identifier.ValueText,
+                ServiceType = serviceType,
+                Tags = GetParametersAsSnakeCaseTags(GetActualParameters(method))
+            });
+    }
+
+    static string ToSnakeCase(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        var builder = new StringBuilder();
+        for (var index = 0; index < value.Length; index++)
+        {
+            var character = value[index];
+            if (char.IsUpper(character))
+            {
+                if (index > 0)
+                {
+                    builder.Append('_');
+                }
+
+                builder.Append(char.ToLowerInvariant(character));
+            }
+            else
+            {
+                builder.Append(character);
+            }
+        }
+
+        return builder.ToString();
     }
 }
