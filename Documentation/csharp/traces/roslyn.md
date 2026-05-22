@@ -164,7 +164,7 @@ The trace generator reports these compile-time diagnostics:
 
 ### TRACES001
 
-The method is missing the required first parameter.
+The method declares no parameters, so the required `IActivitySource<T>` first parameter is missing.
 
 ```csharp
 [Span("order.process")]
