@@ -4,9 +4,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Cratis.Metrics;
 using Cratis.Reflection;
+using Cratis.Traces;
 using Cratis.Types;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Cratis.DependencyInjection;
 
@@ -24,6 +27,8 @@ public static class ServiceCollectionExtensions
     /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
     public static IServiceCollection AddBindingsByConvention(this IServiceCollection services)
     {
+        AddDiagnosticsInstrumentation(services);
+
         return TryAddGeneratedBindingsByConvention(services)
             ? services
             : AddBindingsByConventionUsingReflectionFallback(services);
@@ -36,9 +41,17 @@ public static class ServiceCollectionExtensions
     /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
     public static IServiceCollection AddSelfBindings(this IServiceCollection services)
     {
+        AddDiagnosticsInstrumentation(services);
+
         return TryAddGeneratedSelfBindings(services)
             ? services
             : AddSelfBindingsUsingReflectionFallback(services);
+    }
+
+    static void AddDiagnosticsInstrumentation(IServiceCollection services)
+    {
+        services.TryAddSingleton(typeof(IMeter<>), typeof(Meter<>));
+        services.TryAddSingleton(typeof(IActivitySource<>), typeof(ActivitySource<>));
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]

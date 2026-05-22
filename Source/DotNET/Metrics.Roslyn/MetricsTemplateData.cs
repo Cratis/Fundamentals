@@ -37,4 +37,9 @@ public class MetricsTemplateData
     /// Gets or sets the gauges.
     /// </summary>
     public IList<MetricTemplateData> Gauges { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the spans.
+    /// </summary>
+    public IList<SpanTemplateData> Spans { get; set; } = [];
 }
