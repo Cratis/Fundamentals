@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <ItemGroup>
+        <PackageVersion Update="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+        <PackageVersion Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+        <PackageVersion Update="Microsoft.Extensions.DependencyModel" Version="8.0.2" />
+        <PackageVersion Update="System.Text.Json" Version="9.0.13" Condition="'$(IsTestProject)' != 'true'" />
+    </ItemGroup>
+</Project>
