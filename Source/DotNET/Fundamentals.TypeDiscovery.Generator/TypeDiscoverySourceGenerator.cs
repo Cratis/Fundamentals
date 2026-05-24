@@ -94,15 +94,22 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
         // These packages do not ship their own generated provider, so their I<X>/X pairs
         // would otherwise be invisible once the generated path is taken (bypassing the
         // reflection fallback that previously discovered them).
-        // Assemblies that themselves reference Microsoft.CodeAnalysis are Roslyn analyzer
-        // packages (e.g. Cratis.Metrics.Roslyn). Their types cannot be instantiated at
-        // runtime without CodeAnalysis.dll in the output, so they are excluded.
+        //
+        // We must exclude references that do not produce a runtime assembly in the consuming
+        // project's output, because emitting typeof() for their types causes
+        // FileNotFoundException at runtime. Two independent signals are checked:
+        //   1. NuGet folder convention — runtime libraries live under lib/<tfm>/. Assemblies
+        //      loaded from tasks/ (MSBuild tasks, e.g. Cratis.Arc.ProxyGenerator.Build) or
+        //      analyzers/ (Roslyn analyzers) are build-time only.
+        //   2. Defense-in-depth for in-tree analyzers that have not yet been NuGet-packaged
+        //      (e.g. Cratis.Metrics.Roslyn during local development) — any assembly that
+        //      references Microsoft.CodeAnalysis cannot be instantiated at runtime without
+        //      CodeAnalysis.dll in the output.
         var packageSymbols = globallyAccessibleReferences
             .Select(r => compilation.GetAssemblyOrModuleSymbol(r) as IAssemblySymbol)
             .Where(static a => a?.Name.StartsWith("Cratis", StringComparison.Ordinal) is true)
             .Cast<IAssemblySymbol>()
-            .Where(static a => !a.Modules.Any(static m => m.ReferencedAssemblies.Any(
-                static r => r.Name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal))))
+            .Where(a => !IsBuildTimeOnlyAssembly(compilation, a))
             .SelectMany(static a => a.GlobalNamespace.GetAllNamedTypes())
             .Where(s =>
                 s.DeclaredAccessibility == Accessibility.Public &&
@@ -129,5 +136,26 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
 
         var source = GeneratedSourceBuilder.Build(namedTypes, contractsAndImplementors, conventionServiceBindings, conventionSelfBindings);
         context.AddSource("GeneratedTypeDiscoveryProvider.g.cs", source);
+    }
+
+    static bool IsBuildTimeOnlyAssembly(Compilation compilation, IAssemblySymbol assembly)
+    {
+        // NuGet places non-runtime assets under reserved folders: tasks/ for MSBuild tasks
+        // and analyzers/ for Roslyn analyzers. Neither is copied to the consuming project's
+        // output, so emitting typeof() for their types fails to load at runtime.
+        var path = (compilation.GetMetadataReference(assembly) as PortableExecutableReference)?.FilePath;
+        if (path is not null)
+        {
+            var normalized = path.Replace('\\', '/');
+            if (normalized.Contains("/tasks/") || normalized.Contains("/analyzers/"))
+            {
+                return true;
+            }
+        }
+
+        // Defense-in-depth for in-tree analyzer projects that have not been NuGet-packaged
+        // and therefore are loaded from bin/ rather than from analyzers/.
+        return assembly.Modules.Any(static m => m.ReferencedAssemblies.Any(
+            static r => r.Name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal)));
     }
 }
