@@ -34,6 +34,15 @@ To use traces in your project:
 var services = new ServiceCollection();
 
 services.AddBindingsByConvention();
+services.AddNamedActivitySource("orders");
+```
+
+When using named activity sources, resolve keyed `IActivitySource<T>`:
+
+```csharp
+public class OrderService([FromKeyedServices("orders")] IActivitySource<OrderService> activitySource)
+{
+}
 ```
 
 ## Core Concepts

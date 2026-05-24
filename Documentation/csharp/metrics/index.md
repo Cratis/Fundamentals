@@ -33,6 +33,15 @@ To start using the metrics system in your project:
 ```csharp
 // Add to your service registration
 services.AddSingleton<IMeter<MyService>>();
+services.AddNamedMeter("my-service");
+```
+
+When using named meters, resolve keyed `IMeter<T>` in consumers:
+
+```csharp
+public class MyService([FromKeyedServices("my-service")] IMeter<MyService> meter)
+{
+}
 ```
 
 ## Core Concepts
