@@ -13,7 +13,7 @@ namespace Cratis.Traces;
 /// <remarks>
 /// Initializes a new instance of the <see cref="ActivitySource{T}"/> class.
 /// </remarks>
-/// <param name="activitySource">The actual activity source being used. If resolved as a keyed service, the keyed <see cref="DiagnosticsActivitySource"/> is used. If no keyed activity source is available, one named from <typeparamref name="T"/> is created.</param>
+/// <param name="activitySource">The actual activity source being used. When resolved as a keyed service, DI provides the keyed <see cref="DiagnosticsActivitySource"/>. When resolved as a non-keyed service and no source is provided, one named from <typeparamref name="T"/> is created.</param>
 public class ActivitySource<T>([FromKeyedServices] DiagnosticsActivitySource? activitySource = null) : IActivitySource<T>
 {
     /// <inheritdoc/>
