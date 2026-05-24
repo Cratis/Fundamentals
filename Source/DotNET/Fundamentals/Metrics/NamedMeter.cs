@@ -13,7 +13,7 @@ namespace Cratis.Metrics;
 /// <remarks>
 /// Initializes a new instance of the <see cref="NamedMeter{T}"/> class.
 /// </remarks>
-/// <param name="meter">The named meter.</param>
+/// <param name="meter">The named meter resolved by inheriting the parent keyed service key.</param>
 public class NamedMeter<T>([FromKeyedServices] Meter meter) : IMeter<T>
 {
     /// <inheritdoc/>

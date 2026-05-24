@@ -24,9 +24,7 @@ public static class DiagnosticsServiceCollectionExtensions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-#pragma warning disable CA2000 // Dispose objects before losing scope
-        services.TryAddKeyedSingleton(name, new Meter(name));
-#pragma warning restore CA2000 // Dispose objects before losing scope
+        services.TryAddKeyedSingleton(typeof(Meter), name, static (_, key) => new Meter((string)key!));
         services.TryAddKeyedSingleton(typeof(IMeter<>), name, typeof(NamedMeter<>));
 
         return services;
@@ -42,9 +40,7 @@ public static class DiagnosticsServiceCollectionExtensions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-#pragma warning disable CA2000 // Dispose objects before losing scope
-        services.TryAddKeyedSingleton(name, new DiagnosticsActivitySource(name));
-#pragma warning restore CA2000 // Dispose objects before losing scope
+        services.TryAddKeyedSingleton(typeof(DiagnosticsActivitySource), name, static (_, key) => new DiagnosticsActivitySource((string)key!));
         services.TryAddKeyedSingleton(typeof(IActivitySource<>), name, typeof(NamedActivitySource<>));
 
         return services;
