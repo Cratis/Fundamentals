@@ -52,22 +52,6 @@ Registers concrete types for direct injection without requiring an interface.
 services.AddSelfBindings();
 ```
 
-### AddNamedMeter
-
-Registers a named `System.Diagnostics.Metrics.Meter` as a keyed service and wires keyed `IMeter<T>` to use that same meter.
-
-```csharp
-services.AddNamedMeter("my-service");
-```
-
-### AddNamedActivitySource
-
-Registers a named `System.Diagnostics.ActivitySource` as a keyed service and wires keyed `IActivitySource<T>` to use that same source.
-
-```csharp
-services.AddNamedActivitySource("my-service");
-```
-
 **Registration Rules:**
 
 - Non-static, non-abstract, non-interface types
@@ -144,18 +128,6 @@ public void ConfigureServices(IServiceCollection services)
     
     // Manual registrations for special cases
     services.AddScoped<ISpecialService, CustomImplementation>();
-}
-```
-
-### 5. Resolve keyed diagnostics in consumers
-
-Use `FromKeyedServices` to request the named diagnostics registration.
-
-```csharp
-public class OrderService(
-    [FromKeyedServices("my-service")] IMeter<OrderService> meter,
-    [FromKeyedServices("my-service")] IActivitySource<OrderService> activitySource)
-{
 }
 ```
 
