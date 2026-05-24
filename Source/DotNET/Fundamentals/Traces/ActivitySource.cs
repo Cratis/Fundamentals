@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.DependencyInjection;
 using DiagnosticsActivitySource = System.Diagnostics.ActivitySource;
 
 namespace Cratis.Traces;
@@ -12,8 +13,8 @@ namespace Cratis.Traces;
 /// <remarks>
 /// Initializes a new instance of the <see cref="ActivitySource{T}"/> class.
 /// </remarks>
-/// <param name="activitySource">The actual activity source being used.</param>
-public class ActivitySource<T>(DiagnosticsActivitySource? activitySource = null) : IActivitySource<T>
+/// <param name="activitySource">The actual activity source being used. If resolved as a keyed service, the keyed <see cref="DiagnosticsActivitySource"/> is used. If no keyed activity source is available, one named from <typeparamref name="T"/> is created.</param>
+public class ActivitySource<T>([FromKeyedServices] DiagnosticsActivitySource? activitySource = null) : IActivitySource<T>
 {
     /// <inheritdoc/>
     public DiagnosticsActivitySource ActualSource { get; } = activitySource ?? new(typeof(T).FullName ?? typeof(T).Name);

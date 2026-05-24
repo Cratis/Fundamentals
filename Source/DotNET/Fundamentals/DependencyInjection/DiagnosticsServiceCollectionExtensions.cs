@@ -41,7 +41,7 @@ public static class DiagnosticsServiceCollectionExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         services.TryAddKeyedSingleton(typeof(DiagnosticsActivitySource), name, static (_, key) => new DiagnosticsActivitySource((string)key!));
-        services.TryAddKeyedSingleton(typeof(IActivitySource<>), name, typeof(NamedActivitySource<>));
+        services.TryAddKeyedSingleton(typeof(IActivitySource<>), name, typeof(ActivitySource<>));
 
         return services;
     }
