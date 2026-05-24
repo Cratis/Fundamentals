@@ -25,7 +25,7 @@ public static class DiagnosticsServiceCollectionExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         services.TryAddKeyedSingleton(typeof(Meter), name, static (_, key) => new Meter((string)key!));
-        services.TryAddKeyedSingleton(typeof(IMeter<>), name, typeof(NamedMeter<>));
+        services.TryAddKeyedSingleton(typeof(IMeter<>), name, typeof(Meter<>));
 
         return services;
     }
