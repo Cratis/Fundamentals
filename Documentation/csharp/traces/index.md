@@ -36,6 +36,8 @@ var services = new ServiceCollection();
 services.AddBindingsByConvention();
 ```
 
+For keyed named activity source configuration, see [Named Registration](named-registration.md).
+
 ## Core Concepts
 
 ### Activity sources

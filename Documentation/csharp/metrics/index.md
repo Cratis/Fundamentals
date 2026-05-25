@@ -35,6 +35,8 @@ To start using the metrics system in your project:
 services.AddSingleton<IMeter<MyService>>();
 ```
 
+For keyed named meter configuration, see [Named Registration](named-registration.md).
+
 ## Core Concepts
 
 ### Meters

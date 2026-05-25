@@ -1,4 +1,6 @@
 - name: Overview
   href: index.md
+- name: Named Registration
+  href: named-registration.md
 - name: Roslyn
   href: roslyn.md
