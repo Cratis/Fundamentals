@@ -19,8 +19,10 @@ namespace Cratis.Metrics;
 public class Meter<T>(Meter? meter = null, IServiceProvider? serviceProvider = null, [ServiceKey] object? serviceKey = null) : IMeter<T>
 {
     /// <inheritdoc/>
-    public Meter ActualMeter { get; } =
-        meter ??
-        (serviceKey is not null && serviceProvider is not null ? serviceProvider.GetKeyedService<Meter>(serviceKey) : null) ??
-        new(typeof(T).FullName ?? typeof(T).Name);
+    public Meter ActualMeter { get; } = meter ?? ResolveKeyedMeter(serviceProvider, serviceKey) ?? new(typeof(T).FullName ?? typeof(T).Name);
+
+    static Meter? ResolveKeyedMeter(IServiceProvider? provider, object? key) =>
+        provider is not null && key is not null
+            ? provider.GetKeyedService<Meter>(key)
+            : null;
 }

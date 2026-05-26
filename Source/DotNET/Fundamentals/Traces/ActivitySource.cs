@@ -19,8 +19,10 @@ namespace Cratis.Traces;
 public class ActivitySource<T>(DiagnosticsActivitySource? activitySource = null, IServiceProvider? serviceProvider = null, [ServiceKey] object? serviceKey = null) : IActivitySource<T>
 {
     /// <inheritdoc/>
-    public DiagnosticsActivitySource ActualSource { get; } =
-        activitySource ??
-        (serviceKey is not null && serviceProvider is not null ? serviceProvider.GetKeyedService<DiagnosticsActivitySource>(serviceKey) : null) ??
-        new(typeof(T).FullName ?? typeof(T).Name);
+    public DiagnosticsActivitySource ActualSource { get; } = activitySource ?? ResolveKeyedActivitySource(serviceProvider, serviceKey) ?? new(typeof(T).FullName ?? typeof(T).Name);
+
+    static DiagnosticsActivitySource? ResolveKeyedActivitySource(IServiceProvider? provider, object? key) =>
+        provider is not null && key is not null
+            ? provider.GetKeyedService<DiagnosticsActivitySource>(key)
+            : null;
 }
