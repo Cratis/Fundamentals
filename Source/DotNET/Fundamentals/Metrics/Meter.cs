@@ -13,9 +13,14 @@ namespace Cratis.Metrics;
 /// <remarks>
 /// Initializes a new instance of the <see cref="Meter{T}"/> class.
 /// </remarks>
-/// <param name="meter">The actual meter being used. If resolved as a keyed service, the keyed <see cref="Meter"/> is used. If no keyed meter is available, a meter named from <typeparamref name="T"/> is created.</param>
-public class Meter<T>([FromKeyedServices] Meter? meter = null) : IMeter<T>
+/// <param name="meter">The actual meter being used.</param>
+/// <param name="serviceProvider">The service provider.</param>
+/// <param name="serviceKey">The current service key, if any.</param>
+public class Meter<T>(Meter? meter = null, IServiceProvider? serviceProvider = null, [ServiceKey] object? serviceKey = null) : IMeter<T>
 {
     /// <inheritdoc/>
-    public Meter ActualMeter { get; } = meter ?? new(typeof(T).FullName ?? typeof(T).Name);
+    public Meter ActualMeter { get; } =
+        meter ??
+        (serviceKey is not null && serviceProvider is not null ? serviceProvider.GetKeyedService<Meter>(serviceKey) : null) ??
+        new(typeof(T).FullName ?? typeof(T).Name);
 }
