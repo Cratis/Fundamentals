@@ -16,12 +16,12 @@ namespace Cratis.Metrics;
 /// <param name="meter">The actual meter being used.</param>
 /// <param name="serviceProvider">The service provider.</param>
 /// <param name="serviceKey">The current service key, if any.</param>
-public class Meter<T>(Meter? meter = null, IServiceProvider? serviceProvider = null, [ServiceKey] object? serviceKey = null) : IMeter<T>
+public class Meter<T>(Meter? meter = null, IServiceProvider? serviceProvider = null, [ServiceKey] string? serviceKey = null) : IMeter<T>
 {
     /// <inheritdoc/>
     public Meter ActualMeter { get; } = meter ?? ResolveKeyedMeter(serviceProvider, serviceKey) ?? new(typeof(T).FullName ?? typeof(T).Name);
 
-    static Meter? ResolveKeyedMeter(IServiceProvider? provider, object? key) =>
+    static Meter? ResolveKeyedMeter(IServiceProvider? provider, string? key) =>
         provider is not null && key is not null
             ? provider.GetKeyedService<Meter>(key)
             : null;
