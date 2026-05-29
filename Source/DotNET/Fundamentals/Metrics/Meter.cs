@@ -13,9 +13,38 @@ namespace Cratis.Metrics;
 /// <remarks>
 /// Initializes a new instance of the <see cref="Meter{T}"/> class.
 /// </remarks>
-/// <param name="meter">The actual meter being used. If resolved as a keyed service, the keyed <see cref="Meter"/> is used. If no keyed meter is available, a meter named from <typeparamref name="T"/> is created.</param>
-public class Meter<T>([FromKeyedServices] Meter? meter = null) : IMeter<T>
+public class Meter<T> : IMeter<T>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Meter{T}"/> class.
+    /// </summary>
+    public Meter()
+    {
+        ActualMeter = new(typeof(T).FullName ?? typeof(T).Name);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Meter{T}"/> class.
+    /// </summary>
+    /// <param name="meter">The actual meter to use.</param>
+    public Meter(Meter meter)
+    {
+        ActualMeter = meter;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Meter{T}"/> class.
+    /// </summary>
+    /// <param name="serviceProvider">The <see cref="IServiceProvider"/> used for resolving keyed services.</param>
+    /// <param name="key">The key used when resolving the service.</param>
+    [ActivatorUtilitiesConstructor]
+    public Meter(IServiceProvider serviceProvider, [ServiceKey] string? key = null)
+    {
+        ActualMeter = key is null
+            ? new(typeof(T).FullName ?? typeof(T).Name)
+            : serviceProvider.GetRequiredKeyedService<Meter>(key);
+    }
+
     /// <inheritdoc/>
-    public Meter ActualMeter { get; } = meter ?? new(typeof(T).FullName ?? typeof(T).Name);
+    public Meter ActualMeter { get; }
 }
