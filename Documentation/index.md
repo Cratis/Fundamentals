@@ -1,14 +1,13 @@
-# Fundamentals
+---
+title: Fundamentals
+description: The shared building blocks beneath the Cratis stack — concepts, serialization, dependency injection, and type discovery, for both .NET and TypeScript.
+---
 
-Fundamentals is a comprehensive collection of packages that provides common utilities, formalizations, and abstractions to accelerate development in both backend (.NET) and frontend (JavaScript/TypeScript) environments.
+Fundamentals is the layer of shared building blocks that the rest of Cratis is built on. It's a convenience layer over .NET and TypeScript that solves the same small problems every project hits — strongly-typed domain values, JSON serialization, convention-based DI, runtime type discovery — so you don't reimplement them.
 
-## Overview
+You'll meet it indirectly all the time: the [`ConceptAs<T>`](./csharp/index.md) you wrap an `AuthorId` in, the serialization that carries events across the wire, and the type discovery that lets [Chronicle](/chronicle/) and [Arc](/arc/) find your artifacts by convention all live here. You can also use it on its own.
 
-The Cratis Fundamentals library acts as a convenience layer on top of the existing base platforms (.NET and JavaScript/TypeScript), offering solutions to common development problems.
-Rather than reimplementing basic functionality across multiple projects, Fundamentals provides battle-tested, reusable components that help developers be more productive.
-
-While both platforms are supported, there is no requirement for feature parity.
-Each platform leverages the unique building blocks and idioms of its environment to provide the most idiomatic solutions.
+Both platforms are supported, but there's no requirement for feature parity — each leans on the idioms of its environment.
 
 ## Packages
 
