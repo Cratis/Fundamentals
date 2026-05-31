@@ -84,9 +84,9 @@ public record SocialSecurityNumber(string value) : ConceptAs<string>(value)
 With this you get full interchangeability:
 
 ```csharp
-    string socialSecurityNumber = "12345678901";
-    SocialSecurityNumber formalized = socialSecurityNumber;
-    string unwrapped = formalized;
+string socialSecurityNumber = "12345678901";
+SocialSecurityNumber formalized = socialSecurityNumber;
+string unwrapped = formalized;
 ```
 
 ## Nullability
