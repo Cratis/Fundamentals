@@ -50,8 +50,8 @@ public static class ServiceCollectionExtensions
 
     static void AddDiagnosticsInstrumentation(IServiceCollection services)
     {
-        services.TryAddSingleton(typeof(IMeter<>), typeof(Meter<>));
-        services.TryAddSingleton(typeof(IActivitySource<>), typeof(ActivitySource<>));
+        services.TryAddSingleton(typeof(IMeter<>), typeof(UnkeyedMeter<>));
+        services.TryAddSingleton(typeof(IActivitySource<>), typeof(UnkeyedActivitySource<>));
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]

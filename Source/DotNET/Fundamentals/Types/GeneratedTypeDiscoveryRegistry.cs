@@ -9,7 +9,7 @@ namespace Cratis.Types;
 public static class GeneratedTypeDiscoveryRegistry
 {
 #if NET9_0_OR_GREATER
-    static readonly System.Threading.Lock _gate = new();
+    static readonly Lock _gate = new();
 #else
     static readonly object _gate = new();
 #endif
