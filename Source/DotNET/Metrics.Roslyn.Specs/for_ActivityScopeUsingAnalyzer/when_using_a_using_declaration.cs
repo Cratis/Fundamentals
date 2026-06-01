@@ -9,7 +9,7 @@ namespace Cratis.Metrics.Roslyn.Specs.for_ActivityScopeUsingAnalyzer;
 
 public class when_using_a_using_declaration : Specification
 {
-    ImmutableArray<Microsoft.CodeAnalysis.Diagnostic> _diagnostics;
+    ImmutableArray<Diagnostic> _diagnostics;
 
     void Because() => _diagnostics = AnalyzerRunner.Run(
         @"
