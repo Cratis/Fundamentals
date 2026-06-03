@@ -10,6 +10,7 @@ The Fundamentals frontend package provides JavaScript/TypeScript equivalents and
 
 | Topic | Description |
 | ------- | ----------- |
+| [ConceptAs](./concept_as.md) | Domain-Driven Design pattern for creating strongly-typed domain identifiers and value objects that wrap primitive types. |
 | [GUID](./guid.md) | GUID creation, manipulation, and utility functions for unique identifiers. |
 | [Constructor](./constructor.md) | Runtime constructor type alias for class-based APIs and metadata-driven tooling. |
 | [PropertyAccessor](./property_accessor.md) | Property accessor function type for typed property selection and path utilities. |
