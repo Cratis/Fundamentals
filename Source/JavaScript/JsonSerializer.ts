@@ -63,9 +63,12 @@ const isConceptAs = (type: Constructor): boolean => {
 const serializeValueForType = (type: Constructor, value: any) => {
     if (!value) return value;
 
-    // If it's a ConceptAs instance, serialize the inner value
+    // If it's a ConceptAs instance, unwrap it and serialize the inner value recursively
+    // This follows the C# pattern: recognize as concept, unwrap, then call serializer
     if (value instanceof ConceptAs) {
-        return value.value;
+        const innerValue = value.value;
+        // Recursively serialize the inner value to handle complex types
+        return serializeValueForType(innerValue.__proto__.constructor, innerValue);
     }
 
     if (typeConverters.has(type)) {
