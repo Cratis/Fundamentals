@@ -68,8 +68,8 @@ const serializeValueForType = (type: Constructor, value: any) => {
     if (value instanceof ConceptAs) {
         const innerValue = value.value;
         // Recursively serialize the inner value to handle complex types
-        const innerType = Object.getPrototypeOf(innerValue).constructor;
-        return serializeValueForType(innerType, innerValue);
+        // Use .constructor directly which works reliably for both primitives and objects
+        return serializeValueForType(innerValue.constructor, innerValue);
     }
 
     if (typeConverters.has(type)) {
