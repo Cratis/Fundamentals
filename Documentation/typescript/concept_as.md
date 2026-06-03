@@ -439,7 +439,7 @@ The TypeScript implementation mirrors the C# version but with JavaScript idioms:
 | Base class | `ConceptAs<T>` record | `ConceptAs<T>` abstract class |
 | Value property | `Value` property | `value` readonly property |
 | Implicit conversion | `implicit operator T` | `valueOf()` method |
-| Flexible assignment | N/A (uses implicit operators) | Union types (e.g., `UserId | string`) |
+| Flexible assignment | Implicit operators | Union types (e.g., `UserId | string`) |
 | String representation | `ToString()` override | `toString()` method |
 | JSON serialization | `ConceptAsJsonConverter` | Built into `JsonSerializer` |
 | Serialization pattern | Unwrap → Serialize recursively | Unwrap → Serialize recursively |
