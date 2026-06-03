@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { ConceptAs } from './ConceptAs';
 import { Constructor } from './Constructor';
 import { DerivedType } from './DerivedType';
 import { Field } from './Field';
@@ -39,8 +40,32 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
     [TimeSpan, (value: any) => TimeSpan.parse(value.toString())],
 ]);
 
+/**
+ * Checks if a constructor is a ConceptAs type.
+ * @param {Constructor} type The constructor to check.
+ * @returns {boolean} True if the type extends ConceptAs.
+ */
+const isConceptAs = (type: Constructor): boolean => {
+    if (!type || !type.prototype) return false;
+    
+    // Check if the prototype chain includes ConceptAs
+    let proto = type.prototype;
+    while (proto) {
+        if (proto instanceof ConceptAs || proto.constructor === ConceptAs) {
+            return true;
+        }
+        proto = Object.getPrototypeOf(proto);
+    }
+    return false;
+};
+
 const serializeValueForType = (type: Constructor, value: any) => {
     if (!value) return value;
+
+    // If it's a ConceptAs instance, serialize the inner value
+    if (value instanceof ConceptAs) {
+        return value.value;
+    }
 
     if (typeConverters.has(type)) {
         return typeConverters.get(type)!(value);
@@ -50,6 +75,11 @@ const serializeValueForType = (type: Constructor, value: any) => {
 };
 
 const deserializeValueFromType = (type: Constructor, value: any) => {
+    // If it's a ConceptAs type, instantiate it with the value
+    if (isConceptAs(type)) {
+        return new type(value);
+    }
+    
     if (typeSerializers.has(type)) {
         return typeSerializers.get(type)!(value);
     } else {
@@ -60,6 +90,11 @@ const deserializeValueFromType = (type: Constructor, value: any) => {
 const deserializeValueFromField = (field: Field, value: any) => {
     if (field.type === ValueMap) {
         return deserializeValueMapFromField(field, value);
+    }
+
+    // If it's a ConceptAs type, instantiate it with the value
+    if (isConceptAs(field.type)) {
+        return new field.type(value);
     }
 
     if (typeSerializers.has(field.type)) {
