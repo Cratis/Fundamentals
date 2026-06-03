@@ -2,6 +2,18 @@
 
 The `ConceptAs<T>` abstract class provides a TypeScript equivalent to the C# `ConceptAs<T>`, allowing you to create strongly-typed domain identifiers and value objects that wrap primitive types such as `string`, `number`, or `boolean`.
 
+The recommended pattern is to export concepts as union types for convenient assignment of both concept instances and primitives:
+
+```typescript
+import { ConceptAs } from '@cratis/fundamentals';
+
+class UserIdConcept extends ConceptAs<string> {}
+export type UserId = UserIdConcept | string;
+
+class OrderCountConcept extends ConceptAs<number> {}
+export type OrderCount = OrderCountConcept | number;
+```
+
 ## Overview
 
 ConceptAs is part of Domain-Driven Design (DDD) patterns for creating ubiquitous language in your codebase. Instead of using raw primitive types like `string` or `number` for domain-specific values, you create explicit types that better express their purpose and prevent mix-ups.
@@ -18,14 +30,17 @@ function getUser(id: string) { ... }
 function getOrder(id: string) { ... }
 
 // With ConceptAs - compile-time safety
-class UserId extends ConceptAs<string> {}
-class OrderId extends ConceptAs<string> {}
+class UserIdConcept extends ConceptAs<string> {}
+export type UserId = UserIdConcept | string;
+
+class OrderIdConcept extends ConceptAs<string> {}
+export type OrderId = OrderIdConcept | string;
 
 function getUser(id: UserId) { ... }
 function getOrder(id: OrderId) { ... }
 
 // This would be a compile-time error:
-const userId = new UserId("user-123");
+const userId = new UserIdConcept("user-123");
 getOrder(userId); // ❌ Type error - OrderId expected
 ```
 
@@ -38,8 +53,11 @@ The type names make the code more readable and self-explanatory:
 function createInvoice(customerId: string, amount: number) { ... }
 
 // After: Clear semantic meaning
-class CustomerId extends ConceptAs<string> {}
-class InvoiceAmount extends ConceptAs<number> {}
+class CustomerIdConcept extends ConceptAs<string> {}
+export type CustomerId = CustomerIdConcept | string;
+
+class InvoiceAmountConcept extends ConceptAs<number> {}
+export type InvoiceAmount = InvoiceAmountConcept | number;
 
 function createInvoice(customerId: CustomerId, amount: InvoiceAmount) { ... }
 ```
@@ -51,10 +69,11 @@ ConceptAs types integrate seamlessly with the `JsonSerializer`, automatically se
 ```typescript
 import { ConceptAs, JsonSerializer, field } from '@cratis/fundamentals';
 
-class UserId extends ConceptAs<string> {}
+class UserIdConcept extends ConceptAs<string> {}
+export type UserId = UserIdConcept | string;
 
 class User {
-    @field(UserId)
+    @field(UserIdConcept)
     id!: UserId;
     
     @field(String)
@@ -63,7 +82,7 @@ class User {
 
 // Serialization
 const user = new User();
-user.id = new UserId('user-123');
+user.id = new UserIdConcept('user-123'); // or just 'user-123'
 user.name = 'John Doe';
 
 const json = JsonSerializer.serialize(user);
@@ -71,32 +90,43 @@ const json = JsonSerializer.serialize(user);
 
 // Deserialization
 const deserialized = JsonSerializer.deserialize(User, json);
-console.log(deserialized.id instanceof UserId); // ✅ true
-console.log(deserialized.id.value); // "user-123"
+console.log(deserialized.id instanceof UserIdConcept); // ✅ true
+console.log((deserialized.id as UserIdConcept).value); // "user-123"
 ```
 
 ## Usage
 
 ### Creating a ConceptAs Type
 
-To create a ConceptAs type, extend the `ConceptAs<T>` abstract class with the appropriate primitive type:
+To create a ConceptAs type, extend the `ConceptAs<T>` abstract class with the appropriate primitive type. For convenience and ease of reading, export the concept as a union type that includes both the concept class and the underlying primitive:
 
 ```typescript
 import { ConceptAs } from '@cratis/fundamentals';
 
-class UserId extends ConceptAs<string> {}
-class OrderCount extends ConceptAs<number> {}
-class IsActive extends ConceptAs<boolean> {}
+class UserIdConcept extends ConceptAs<string> {}
+export type UserId = UserIdConcept | string;
+
+class OrderCountConcept extends ConceptAs<number> {}
+export type OrderCount = OrderCountConcept | number;
+
+class IsActiveConcept extends ConceptAs<boolean> {}
+export type IsActive = IsActiveConcept | boolean;
 ```
+
+This pattern provides:
+- **Convenience**: Consumers can assign either the concept instance or the primitive value
+- **Readability**: The exported type name is clean and matches domain language
+- **Type Safety**: The `@field` decorator metadata ensures correct serialization/deserialization
 
 ### Using ConceptAs Types
 
-Instantiate your concept types by passing the underlying value:
+Instantiate your concept types by passing the underlying value. With the union type export pattern, you can assign either concept instances or primitive values:
 
 ```typescript
-const userId = new UserId('user-123');
-const orderCount = new OrderCount(42);
-const isActive = new IsActive(true);
+// Instantiate the concept class
+const userId = new UserIdConcept('user-123');
+const orderCount = new OrderCountConcept(42);
+const isActive = new IsActiveConcept(true);
 
 // Access the underlying value
 console.log(userId.value); // "user-123"
@@ -108,33 +138,42 @@ console.log(userId.valueOf()); // "user-123"
 // String representation
 console.log(userId.toString()); // "user-123"
 console.log(orderCount.toString()); // "42"
+
+// With union types, you can also assign primitives directly
+let flexibleUserId: UserId = 'user-456'; // Works!
+flexibleUserId = new UserIdConcept('user-789'); // Also works!
 ```
 
 ### Using with JsonSerializer
 
-To use ConceptAs types in objects that will be serialized/deserialized, mark the fields with the `@field` decorator:
+To use ConceptAs types in objects that will be serialized/deserialized, mark the fields with the `@field` decorator. The `@field` decorator takes the concept class (not the union type), ensuring proper deserialization:
 
 ```typescript
 import { ConceptAs, JsonSerializer, field } from '@cratis/fundamentals';
 
-class UserId extends ConceptAs<string> {}
-class OrderId extends ConceptAs<string> {}
+// Define concepts with union type exports
+class UserIdConcept extends ConceptAs<string> {}
+export type UserId = UserIdConcept | string;
+
+class OrderIdConcept extends ConceptAs<string> {}
+export type OrderId = OrderIdConcept | string;
 
 class Order {
-    @field(OrderId)
+    // @field takes the class, type annotation uses the exported union type
+    @field(OrderIdConcept)
     orderId!: OrderId;
     
-    @field(UserId)
+    @field(UserIdConcept)
     customerId!: UserId;
     
     @field(Number)
     totalAmount!: number;
 }
 
-// Create and serialize
+// Create and serialize - can use either concept instances or primitives
 const order = new Order();
-order.orderId = new OrderId('order-456');
-order.customerId = new UserId('user-123');
+order.orderId = new OrderIdConcept('order-456'); // or 'order-456'
+order.customerId = 'user-123'; // or new UserIdConcept('user-123')
 order.totalAmount = 99.99;
 
 const json = JsonSerializer.serialize(order);
@@ -143,71 +182,99 @@ console.log(json);
 
 // Deserialize back to typed instances
 const restored = JsonSerializer.deserialize(Order, json);
-console.log(restored.orderId instanceof OrderId); // ✅ true
-console.log(restored.customerId instanceof UserId); // ✅ true
+console.log(restored.orderId instanceof OrderIdConcept); // ✅ true
+console.log(restored.customerId instanceof UserIdConcept); // ✅ true
 ```
+
+> 🔑 **Key Point**: The `@field` decorator always references the concept class (e.g., `UserIdConcept`), while the TypeScript type annotation uses the exported union type (e.g., `UserId`). The `@field` metadata ensures proper deserialization to the concept class, while the union type allows flexible assignment.
 
 ### Union Types for Flexible Assignment
 
-To make it more convenient to work with ConceptAs types, you can use TypeScript union types to allow both ConceptAs instances and primitive values to be assigned to the same field. This pattern provides flexibility while maintaining type safety and proper serialization.
+To make it convenient to work with ConceptAs types, the recommended pattern is to export the concept as a union type that includes both the concept class and the underlying primitive. This allows both ConceptAs instances and primitive values to be assigned to the same field, providing flexibility while maintaining type safety and proper serialization.
 
-#### Declaring Union Types
+#### Recommended Export Pattern
 
-When declaring fields that should accept both ConceptAs instances and primitive values, use the union type syntax:
+Define your concept file with both the concept class and the union type export:
 
 ```typescript
-import { ConceptAs, JsonSerializer, field } from '@cratis/fundamentals';
+// UserId.ts
+import { ConceptAs } from '@cratis/fundamentals';
 
-class UserId extends ConceptAs<string> {}
-class OrderCount extends ConceptAs<number> {}
+class UserIdConcept extends ConceptAs<string> {}
+
+export type UserId = UserIdConcept | string;
+```
+
+```typescript
+// OrderCount.ts
+import { ConceptAs } from '@cratis/fundamentals';
+
+class OrderCountConcept extends ConceptAs<number> {}
+
+export type OrderCount = OrderCountConcept | number;
+```
+
+**Benefits of this pattern:**
+- **Convenience**: Consumers can assign either the concept instance or the primitive value
+- **Readability**: The exported type name (`UserId`) is clean and matches domain language
+- **Encapsulation**: The concept class name (`UserIdConcept`) is an implementation detail
+- **Consistency**: All concept files follow the same export pattern
+
+#### Using the Exported Types
+
+When declaring fields, import and use the exported union type. The `@field` decorator still references the concept class for proper serialization:
+
+```typescript
+import { JsonSerializer, field } from '@cratis/fundamentals';
+import { UserId, UserIdConcept } from './UserId';
+import { OrderCount, OrderCountConcept } from './OrderCount';
 
 class Order {
-    // Union type allows both UserId instance and string primitive
-    @field(UserId)
-    userId!: UserId | string;
+    // @field takes the class, type annotation uses the exported union type
+    @field(UserIdConcept)
+    userId!: UserId;
     
-    // Union type allows both OrderCount instance and number primitive
-    @field(OrderCount)
-    orderCount!: OrderCount | number;
+    @field(OrderCountConcept)
+    orderCount!: OrderCount;
     
     @field(String)
     description!: string;
 }
 ```
 
-> 🔑 **Key Point**: The `@field` decorator still specifies the ConceptAs type (e.g., `UserId`), but the TypeScript type annotation uses the union type (e.g., `UserId | string`).
+> 🔑 **Key Point**: The `@field` decorator specifies the concept class (e.g., `UserIdConcept`) for serialization metadata, while the TypeScript type annotation uses the exported union type (e.g., `UserId`) for flexible assignment.
 
 #### Assignment Flexibility
 
-With union types, you can assign either ConceptAs instances or primitive values:
+With union types exported from the concept file, you can assign either concept instances or primitive values:
 
 ```typescript
 const order = new Order();
 
-// Option 1: Assign ConceptAs instances
-order.userId = new UserId('user-123');
-order.orderCount = new OrderCount(42);
+// Option 1: Assign concept instances
+order.userId = new UserIdConcept('user-123');
+order.orderCount = new OrderCountConcept(42);
 
 // Option 2: Assign primitive values directly
 order.userId = 'user-456';
 order.orderCount = 99;
 
 // Option 3: Mix both approaches
-order.userId = new UserId('user-789');
+order.userId = new UserIdConcept('user-789');
 order.orderCount = 55; // primitive
 ```
 
 #### Serialization Behavior
 
-The JsonSerializer handles both ConceptAs instances and primitives correctly:
+The JsonSerializer handles both ConceptAs instances and primitives correctly, thanks to the `@field` decorator metadata:
 
 **Serialization** - Both ConceptAs instances and primitives serialize to the inner primitive value:
 
 ```typescript
 // With ConceptAs instances
 const order1 = new Order();
-order1.userId = new UserId('user-123');
-order1.orderCount = new OrderCount(42);
+order1.userId = new UserIdConcept('user-123');
+order1.orderCount = new OrderCountConcept(42);
 
 const json1 = JsonSerializer.serialize(order1);
 // Result: {"userId":"user-123","orderCount":42}
@@ -227,13 +294,13 @@ const json2 = JsonSerializer.serialize(order2);
 const json = '{"userId":"user-123","orderCount":42}';
 const order = JsonSerializer.deserialize(Order, json);
 
-console.log(order.userId instanceof UserId); // ✅ true
-console.log(order.orderCount instanceof OrderCount); // ✅ true
-console.log((order.userId as UserId).value); // "user-123"
-console.log((order.orderCount as OrderCount).value); // 42
+console.log(order.userId instanceof UserIdConcept); // ✅ true
+console.log(order.orderCount instanceof OrderCountConcept); // ✅ true
+console.log((order.userId as UserIdConcept).value); // "user-123"
+console.log((order.orderCount as OrderCountConcept).value); // 42
 ```
 
-> 📝 **Note**: Regardless of whether you assigned a ConceptAs instance or a primitive during serialization, deserialization always creates ConceptAs instances based on the type specified in the `@field` decorator.
+> 📝 **Note**: Regardless of whether you assigned a ConceptAs instance or a primitive during serialization, deserialization always creates ConceptAs instances based on the concept class specified in the `@field` decorator.
 
 #### Implementation Details
 
@@ -250,15 +317,26 @@ This ensures that:
 
 #### Best Practices for Union Types
 
-**✅ DO** use union types when:
-- Building flexible APIs that accept either ConceptAs or primitives
-- Working with external data sources that provide primitives
-- Creating objects that will be immediately serialized
+**✅ DO** export union types from the concept file for convenience and consistency:
 
 ```typescript
+// UserId.ts
+import { ConceptAs } from '@cratis/fundamentals';
+
+class UserIdConcept extends ConceptAs<string> {}
+
+export type UserId = UserIdConcept | string;
+```
+
+**✅ DO** use union types in method signatures for flexible APIs:
+
+```typescript
+import { UserId, UserIdConcept } from './UserId';
+import { OrderCount, OrderCountConcept } from './OrderCount';
+
 class OrderService {
-    // Flexible method signature
-    createOrder(userId: UserId | string, count: OrderCount | number) {
+    // Flexible method signature accepts both concept instances and primitives
+    createOrder(userId: UserId, count: OrderCount) {
         const order = new Order();
         order.userId = userId; // Works with both types
         order.orderCount = count;
@@ -267,15 +345,17 @@ class OrderService {
 }
 
 // Can be called both ways
-service.createOrder(new UserId('user-123'), new OrderCount(42));
+service.createOrder(new UserIdConcept('user-123'), new OrderCountConcept(42));
 service.createOrder('user-123', 42);
 ```
 
 **✅ DO** use type guards when you need to distinguish between ConceptAs and primitives:
 
 ```typescript
-function processUserId(userId: UserId | string) {
-    if (userId instanceof UserId) {
+import { UserId, UserIdConcept } from './UserId';
+
+function processUserId(userId: UserId) {
+    if (userId instanceof UserIdConcept) {
         // Handle ConceptAs instance
         console.log('UserId:', userId.value);
     } else {
@@ -290,13 +370,13 @@ function processUserId(userId: UserId | string) {
 ```typescript
 // ❌ BAD: Missing @field decorator
 class Order {
-    userId!: UserId | string; // Won't deserialize correctly!
+    userId!: UserId; // Won't deserialize correctly!
 }
 
-// ✅ GOOD: Has @field decorator
+// ✅ GOOD: Has @field decorator with concept class
 class Order {
-    @field(UserId)
-    userId!: UserId | string;
+    @field(UserIdConcept)
+    userId!: UserId;
 }
 ```
 
@@ -315,8 +395,10 @@ Creates a new instance of the concept with the specified value.
 
 **Example:**
 ```typescript
-class UserId extends ConceptAs<string> {}
-const userId = new UserId('user-123');
+class UserIdConcept extends ConceptAs<string> {}
+export type UserId = UserIdConcept | string;
+
+const userId = new UserIdConcept('user-123');
 ```
 
 ### Properties
@@ -327,7 +409,7 @@ The underlying primitive value.
 
 **Example:**
 ```typescript
-const userId = new UserId('user-123');
+const userId = new UserIdConcept('user-123');
 console.log(userId.value); // "user-123"
 ```
 
@@ -341,7 +423,10 @@ Returns the primitive value of the concept. This method is used by JavaScript wh
 
 **Example:**
 ```typescript
-const count = new OrderCount(42);
+class OrderCountConcept extends ConceptAs<number> {}
+export type OrderCount = OrderCountConcept | number;
+
+const count = new OrderCountConcept(42);
 console.log(count.valueOf()); // 42
 console.log(count + 10); // 52 (automatic coercion)
 ```
@@ -354,10 +439,10 @@ Returns the string representation of the concept.
 
 **Example:**
 ```typescript
-const userId = new UserId('user-123');
+const userId = new UserIdConcept('user-123');
 console.log(userId.toString()); // "user-123"
 
-const count = new OrderCount(42);
+const count = new OrderCountConcept(42);
 console.log(count.toString()); // "42"
 ```
 
@@ -365,13 +450,24 @@ console.log(count.toString()); // "42"
 
 ### 1. Use for Domain Identifiers
 
-Create ConceptAs types for all domain identifiers:
+Create ConceptAs types for all domain identifiers with the union type export pattern:
 
 ```typescript
-class UserId extends ConceptAs<string> {}
-class ProductId extends ConceptAs<string> {}
-class OrderId extends ConceptAs<string> {}
-class CustomerId extends ConceptAs<string> {}
+// UserId.ts
+class UserIdConcept extends ConceptAs<string> {}
+export type UserId = UserIdConcept | string;
+
+// ProductId.ts
+class ProductIdConcept extends ConceptAs<string> {}
+export type ProductId = ProductIdConcept | string;
+
+// OrderId.ts
+class OrderIdConcept extends ConceptAs<string> {}
+export type OrderId = OrderIdConcept | string;
+
+// CustomerId.ts
+class CustomerIdConcept extends ConceptAs<string> {}
+export type CustomerId = CustomerIdConcept | string;
 ```
 
 ### 2. Use for Measured Values
@@ -379,28 +475,53 @@ class CustomerId extends ConceptAs<string> {}
 Wrap numeric values that represent specific measurements or counts:
 
 ```typescript
-class OrderCount extends ConceptAs<number> {}
-class Price extends ConceptAs<number> {}
-class Quantity extends ConceptAs<number> {}
-class TemperatureInCelsius extends ConceptAs<number> {}
+// OrderCount.ts
+class OrderCountConcept extends ConceptAs<number> {}
+export type OrderCount = OrderCountConcept | number;
+
+// Price.ts
+class PriceConcept extends ConceptAs<number> {}
+export type Price = PriceConcept | number;
+
+// Quantity.ts
+class QuantityConcept extends ConceptAs<number> {}
+export type Quantity = QuantityConcept | number;
+
+// TemperatureInCelsius.ts
+class TemperatureInCelsiusConcept extends ConceptAs<number> {}
+export type TemperatureInCelsius = TemperatureInCelsiusConcept | number;
 ```
 
 ### 3. Use Union Types for Flexibility
 
-Use union types to allow both ConceptAs instances and primitives, providing flexibility while maintaining proper serialization:
+Export union types from your concept files to allow both ConceptAs instances and primitives, providing flexibility while maintaining proper serialization:
 
 ```typescript
+// UserId.ts
+import { ConceptAs } from '@cratis/fundamentals';
+
+class UserIdConcept extends ConceptAs<string> {}
+export type UserId = UserIdConcept | string;
+```
+
+```typescript
+// Order.ts
+import { field } from '@cratis/fundamentals';
+import { UserId, UserIdConcept } from './UserId';
+import { OrderCount, OrderCountConcept } from './OrderCount';
+
 class Order {
-    // Union type allows flexible assignment
-    @field(UserId)
-    userId!: UserId | string;
+    // Use the exported union type in the type annotation
+    // Use the concept class in the @field decorator
+    @field(UserIdConcept)
+    userId!: UserId;
     
-    @field(OrderCount)
-    orderCount!: OrderCount | number;
+    @field(OrderCountConcept)
+    orderCount!: OrderCount;
 }
 
 // Both work correctly
-order.userId = new UserId('user-123');
+order.userId = new UserIdConcept('user-123');
 order.userId = 'user-456';
 ```
 
@@ -412,13 +533,13 @@ See the [Union Types for Flexible Assignment](#union-types-for-flexible-assignme
 
 ```typescript
 // ❌ DON'T do this
-class UserId extends ConceptAs<string> {
+class UserIdConcept extends ConceptAs<string> {
     createdAt: Date; // This will break serialization
 }
 
 // ✅ DO this instead - create a separate class
 class User {
-    @field(UserId)
+    @field(UserIdConcept)
     id!: UserId;
     
     @field(Date)
