@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { JsonSerializer } from '../JsonSerializer';
-import { UserId, OrderCount } from './ConceptTypes';
+import { UserId, OrderCount } from './Types';
 import { field } from '../fieldDecorator';
 
 class TestObject {
