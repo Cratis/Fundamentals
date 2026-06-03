@@ -1,7 +1,9 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { OrderCount } from '../for_JsonSerializer/Types';
+import { ConceptAs } from '../ConceptAs';
+
+class OrderCount extends ConceptAs<number> {}
 
 describe('when creating a concept with number value', () => {
     const value = 42;

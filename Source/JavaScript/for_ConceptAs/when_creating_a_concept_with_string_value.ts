@@ -1,7 +1,9 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { UserId } from '../for_JsonSerializer/Types';
+import { ConceptAs } from '../ConceptAs';
+
+class UserId extends ConceptAs<string> {}
 
 describe('when creating a concept with string value', () => {
     const value = 'user-123';
