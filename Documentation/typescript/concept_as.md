@@ -394,6 +394,7 @@ Creates a new instance of the concept with the specified value.
 - `value: T` - The underlying value to wrap
 
 **Example:**
+
 ```typescript
 class UserIdConcept extends ConceptAs<string> {}
 export type UserId = UserIdConcept | string;
@@ -408,6 +409,7 @@ const userId = new UserIdConcept('user-123');
 The underlying primitive value.
 
 **Example:**
+
 ```typescript
 const userId = new UserIdConcept('user-123');
 console.log(userId.value); // "user-123"
@@ -422,6 +424,7 @@ Returns the primitive value of the concept. This method is used by JavaScript wh
 **Returns:** The underlying value
 
 **Example:**
+
 ```typescript
 class OrderCountConcept extends ConceptAs<number> {}
 export type OrderCount = OrderCountConcept | number;
@@ -438,6 +441,7 @@ Returns the string representation of the concept.
 **Returns:** String representation of the underlying value
 
 **Example:**
+
 ```typescript
 const userId = new UserIdConcept('user-123');
 console.log(userId.toString()); // "user-123"
@@ -556,11 +560,11 @@ ConceptAs is for wrapping primitives. For complex domain objects with multiple p
 The TypeScript implementation mirrors the C# version but with JavaScript idioms:
 
 | Feature | C# | TypeScript |
-|---------|-----|-----------|
+|---------|----|------------|
 | Base class | `ConceptAs<T>` record | `ConceptAs<T>` abstract class |
 | Value property | `Value` property | `value` readonly property |
 | Implicit conversion | `implicit operator T` | `valueOf()` method |
-| Flexible assignment | Implicit operators | Union types (e.g., `UserId | string`) |
+| Flexible assignment | Implicit operators | Union types (e.g., `UserId \| string`) |
 | String representation | `ToString()` override | `toString()` method |
 | JSON serialization | `ConceptAsJsonConverter` | Built into `JsonSerializer` |
 | Serialization pattern | Unwrap → Serialize recursively | Unwrap → Serialize recursively |
