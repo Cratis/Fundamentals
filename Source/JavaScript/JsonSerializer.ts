@@ -51,7 +51,8 @@ const isConceptAs = (type: Constructor): boolean => {
     // Check if the prototype chain includes ConceptAs
     let proto = type.prototype;
     while (proto) {
-        if (proto instanceof ConceptAs || proto.constructor === ConceptAs) {
+        // Check if this prototype is ConceptAs.prototype
+        if (proto === ConceptAs.prototype) {
             return true;
         }
         proto = Object.getPrototypeOf(proto);
