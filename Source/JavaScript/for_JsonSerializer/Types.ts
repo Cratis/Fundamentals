@@ -5,6 +5,7 @@ import { field } from '../fieldDecorator';
 import { derivedType } from '../derivedTypeDecorator';
 import { Guid } from '../Guid';
 import { ValueMap } from '../ValueMap';
+import { ConceptAs } from '../ConceptAs';
 
 export class OtherType {
     @field(Number)
@@ -81,3 +82,9 @@ export class TopLevel {
     @field(ValueMap, { genericArguments: [MapKeyType, OtherType] })
     complexKeyMap!: ValueMap<MapKeyType, OtherType>;
 }
+
+export class UserId extends ConceptAs<string> {}
+
+export class OrderCount extends ConceptAs<number> {}
+
+export class IsActive extends ConceptAs<boolean> {}

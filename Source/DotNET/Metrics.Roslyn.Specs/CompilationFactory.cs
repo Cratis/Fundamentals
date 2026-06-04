@@ -15,7 +15,7 @@ static class CompilationFactory
         Assembly.Load("System.Runtime"),
         Assembly.Load("netstandard"),
         typeof(System.Diagnostics.ActivitySource).Assembly,
-        typeof(Cratis.Traces.SpanAttribute).Assembly,
+        typeof(Traces.SpanAttribute).Assembly,
     ];
 
     public static CSharpCompilation CreateCompilation(string source, params Assembly[] additionalAssemblies)

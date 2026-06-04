@@ -1,0 +1,52 @@
+{
+    "name": "@cratis/eslint-config",
+    "version": "0.0.0",
+    "description": "Shared Cratis ESLint flat-config presets. `consumer` is for projects that build on Cratis; `internal` adds the Cratis-authoring rules (MIT license header) used inside the Cratis product repos.",
+    "author": "Cratis",
+    "license": "MIT",
+    "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Cratis/Fundamentals.git"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "keywords": [
+        "eslint",
+        "eslintconfig",
+        "eslint-config",
+        "cratis"
+    ],
+    "files": [
+        "index.js",
+        "base.js",
+        "specs.js",
+        "consumer.js",
+        "internal.js",
+        "lib",
+        "README.md"
+    ],
+    "exports": {
+        "./package.json": "./package.json",
+        ".": "./index.js"
+    },
+    "scripts": {
+        "test": "yarn g:test",
+        "ci": "yarn g:test"
+    },
+    "dependencies": {
+        "@eslint/js": "^10.0.1",
+        "@tony.ganchev/eslint-plugin-header": "^3.4.4",
+        "@typescript-eslint/eslint-plugin": "^8.60.1",
+        "@typescript-eslint/parser": "^8.60.1",
+        "eslint-plugin-no-null": "^1.0.2",
+        "eslint-plugin-react": "^7.37.5",
+        "globals": "^17.6.0",
+        "typescript-eslint": "^8.60.1"
+    },
+    "peerDependencies": {
+        "eslint": ">=9",
+        "typescript": ">=4.8.4"
+    }
+}
