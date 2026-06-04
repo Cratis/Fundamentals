@@ -46,6 +46,7 @@
         "typescript-eslint": "^8.60.1"
     },
     "peerDependencies": {
-        "eslint": ">=9"
+        "eslint": ">=9",
+        "typescript": ">=4.8.4"
     }
 }
