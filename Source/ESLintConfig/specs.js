@@ -3,6 +3,7 @@
 // naming for `when_…`/`and_…` describers, and empty setup bodies.
 const specs = [
     {
+        name: '@cratis/eslint-config/specs',
         files: ['**/for_*/**/*.ts', '**/for_*/**/*.tsx'],
         rules: {
             '@typescript-eslint/naming-convention': 0,

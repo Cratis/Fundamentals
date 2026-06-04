@@ -25,8 +25,9 @@ export const ignores = [
 // Product-agnostic Cratis hygiene for TypeScript/React. No license-header rule here —
 // see `internal` for the Cratis-authoring layer.
 const base = [
-    { ignores },
+    { name: '@cratis/eslint-config/ignores', ignores },
     {
+        name: '@cratis/eslint-config/base',
         files: ['**/*.ts', '**/*.tsx'],
         plugins: {
             '@typescript-eslint': tseslintPlugin,

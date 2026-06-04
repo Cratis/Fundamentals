@@ -6,6 +6,7 @@ import specs from './specs.js';
 // This is an internal authoring rule: it belongs in the Cratis product repos
 // (Arc, Components, Fundamentals, …), and consumers must NOT inherit it.
 const licenseHeader = {
+    name: '@cratis/eslint-config/license-header',
     files: ['**/*.ts', '**/*.tsx'],
     plugins: { '@tony.ganchev': header },
     rules: {
