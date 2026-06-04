@@ -35,8 +35,8 @@ If you consume Cratis Arc proxies or Cratis Components, also compose the product
 
 ```js
 import cratis from '@cratis/eslint-config';
-import arc from '@cratis/arc.eslint';
-import components from '@cratis/components.eslint';
+import arc from '@cratis/eslint-plugin-arc';
+import components from '@cratis/eslint-plugin-components';
 
 export default [
     ...cratis.configs.consumer,
