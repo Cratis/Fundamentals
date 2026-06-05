@@ -58,4 +58,4 @@ nullability, serialization, and type converters — in [Concepts](./concepts.md)
 | [Metrics](./metrics/index.md) | A source-generated metrics system for tracking application behavior. |
 
 Concepts and type discovery are exactly what let [Chronicle](/chronicle/) and [Arc](/arc/) find your
-events, commands, and read models by convention — see [Why Cratis](/why-cratis/) for the bigger picture.
+events, commands, and read models by convention — see [Why developers choose Cratis](/why-cratis/) for the bigger picture.
