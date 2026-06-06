@@ -9,24 +9,22 @@ If you want to bypass any automatic hookup of the system, you can manually creat
 
 ## Assembly Prefixes
 
-By default, the `Types` system will load all referenced project and package assemblies.
-You can exclude assemblies by using the static method `Types.AddAssemblyPrefixesToExclude()`.
-This takes a `params` of strings representing prefixes of assemblies to exclude.
-Out of the box, it ignores assemblies like `System`, `Microsoft`, and `Newtonsoft`.
-
-Alternatively, the constructor for `Types` supports taking an explicit 'opt-in' filter for including assemblies
-in type discovery. This allows you to include additional assemblies beyond the defaults.
-
-For both filters, the strings you pass are considered prefixes, meaning that if you want to include
-a set of assemblies all starting with the same string, you simply provide the common start.
+`Types` discovers project-referenced assemblies automatically. For **package**-referenced
+assemblies, discovery is opt-in by assembly-name prefix — by default only assemblies whose
+name starts with `Cratis` are included. To include additional packages, add their prefixes to
+the shared `PackageReferencedAssemblies.Instance` before discovery runs:
 
 ```csharp
 using Cratis.Types;
 
-var types = new Types("Microsoft","SomeOther");
+PackageReferencedAssemblies.Instance.AddAssemblyPrefixesToInclude("Microsoft", "SomeOther");
 ```
 
-> Note: When using the application model, it will exclude even more 3rd parties.
+The strings you pass are treated as prefixes, so a single value matches every assembly whose
+name starts with it — for example, `Microsoft` matches all `Microsoft.*` packages.
+
+> Note: Use the shared `PackageReferencedAssemblies.Instance` singleton rather than constructing
+> your own — scanning all assemblies in the application has a performance cost.
 
 ## Type Discovery
 
