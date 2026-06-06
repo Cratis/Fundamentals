@@ -170,8 +170,9 @@ public class ConfigurationManager
     {
         var result = _secureConfigService.LoadSecureConfig(path);
         
-        // Match() with side effects
-        result.Match(
+        // Switch() for side effects. Catch<T, TError> is a three-case union
+        // (success, error, exception), so Switch takes three actions.
+        result.Switch(
             config => 
             {
                 Console.WriteLine("Configuration loaded successfully");
@@ -181,6 +182,10 @@ public class ConfigurationManager
             {
                 Console.WriteLine($"Configuration error: {error.Message}");
                 LogError(error);
+            },
+            exception => 
+            {
+                Console.WriteLine($"Unexpected failure: {exception.Message}");
             });
     }
     
