@@ -1,0 +1,42 @@
+---
+title: Fundamentals
+description: The shared building blocks beneath the Cratis stack — concepts, serialization, dependency injection, and type discovery, for both .NET and TypeScript.
+---
+
+import { CardGrid } from '@astrojs/starlight/components';
+import SimpleCard from '@components/SimpleCard.astro';
+import TopicHero from '@components/TopicHero.astro';
+
+<TopicHero icon="seti:folder" eyebrow="Fundamentals" title="The building blocks beneath the stack">
+The convenience layer the rest of Cratis is built on: strongly-typed domain values, JSON serialization, convention-based DI, and runtime type discovery — for both .NET and TypeScript. You meet it indirectly all the time, and you can use it on its own.
+</TopicHero>
+
+## Choose your platform
+
+<CardGrid>
+  <SimpleCard title="C# / .NET" icon="seti:c-sharp" link="/fundamentals/csharp/">
+    Concepts, serialization, DI, type discovery, metrics, monads, and reactive helpers for .NET.
+  </SimpleCard>
+  <SimpleCard title="TypeScript" icon="seti:typescript" link="/fundamentals/typescript/">
+    GUIDs, derived-type serialization, property-path proxies, and decorators for the browser.
+  </SimpleCard>
+</CardGrid>
+
+## What it gives you
+
+<CardGrid>
+  <SimpleCard title="Concepts" icon="approve-check" link="/fundamentals/csharp/">
+    The `ConceptAs<T>` pattern that wraps an `AuthorId` so the compiler stops you mixing ids up.
+  </SimpleCard>
+  <SimpleCard title="Serialization" icon="seti:db" link="/fundamentals/csharp/">
+    Robust JSON with custom and derived-type handling — what carries events across the wire.
+  </SimpleCard>
+  <SimpleCard title="Dependency injection" icon="puzzle" link="/fundamentals/csharp/">
+    Convention-based registration so artifacts are discovered, not hand-wired.
+  </SimpleCard>
+  <SimpleCard title="Derived types" icon="right-arrow" link="/fundamentals/derived_types_integration/">
+    How polymorphic types travel between .NET and TypeScript without losing their identity.
+  </SimpleCard>
+</CardGrid>
+
+Fundamentals is what lets [Chronicle](/chronicle/) and [Arc](/arc/) find your artifacts by convention — see [Why developers choose Cratis](/why-cratis/).

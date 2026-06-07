@@ -137,8 +137,8 @@ public class OrderController
     {
         var result = _orderService.ConfirmOrder(orderId);
         
-        // Match() with side effects
-        result.Match(
+        // Switch() for side effects (Match returns a value; Switch is for actions)
+        result.Switch(
             confirmation => 
             {
                 Console.WriteLine($"Success: Order {confirmation.Id} confirmed");

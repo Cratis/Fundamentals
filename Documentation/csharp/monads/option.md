@@ -98,8 +98,8 @@ public class UserService
     {
         var userOption = _repository.FindById(id);
         
-        // Match() with side effects
-        userOption.Match(
+        // Switch() for side effects (Match returns a value; Switch is for actions)
+        userOption.Switch(
             value => Console.WriteLine($"Processing user: {value.Name}"),
             none => Console.WriteLine("User not found"));
     }
