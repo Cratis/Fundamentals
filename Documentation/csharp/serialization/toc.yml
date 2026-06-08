@@ -6,3 +6,5 @@
   href: complex_key_dictionaries.md
 - name: Date & Time Only
   href: date_and_time_only.md
+- name: Geospatial Coordinate
+  href: geospatial_coordinate.md
