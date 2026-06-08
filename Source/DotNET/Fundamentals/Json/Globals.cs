@@ -55,6 +55,7 @@ public static class Globals
                 new TimeOnlyJsonConverter(),
                 new TypeJsonConverter(),
                 new UriJsonConverter(),
+                new CoordinateJsonConverter(),
                 new EnumerableModelWithIdToConceptOrPrimitiveEnumerableConverterFactory()
             }
         };

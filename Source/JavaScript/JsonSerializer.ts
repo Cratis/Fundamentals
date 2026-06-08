@@ -3,6 +3,7 @@
 
 import { ConceptAs } from './ConceptAs';
 import { Constructor } from './Constructor';
+import { Coordinate } from './Coordinate';
 import { DerivedType } from './DerivedType';
 import { Field } from './Field';
 import { Fields } from './Fields';
@@ -21,6 +22,7 @@ const typeConverters: Map<Constructor, typeSerializer> = new Map<Constructor, ty
     [Date, (value: Date) => value.toISOString()],
     [Guid, (value: Guid) => value?.toString() ?? ''],
     [TimeSpan, (value: TimeSpan) => value?.toString() ?? ''],
+    [Coordinate, (value: Coordinate) => value?.toJSON() ?? null],
     [ValueMap, (value: ValueMap<any, any>) => {
         const converted: any = {};
         for (const [key, mapValue] of value.entries()) {
@@ -38,6 +40,18 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
     [Date, (value: any) => new Date(value)],
     [Guid, (value: any) => Guid.parse(value.toString())],
     [TimeSpan, (value: any) => TimeSpan.parse(value.toString())],
+    [Coordinate, (value: any) => {
+        if (value === null || value === undefined) {
+            throw new Error('Cannot deserialize null or undefined to Coordinate');
+        }
+        if (value.longitude === undefined || value.latitude === undefined) {
+            throw new Error('Cannot deserialize Coordinate: longitude and latitude are required');
+        }
+        const coordinate = new Coordinate();
+        coordinate.longitude = value.longitude;
+        coordinate.latitude = value.latitude;
+        return coordinate;
+    }],
 ]);
 
 /**
