@@ -10,6 +10,7 @@ import { Fields } from './Fields';
 import { Guid } from './Guid';
 import { TimeSpan } from './TimeSpan';
 import { ValueMap } from './ValueMap';
+import { Point, LineString, LinearRing, Polygon } from './geospatial';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -23,6 +24,9 @@ const typeConverters: Map<Constructor, typeSerializer> = new Map<Constructor, ty
     [Guid, (value: Guid) => value?.toString() ?? ''],
     [TimeSpan, (value: TimeSpan) => value?.toString() ?? ''],
     [Coordinate, (value: Coordinate) => value?.toJSON() ?? null],
+    [Point, (value: Point) => value?.toJSON() ?? null],
+    [LineString, (value: LineString) => value?.toJSON() ?? null],
+    [Polygon, (value: Polygon) => value?.toJSON() ?? null],
     [ValueMap, (value: ValueMap<any, any>) => {
         const converted: any = {};
         for (const [key, mapValue] of value.entries()) {
@@ -51,6 +55,58 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
         coordinate.longitude = value.longitude;
         coordinate.latitude = value.latitude;
         return coordinate;
+    }],
+    [Point, (value: any) => {
+        if (value === null || value === undefined) {
+            throw new Error('Cannot deserialize null or undefined to Point');
+        }
+        if (value.type !== 'Point' || !value.coordinates || value.coordinates.length !== 2) {
+            throw new Error('Cannot deserialize Point: invalid GeoJSON format');
+        }
+        const point = new Point();
+        point.longitude = value.coordinates[0];
+        point.latitude = value.coordinates[1];
+        return point;
+    }],
+    [LineString, (value: any) => {
+        if (value === null || value === undefined) {
+            throw new Error('Cannot deserialize null or undefined to LineString');
+        }
+        if (value.type !== 'LineString' || !value.coordinates || value.coordinates.length < 2) {
+            throw new Error('Cannot deserialize LineString: invalid GeoJSON format');
+        }
+        const lineString = new LineString();
+        lineString.coordinates = value.coordinates.map((coord: number[]) => {
+            const point = new Point();
+            point.longitude = coord[0];
+            point.latitude = coord[1];
+            return point;
+        });
+        return lineString;
+    }],
+    [Polygon, (value: any) => {
+        if (value === null || value === undefined) {
+            throw new Error('Cannot deserialize null or undefined to Polygon');
+        }
+        if (value.type !== 'Polygon' || !value.coordinates || value.coordinates.length === 0) {
+            throw new Error('Cannot deserialize Polygon: invalid GeoJSON format');
+        }
+        const polygon = new Polygon();
+        polygon.shell = new LinearRing(value.coordinates[0].map((coord: number[]) => {
+            const point = new Point();
+            point.longitude = coord[0];
+            point.latitude = coord[1];
+            return point;
+        }));
+        polygon.holes = value.coordinates.slice(1).map((ring: number[][]) => 
+            new LinearRing(ring.map((coord: number[]) => {
+                const point = new Point();
+                point.longitude = coord[0];
+                point.latitude = coord[1];
+                return point;
+            }))
+        );
+        return polygon;
     }],
 ]);
 

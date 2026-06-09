@@ -1,33 +1,16 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { field } from './fieldDecorator';
+import { Point } from './geospatial/Point';
 
 /**
+ * @deprecated Use Point from './geospatial' instead. This alias will be removed in a future version.
  * Represents a geographic coordinate with longitude and latitude.
  */
-export class Coordinate {
-    @field(Number)
-    longitude!: number;
-
-    @field(Number)
-    latitude!: number;
-
+export class Coordinate extends Point {
     /**
-     * Creates a new Coordinate instance.
-     * @param {number} longitude - The longitude of the coordinate.
-     * @param {number} latitude - The latitude of the coordinate.
-     */
-    constructor(longitude?: number, latitude?: number) {
-        if (longitude !== undefined && latitude !== undefined) {
-            this.longitude = longitude;
-            this.latitude = latitude;
-        }
-    }
-
-    /**
-     * Converts the Coordinate to a JSON representation.
-     * @returns {object} JSON representation with longitude and latitude.
+     * Converts the Coordinate to a JSON representation (backwards compatible format).
+     * @returns {object} JSON representation with longitude and latitude (not GeoJSON).
      */
     toJSON(): object {
         return {
