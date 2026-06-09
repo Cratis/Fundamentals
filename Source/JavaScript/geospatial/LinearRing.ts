@@ -11,12 +11,13 @@ export class LinearRing {
 
     /**
      * Creates a new LinearRing instance.
-     * @param {Point[]} coordinates - The points that make up the linear ring.
+     * @param {Point[]} coordinates - The points that make up the linear ring (minimum 4 points, first must equal last).
      */
-    constructor(coordinates?: Point[]) {
-        if (coordinates !== undefined) {
-            this.coordinates = coordinates;
+    constructor(coordinates: Point[]) {
+        if (coordinates.length < 4) {
+            throw new Error('LinearRing must have at least 4 points to form a closed ring');
         }
+        this.coordinates = coordinates;
     }
 
     /**

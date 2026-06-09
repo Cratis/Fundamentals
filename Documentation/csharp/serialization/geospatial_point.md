@@ -96,7 +96,12 @@ var office = new Location(
 
 ## Migration from Coordinate
 
-If you have existing code using `Coordinate`, rename it to `Point`. The JSON format has changed from the old format to GeoJSON:
+> **⚠️ Breaking Change**: The `Coordinate` type and `CoordinateJsonConverter` have been completely removed from the C# codebase. There is no backward compatibility layer in C#.
+
+If you have existing code using `Coordinate`, you must:
+1. Rename all `Coordinate` references to `Point` in your C# code
+2. Update any stored JSON data from the old format to GeoJSON format
+3. Update any API contracts that consume or produce `Coordinate` JSON
 
 **Old format (Coordinate):**
 ```json
@@ -113,3 +118,5 @@ If you have existing code using `Coordinate`, rename it to `Point`. The JSON for
     "coordinates": [10.5, 20.3]
 }
 ```
+
+For TypeScript, a deprecated `Coordinate` class is provided for backward compatibility, but it will be removed in a future version. See the [TypeScript Coordinate documentation](../../typescript/coordinate.md) for details.

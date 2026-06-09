@@ -63,10 +63,7 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
         if (value.type !== 'Point' || !value.coordinates || value.coordinates.length !== 2) {
             throw new Error('Cannot deserialize Point: invalid GeoJSON format');
         }
-        const point = new Point();
-        point.longitude = value.coordinates[0];
-        point.latitude = value.coordinates[1];
-        return point;
+        return new Point(value.coordinates[0], value.coordinates[1]);
     }],
     [LineString, (value: any) => {
         if (value === null || value === undefined) {
@@ -75,14 +72,8 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
         if (value.type !== 'LineString' || !value.coordinates || value.coordinates.length < 2) {
             throw new Error('Cannot deserialize LineString: invalid GeoJSON format');
         }
-        const lineString = new LineString();
-        lineString.coordinates = value.coordinates.map((coord: number[]) => {
-            const point = new Point();
-            point.longitude = coord[0];
-            point.latitude = coord[1];
-            return point;
-        });
-        return lineString;
+        const points = value.coordinates.map((coord: number[]) => new Point(coord[0], coord[1]));
+        return new LineString(points);
     }],
     [Polygon, (value: any) => {
         if (value === null || value === undefined) {
@@ -91,22 +82,11 @@ const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, t
         if (value.type !== 'Polygon' || !value.coordinates || value.coordinates.length === 0) {
             throw new Error('Cannot deserialize Polygon: invalid GeoJSON format');
         }
-        const polygon = new Polygon();
-        polygon.shell = new LinearRing(value.coordinates[0].map((coord: number[]) => {
-            const point = new Point();
-            point.longitude = coord[0];
-            point.latitude = coord[1];
-            return point;
-        }));
-        polygon.holes = value.coordinates.slice(1).map((ring: number[][]) => 
-            new LinearRing(ring.map((coord: number[]) => {
-                const point = new Point();
-                point.longitude = coord[0];
-                point.latitude = coord[1];
-                return point;
-            }))
+        const shell = new LinearRing(value.coordinates[0].map((coord: number[]) => new Point(coord[0], coord[1])));
+        const holes = value.coordinates.slice(1).map((ring: number[][]) => 
+            new LinearRing(ring.map((coord: number[]) => new Point(coord[0], coord[1])))
         );
-        return polygon;
+        return new Polygon(shell, holes);
     }],
 ]);
 

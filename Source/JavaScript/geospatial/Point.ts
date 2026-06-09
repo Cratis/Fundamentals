@@ -18,11 +18,9 @@ export class Point {
      * @param {number} longitude - The longitude of the point.
      * @param {number} latitude - The latitude of the point.
      */
-    constructor(longitude?: number, latitude?: number) {
-        if (longitude !== undefined && latitude !== undefined) {
-            this.longitude = longitude;
-            this.latitude = latitude;
-        }
+    constructor(longitude: number, latitude: number) {
+        this.longitude = longitude;
+        this.latitude = latitude;
     }
 
     /**

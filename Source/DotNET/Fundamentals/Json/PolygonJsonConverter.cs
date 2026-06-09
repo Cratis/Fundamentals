@@ -130,6 +130,15 @@ public class PolygonJsonConverter : JsonConverter<Polygon>
                 {
                     throw new JsonException("LinearRing must have at least 4 points");
                 }
+
+                // Validate ring closure: first and last points must be identical
+                var firstPoint = points[0];
+                var lastPoint = points[^1];
+                if (firstPoint.Longitude != lastPoint.Longitude || firstPoint.Latitude != lastPoint.Latitude)
+                {
+                    throw new JsonException("LinearRing must be closed (first and last points must be identical)");
+                }
+
                 return new LinearRing([.. points]);
             }
 

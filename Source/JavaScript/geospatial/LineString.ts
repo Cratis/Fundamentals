@@ -11,12 +11,13 @@ export class LineString {
 
     /**
      * Creates a new LineString instance.
-     * @param {Point[]} coordinates - The points that make up the line string.
+     * @param {Point[]} coordinates - The points that make up the line string (minimum 2 points).
      */
-    constructor(coordinates?: Point[]) {
-        if (coordinates !== undefined) {
-            this.coordinates = coordinates;
+    constructor(coordinates: Point[]) {
+        if (coordinates.length < 2) {
+            throw new Error('LineString must have at least 2 points');
         }
+        this.coordinates = coordinates;
     }
 
     /**

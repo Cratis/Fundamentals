@@ -15,11 +15,9 @@ export class Polygon {
      * @param {LinearRing} shell - The outer boundary of the polygon.
      * @param {LinearRing[]} holes - Optional inner boundaries (holes) within the polygon.
      */
-    constructor(shell?: LinearRing, holes?: LinearRing[]) {
-        if (shell !== undefined) {
-            this.shell = shell;
-            this.holes = holes || [];
-        }
+    constructor(shell: LinearRing, holes?: LinearRing[]) {
+        this.shell = shell;
+        this.holes = holes || [];
     }
 
     /**
