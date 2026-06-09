@@ -1,0 +1,10 @@
+- name: Geospatial Types
+  href: index.md
+- name: Understanding Geospatial Types
+  href: understanding.md
+- name: Point
+  href: point.md
+- name: LineString
+  href: linestring.md
+- name: Polygon
+  href: polygon.md

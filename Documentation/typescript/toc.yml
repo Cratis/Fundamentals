@@ -14,6 +14,9 @@
   href: time_span.md
 - name: ValueMap
   href: value_map.md
+- name: Geospatial
+  href: geospatial/toc.yml
+  topicHref: geospatial/index.md
 - name: Serialization
   href: serialization/toc.yml
   topicHref: serialization/index.md
