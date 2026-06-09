@@ -4,6 +4,8 @@
   href: json_serializer.md
 - name: Field Decorator
   href: field_decorator.md
+- name: Geospatial
+  href: geospatial.md
 - name: Derived Types
   href: derived_types.md
 - name: ValueMap Serialization

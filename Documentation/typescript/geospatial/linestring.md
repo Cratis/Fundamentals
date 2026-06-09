@@ -1,4 +1,12 @@
-# Work with LineStrings
+# LineString
+
+## What is a LineString?
+
+A LineString represents a connected path of two or more geographic points, forming a line or route. Unlike a simple array of points, a LineString explicitly represents the path connecting consecutive points.
+
+A LineString must have at least two Points. It represents the shortest path (geodesic) between each consecutive pair of points on Earth's surface.
+
+Use LineStrings for routes, boundaries, and trajectories: hiking trails, river boundaries, road networks, vehicle movement history.
 
 ## Creating a LineString
 
@@ -42,32 +50,9 @@ trail.path = new LineString([
 ]);
 ```
 
-## Serializing and Deserializing
+## Serialization
 
-The `JsonSerializer` automatically handles LineString serialization and deserialization:
-
-```typescript
-import { Point, LineString, JsonSerializer } from '@cratis/fundamentals';
-
-const lineString = new LineString([
-    new Point(10.5, 20.3),
-    new Point(11.2, 21.1),
-    new Point(12.0, 22.0)
-]);
-const json = JsonSerializer.serialize(lineString);
-// Output: {"type":"LineString","coordinates":[[10.5,20.3],[11.2,21.1],[12.0,22.0]]}
-
-const deserialized = JsonSerializer.deserialize(LineString, json);
-```
-
-## Validation
-
-The deserializer validates:
-- The `type` property is "LineString"
-- The `coordinates` property is an array with at least two coordinate pairs
-- Each coordinate pair is an array of two numbers [longitude, latitude]
-
-If validation fails, an error is thrown.
+LineStrings automatically serialize to GeoJSON format. See [Geospatial Serialization](../serialization/geospatial.md) for details on JSON handling.
 
 ## Accessing Coordinates
 

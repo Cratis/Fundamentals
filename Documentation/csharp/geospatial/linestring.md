@@ -1,4 +1,12 @@
-# Work with LineStrings
+# LineString
+
+## What is a LineString?
+
+A LineString represents a connected path of two or more geographic points, forming a line or route. Unlike a simple array of points, a LineString explicitly represents the path connecting consecutive points.
+
+A LineString must have at least two Points. It represents the shortest path (geodesic) between each consecutive pair of points on Earth's surface.
+
+Use LineStrings for routes, boundaries, and trajectories: hiking trails, river boundaries, road networks, vehicle movement history.
 
 ## Creating a LineString
 
@@ -42,56 +50,9 @@ var trail = new Route(
 );
 ```
 
-## Serializing and Deserializing
-
-The `LineStringJsonConverter` is automatically registered when you use the Cratis Application Model:
-
-```csharp
-using System.Text.Json;
-using Cratis.Geospatial;
-using Cratis.Json;
-
-var lineString = new LineString(
-[
-    new Point(10.5, 20.3),
-    new Point(11.2, 21.1),
-    new Point(12.0, 22.0)
-]);
-var json = JsonSerializer.Serialize(lineString, Globals.JsonSerializerOptions);
-// Output: {"type":"LineString","coordinates":[[10.5,20.3],[11.2,21.1],[12.0,22.0]]}
-
-var deserialized = JsonSerializer.Deserialize<LineString>(json, Globals.JsonSerializerOptions);
-```
-
-## Manual Converter Configuration
-
-If you need to configure the converter manually:
-
-```csharp
-using System.Text.Json;
-using Cratis.Json;
-
-var options = new JsonSerializerOptions
-{
-    Converters =
-    {
-        new LineStringJsonConverter()
-    }
-};
-```
-
-## Validation
-
-The converter validates:
-- The `type` property is "LineString"
-- The `coordinates` property is an array with at least two coordinate pairs
-- Each coordinate pair is an array of two numbers [longitude, latitude]
-
-If validation fails, a `JsonException` is thrown.
-
 ## Accessing Coordinates
 
-Once created, you can access the Points in a LineString:
+Once created, access the Points in a LineString:
 
 ```csharp
 var route = new LineString(
@@ -104,4 +65,11 @@ foreach (var point in route.Coordinates)
 {
     Console.WriteLine($"({point.Longitude}, {point.Latitude})");
 }
+
+var firstPoint = route.Coordinates[0];
+var lastPoint = route.Coordinates[^1];
 ```
+
+## Serialization
+
+LineStrings automatically serialize to GeoJSON format. See [Geospatial Serialization](../serialization/geospatial.md) for details on JSON handling.

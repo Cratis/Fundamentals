@@ -1,8 +1,17 @@
-# Work with Points
+# Point
+
+## What is a Point?
+
+A Point represents a single geographic location on Earth's surface defined by a longitude and latitude pair.
+
+- **Longitude** (east-west position): ranges from -180° to 180°
+- **Latitude** (north-south position): ranges from -90° to 90°
+
+Use Points to represent discrete locations like addresses, landmarks, device positions, or any fixed geographic location.
 
 ## Creating a Point
 
-Create a Point with longitude and latitude:
+Create a point with longitude and latitude:
 
 ```typescript
 import { Point } from '@cratis/fundamentals';
@@ -13,7 +22,7 @@ console.log(location.longitude); // 10.5
 console.log(location.latitude);  // 20.3
 ```
 
-The first parameter is **longitude** (east-west position), the second is **latitude** (north-south position).
+The first parameter is **longitude**, the second is **latitude**.
 
 ## Using Points in Classes
 
@@ -35,29 +44,7 @@ office.name = 'Headquarters';
 office.position = new Point(10.7522, 59.9139); // Oslo, Norway
 ```
 
-## Serializing and Deserializing
-
-The `JsonSerializer` automatically handles Point serialization and deserialization following GeoJSON format:
-
-```typescript
-import { Point, JsonSerializer } from '@cratis/fundamentals';
-
-const point = new Point(10.5, 20.3);
-const json = JsonSerializer.serialize(point);
-// Output: {"type":"Point","coordinates":[10.5,20.3]}
-
-const deserialized = JsonSerializer.deserialize(Point, json);
-```
-
-## Validation
-
-The deserializer validates the GeoJSON structure:
-- The `type` property must be "Point"
-- The `coordinates` property must be an array with exactly two numbers [longitude, latitude]
-
-If validation fails, an error is thrown. Ensure your incoming data has the correct structure before deserialization.
-
-## Working with Coordinates
+## Accessing Coordinates
 
 Access and work with a Point's coordinates:
 
@@ -72,14 +59,6 @@ const latPart = location.latitude;
 const adjusted = new Point(longPart + 0.1, latPart + 0.1);
 ```
 
-## Deprecated Coordinate Type
+## Serialization
 
-If you have existing code using the deprecated `Coordinate` type, replace it with `Point`:
-
-```typescript
-// Old
-const coord = new Coordinate(10.5, 20.3);
-
-// New
-const point = new Point(10.5, 20.3);
-```
+Points automatically serialize to GeoJSON format. See [Geospatial Serialization](../serialization/geospatial.md) for details on JSON handling.

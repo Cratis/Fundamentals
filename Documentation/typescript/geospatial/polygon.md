@@ -1,4 +1,12 @@
-# Work with Polygons
+# Polygon
+
+## What is a Polygon?
+
+A Polygon represents a bounded area on Earth's surface using one or more closed rings of points. The outer ring defines the boundary; optional inner rings define excluded areas (holes, like courtyards or lakes within land).
+
+A Polygon ring must have at least 4 points, with the first and last points identical to close the ring.
+
+Use Polygons for areas and regions: park boundaries, property parcels, delivery zones, geofences, administrative boundaries.
 
 ## Creating a Simple Polygon
 
@@ -25,7 +33,7 @@ The first parameter is the outer boundary (shell) as a `LinearRing`. The second 
 
 ## Creating a Polygon with Holes
 
-Create a Polygon with excluded areas (holes):
+Create a Polygon with excluded areas:
 
 ```typescript
 import { Point, LinearRing, Polygon } from '@cratis/fundamentals';
@@ -83,42 +91,9 @@ lot.boundary = new Polygon(
 );
 ```
 
-## Serializing and Deserializing
-
-The `JsonSerializer` automatically handles Polygon serialization and deserialization:
-
-```typescript
-import { Point, LinearRing, Polygon, JsonSerializer } from '@cratis/fundamentals';
-
-const polygon = new Polygon(
-    new LinearRing([
-        new Point(0, 0),
-        new Point(10, 0),
-        new Point(10, 10),
-        new Point(0, 10),
-        new Point(0, 0)
-    ]),
-    []
-);
-const json = JsonSerializer.serialize(polygon);
-// Output: {"type":"Polygon","coordinates":[[[0,0],[10,0],[10,10],[0,10],[0,0]]]}
-
-const deserialized = JsonSerializer.deserialize(Polygon, json);
-```
-
-## Validation
-
-The deserializer validates:
-- The `type` property is "Polygon"
-- The `coordinates` property is an array with at least one ring (the shell)
-- Each ring has coordinate pairs
-- Each coordinate pair is an array of two numbers [longitude, latitude]
-
-If validation fails, an error is thrown.
-
 ## Accessing Shell and Holes
 
-Once created, you can access the shell and holes:
+Access the outer boundary and any holes:
 
 ```typescript
 import { Polygon } from '@cratis/fundamentals';
@@ -133,9 +108,9 @@ const holes = polygon.holes;    // Array of holes
 console.log(holes.length);      // Number of holes
 ```
 
-## LinearRing Helper
+## LinearRing
 
-A `LinearRing` represents a closed boundary. Convert it to GeoJSON format when needed:
+A `LinearRing` represents a closed boundary. It must have at least 4 points, with the first and last identical to close the ring:
 
 ```typescript
 import { Point, LinearRing } from '@cratis/fundamentals';
@@ -145,9 +120,10 @@ const ring = new LinearRing([
     new Point(10, 0),
     new Point(10, 10),
     new Point(0, 10),
-    new Point(0, 0)
+    new Point(0, 0) // Closes the ring
 ]);
-
-const geoJsonArray = ring.toJSON();
-// Output: [[0,0],[10,0],[10,10],[0,10],[0,0]]
 ```
+
+## Serialization
+
+Polygons automatically serialize to GeoJSON format. See [Geospatial Serialization](../serialization/geospatial.md) for details on JSON handling.

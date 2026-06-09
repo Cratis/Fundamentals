@@ -1,4 +1,12 @@
-# Work with Polygons
+# Polygon
+
+## What is a Polygon?
+
+A Polygon represents a bounded area on Earth's surface using one or more closed rings of points. The outer ring defines the boundary; optional inner rings define excluded areas (holes, like courtyards or lakes within land).
+
+A Polygon ring must have at least 4 points, with the first and last points identical to close the ring.
+
+Use Polygons for areas and regions: park boundaries, property parcels, delivery zones, geofences, administrative boundaries.
 
 ## Creating a Simple Polygon
 
@@ -26,7 +34,7 @@ The first parameter is the outer boundary (shell) as a `LinearRing`. The second 
 
 ## Creating a Polygon with Holes
 
-Create a Polygon with excluded areas (holes):
+Create a Polygon with excluded areas:
 
 ```csharp
 using Cratis.Geospatial;
@@ -83,63 +91,9 @@ var parkingLot = new Zone(
 );
 ```
 
-## Serializing and Deserializing
-
-The `PolygonJsonConverter` is automatically registered when you use the Cratis Application Model:
-
-```csharp
-using System.Text.Json;
-using Cratis.Geospatial;
-using Cratis.Json;
-
-var polygon = new Polygon(
-    new LinearRing(
-    [
-        new Point(0, 0),
-        new Point(10, 0),
-        new Point(10, 10),
-        new Point(0, 10),
-        new Point(0, 0)
-    ]),
-    []
-);
-var json = JsonSerializer.Serialize(polygon, Globals.JsonSerializerOptions);
-// Output: {"type":"Polygon","coordinates":[[[0,0],[10,0],[10,10],[0,10],[0,0]]]}
-
-var deserialized = JsonSerializer.Deserialize<Polygon>(json, Globals.JsonSerializerOptions);
-```
-
-## Manual Converter Configuration
-
-If you need to configure the converter manually:
-
-```csharp
-using System.Text.Json;
-using Cratis.Json;
-
-var options = new JsonSerializerOptions
-{
-    Converters =
-    {
-        new PolygonJsonConverter()
-    }
-};
-```
-
-## Validation
-
-The converter validates:
-- The `type` property is "Polygon"
-- The `coordinates` property is an array with at least one ring (the shell)
-- Each ring has at least 4 coordinate pairs (minimum for a closed polygon)
-- The first and last coordinate of each ring are the same (closed ring)
-- Each coordinate pair is an array of two numbers [longitude, latitude]
-
-If validation fails, a `JsonException` is thrown.
-
 ## Accessing Shell and Holes
 
-Once created, you can access the shell and holes:
+Access the outer boundary and any holes:
 
 ```csharp
 var polygon = new Polygon(
@@ -147,7 +101,26 @@ var polygon = new Polygon(
     [new LinearRing([...])]
 );
 
-var shell = polygon.Shell;     // Outer boundary
-var holes = polygon.Holes;     // Array of holes
+var shell = polygon.Shell;      // Outer boundary
+var holes = polygon.Holes;      // Array of holes
 Console.WriteLine(holes.Length); // Number of holes
 ```
+
+## LinearRing
+
+A `LinearRing` is a closed line that forms the boundary of a polygon. It must have at least 4 points, with the first and last identical to close the ring:
+
+```csharp
+var ring = new LinearRing(
+[
+    new Point(0, 0),
+    new Point(10, 0),
+    new Point(10, 10),
+    new Point(0, 10),
+    new Point(0, 0) // Closes the ring
+]);
+```
+
+## Serialization
+
+Polygons automatically serialize to GeoJSON format. See [Geospatial Serialization](../serialization/geospatial.md) for details on JSON handling.

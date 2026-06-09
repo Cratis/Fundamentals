@@ -1,5 +1,7 @@
 - name: JSON Serialization
   href: serialization.md
+- name: Geospatial
+  href: geospatial.md
 - name: Derived Types
   href: derived_types.md
 - name: Complex Key Dictionaries
