@@ -3,55 +3,56 @@
 
 import { ConceptAs } from './ConceptAs';
 import { Constructor } from './Constructor';
-import { Coordinate } from './Coordinate';
 import { DerivedType } from './DerivedType';
 import { Field } from './Field';
 import { Fields } from './Fields';
-import { Guid } from './Guid';
-import { TimeSpan } from './TimeSpan';
 import { ValueMap } from './ValueMap';
+import { 
+    JsonConverter, 
+    DateJsonConverter, 
+    GuidJsonConverter, 
+    TimeSpanJsonConverter, 
+    PointJsonConverter,
+    LineStringJsonConverter,
+    PolygonJsonConverter,
+    ValueMapJsonConverter
+} from './json';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type typeSerializer = (value: any) => any;
 
-const typeConverters: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
+// Initialize converters
+const converters: JsonConverter[] = [
+    new DateJsonConverter(),
+    new GuidJsonConverter(),
+    new TimeSpanJsonConverter(),
+    new PointJsonConverter(),
+    new LineStringJsonConverter(),
+    new PolygonJsonConverter(),
+    new ValueMapJsonConverter()
+];
+
+// Build converter maps from the converters
+const typeConverters: Map<Constructor, JsonConverter> = new Map<Constructor, JsonConverter>();
+const typeSerializers: Map<Constructor, JsonConverter> = new Map<Constructor, JsonConverter>();
+
+for (const converter of converters) {
+    typeConverters.set(converter.type, converter);
+    typeSerializers.set(converter.type, converter);
+}
+
+// Add primitive type converters that don't need a full JsonConverter class
+const primitiveConverters: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
     [Number, (value: number) => value],
     [String, (value: string) => value],
-    [Boolean, (value: boolean) => value],
-    [Date, (value: Date) => value.toISOString()],
-    [Guid, (value: Guid) => value?.toString() ?? ''],
-    [TimeSpan, (value: TimeSpan) => value?.toString() ?? ''],
-    [Coordinate, (value: Coordinate) => value?.toJSON() ?? null],
-    [ValueMap, (value: ValueMap<any, any>) => {
-        const converted: any = {};
-        for (const [key, mapValue] of value.entries()) {
-            converted[serializeMapKey(key)] = convertTypesOnInstance(mapValue);
-        }
-
-        return converted;
-    }]
+    [Boolean, (value: boolean) => value]
 ]);
 
-const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
+const primitiveSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
     [Number, (value: any) => value],
     [String, (value: any) => value],
-    [Boolean, (value: any) => value],
-    [Date, (value: any) => new Date(value)],
-    [Guid, (value: any) => Guid.parse(value.toString())],
-    [TimeSpan, (value: any) => TimeSpan.parse(value.toString())],
-    [Coordinate, (value: any) => {
-        if (value === null || value === undefined) {
-            throw new Error('Cannot deserialize null or undefined to Coordinate');
-        }
-        if (value.longitude === undefined || value.latitude === undefined) {
-            throw new Error('Cannot deserialize Coordinate: longitude and latitude are required');
-        }
-        const coordinate = new Coordinate();
-        coordinate.longitude = value.longitude;
-        coordinate.latitude = value.latitude;
-        return coordinate;
-    }],
+    [Boolean, (value: any) => value]
 ]);
 
 /**
@@ -86,11 +87,18 @@ const serializeValueForType = (type: Constructor, value: any) => {
         return serializeValueForType(innerValue.constructor, innerValue);
     }
 
+    // Check if there's a registered converter
     if (typeConverters.has(type)) {
-        return typeConverters.get(type)!(value);
-    } else {
-        return convertTypesOnInstance(value);
+        const converter = typeConverters.get(type)!;
+        return converter.write(value);
     }
+    
+    // Check primitive converters
+    if (primitiveConverters.has(type)) {
+        return primitiveConverters.get(type)!(value);
+    }
+    
+    return convertTypesOnInstance(value);
 };
 
 const deserializeValueFromType = (type: Constructor, value: any) => {
@@ -99,11 +107,18 @@ const deserializeValueFromType = (type: Constructor, value: any) => {
         return new type(value);
     }
     
+    // Check if there's a registered converter
     if (typeSerializers.has(type)) {
-        return typeSerializers.get(type)!(value);
-    } else {
-        return JsonSerializer.deserialize(type, JSON.stringify(value));
+        const converter = typeSerializers.get(type)!;
+        return converter.read(value);
     }
+    
+    // Check primitive serializers
+    if (primitiveSerializers.has(type)) {
+        return primitiveSerializers.get(type)!(value);
+    }
+    
+    return JsonSerializer.deserialize(type, JSON.stringify(value));
 };
 
 const deserializeValueFromField = (field: Field, value: any) => {
@@ -116,18 +131,25 @@ const deserializeValueFromField = (field: Field, value: any) => {
         return new field.type(value);
     }
 
+    // Check if there's a registered converter
     if (typeSerializers.has(field.type)) {
-        return typeSerializers.get(field.type)!(value);
-    } else {
-        let type = field.type;
-        if (value[JsonSerializer.DerivedTypeIdProperty]) {
-            const derivedTypeId = value[JsonSerializer.DerivedTypeIdProperty];
-            const candidates = [...field.derivatives, ...DerivedType.getDerivedTypesFor(field.type)];
-            type = candidates.find(_ => DerivedType.get(_) == derivedTypeId) || type;
-        }
-
-        return JsonSerializer.deserialize(type, JSON.stringify(value));
+        const converter = typeSerializers.get(field.type)!;
+        return converter.read(value);
     }
+    
+    // Check primitive serializers
+    if (primitiveSerializers.has(field.type)) {
+        return primitiveSerializers.get(field.type)!(value);
+    }
+    
+    let type = field.type;
+    if (value[JsonSerializer.DerivedTypeIdProperty]) {
+        const derivedTypeId = value[JsonSerializer.DerivedTypeIdProperty];
+        const candidates = [...field.derivatives, ...DerivedType.getDerivedTypesFor(field.type)];
+        type = candidates.find(_ => DerivedType.get(_) == derivedTypeId) || type;
+    }
+
+    return JsonSerializer.deserialize(type, JSON.stringify(value));
 };
 
 const serializeMapKey = (key: any): string => {
@@ -163,12 +185,10 @@ const deserializeMapKey = (keyType: Constructor, key: string): any => {
         return key.toLowerCase() === 'true';
     }
 
-    if (keyType === Date) {
-        return new Date(key);
-    }
-
+    // Check if there's a converter for this type
     if (typeSerializers.has(keyType)) {
-        return typeSerializers.get(keyType)!(key);
+        const converter = typeSerializers.get(keyType)!;
+        return converter.read(key);
     }
 
     return JsonSerializer.deserialize(keyType, key);
@@ -179,8 +199,10 @@ const deserializeMapValue = (valueType: Constructor | undefined, value: any): an
         return value;
     }
 
+    // Check if there's a converter for this type
     if (typeSerializers.has(valueType)) {
-        return typeSerializers.get(valueType)!(value);
+        const converter = typeSerializers.get(valueType)!;
+        return converter.read(value);
     }
 
     return JsonSerializer.deserialize(valueType, JSON.stringify(value));
@@ -205,8 +227,14 @@ const deserializeValueMapFromField = (field: Field, value: any): ValueMap<any, a
 };
 
 const convertTypesOnInstance = (instance: any) => {
+    // Check if there's a converter for this type
     if (typeConverters.has(instance.constructor)) {
         return serializeValueForType(instance.constructor, instance);
+    }
+    
+    // Check primitive converters
+    if (primitiveConverters.has(instance.constructor)) {
+        return primitiveConverters.get(instance.constructor)!(instance);
     }
 
     const properties = Object.getOwnPropertyNames(instance);
@@ -231,6 +259,10 @@ const convertTypesOnInstance = (instance: any) => {
 
     return converted;
 };
+
+// Initialize ValueMapJsonConverter with helper functions to avoid circular dependencies
+// Must be done after serializeMapKey and convertTypesOnInstance are defined
+ValueMapJsonConverter.setHelpers(serializeMapKey, convertTypesOnInstance);
 
 /**
  * Represents a serializer for JSON.

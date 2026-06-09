@@ -3,7 +3,8 @@
 
 export * from './ConceptAs';
 export * from './Constructor';
-export * from './Coordinate';
+export * from './geospatial';
+export * from './json';
 export * from './Field';
 export * from './Fields';
 export * from './Guid';
