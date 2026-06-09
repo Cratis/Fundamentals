@@ -11,15 +11,23 @@ import { JsonConverter } from './JsonConverter';
 /**
  * JSON converter for ValueMap type.
  * 
- * Note: This converter is NOT registered in the JsonSerializer converters list.
- * ValueMap serialization is handled as a special case in JsonSerializer.serializeValueForType
- * to properly support nested type conversions through convertTypesOnInstance. This avoids
- * circular dependencies and ensures that map values are recursively serialized correctly.
- * 
- * This class exists primarily for consistency with the converter pattern and for potential
- * future use if ValueMap serialization logic needs to be refactored.
+ * Note: ValueMap deserialization is handled separately by JsonSerializer.deserializeValueMapFromField
+ * based on field metadata to properly deserialize keys and values according to their types.
+ * The read() method is not used directly during normal deserialization.
  */
 export class ValueMapJsonConverter extends JsonConverter<ValueMap<any, any>> {
+    // Circular dependency workaround - these will be injected by JsonSerializer
+    private static serializeMapKey: ((key: any) => string) | null = null;
+    private static convertTypesOnInstance: ((instance: any) => any) | null = null;
+
+    /**
+     * Sets the required helper functions from JsonSerializer to avoid circular dependencies.
+     */
+    static setHelpers(serializeMapKey: (key: any) => string, convertTypesOnInstance: (instance: any) => any): void {
+        ValueMapJsonConverter.serializeMapKey = serializeMapKey;
+        ValueMapJsonConverter.convertTypesOnInstance = convertTypesOnInstance;
+    }
+
     /** @inheritdoc */
     get type(): Constructor<ValueMap<any, any>> {
         return ValueMap;
@@ -29,15 +37,21 @@ export class ValueMapJsonConverter extends JsonConverter<ValueMap<any, any>> {
     read(_value: any): ValueMap<any, any> {
         // ValueMap deserialization is handled separately by JsonSerializer.deserializeValueMapFromField
         // based on field metadata to properly deserialize keys and values according to their types.
-        // This method should not be called directly.
+        // This method should not be called directly during normal deserialization.
         const valueMap = new ValueMap<any, any>();
         return valueMap;
     }
 
     /** @inheritdoc */
-    write(_value: any): any {
-        // ValueMap serialization is handled by JsonSerializer.serializeValueForType as a special case
-        // to properly handle nested type conversions. This method should not be called directly.
-        return null;
+    write(value: ValueMap<any, any>): any {
+        if (!ValueMapJsonConverter.serializeMapKey || !ValueMapJsonConverter.convertTypesOnInstance) {
+            throw new Error('ValueMapJsonConverter helpers not initialized. Call setHelpers() first.');
+        }
+
+        const converted: any = {};
+        for (const [key, mapValue] of value.entries()) {
+            converted[ValueMapJsonConverter.serializeMapKey(key)] = ValueMapJsonConverter.convertTypesOnInstance(mapValue);
+        }
+        return converted;
     }
 }

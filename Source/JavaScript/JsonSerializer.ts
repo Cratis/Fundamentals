@@ -24,8 +24,6 @@ import {
 type typeSerializer = (value: any) => any;
 
 // Initialize converters
-// Note: ValueMapJsonConverter is not included because ValueMap serialization
-// is handled as a special case in serializeValueForType to support nested type conversions
 const converters: JsonConverter[] = [
     new DateJsonConverter(),
     new GuidJsonConverter(),
@@ -33,7 +31,8 @@ const converters: JsonConverter[] = [
     new CoordinateJsonConverter(),
     new PointJsonConverter(),
     new LineStringJsonConverter(),
-    new PolygonJsonConverter()
+    new PolygonJsonConverter(),
+    new ValueMapJsonConverter()
 ];
 
 // Build converter maps from the converters
@@ -88,15 +87,6 @@ const serializeValueForType = (type: Constructor, value: any) => {
         // Recursively serialize the inner value to handle complex types
         // Use .constructor directly which works reliably for both primitives and objects
         return serializeValueForType(innerValue.constructor, innerValue);
-    }
-
-    // Special handling for ValueMap to avoid circular dependency
-    if (value instanceof ValueMap) {
-        const converted: any = {};
-        for (const [key, mapValue] of value.entries()) {
-            converted[serializeMapKey(key)] = convertTypesOnInstance(mapValue);
-        }
-        return converted;
     }
 
     // Check if there's a registered converter
@@ -271,6 +261,10 @@ const convertTypesOnInstance = (instance: any) => {
 
     return converted;
 };
+
+// Initialize ValueMapJsonConverter with helper functions to avoid circular dependencies
+// Must be done after serializeMapKey and convertTypesOnInstance are defined
+ValueMapJsonConverter.setHelpers(serializeMapKey, convertTypesOnInstance);
 
 /**
  * Represents a serializer for JSON.
