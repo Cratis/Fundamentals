@@ -3,6 +3,8 @@
 
 namespace Cratis.Geospatial;
 
+#pragma warning disable CA1819 // Properties should not return arrays
+
 /// <summary>
 /// Represents a closed linear ring (polygon boundary).
 /// </summary>
@@ -10,5 +12,4 @@ namespace Cratis.Geospatial;
 /// <remarks>
 /// Initializes a new instance of <see cref="LinearRing"/>.
 /// </remarks>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "GeoJSON spec requires array representation")]
 public record LinearRing(Point[] Coordinates);

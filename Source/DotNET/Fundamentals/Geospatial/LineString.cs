@@ -3,6 +3,8 @@
 
 namespace Cratis.Geospatial;
 
+#pragma warning disable CA1819 // Properties should not return arrays
+
 /// <summary>
 /// Represents a line string composed of two or more points.
 /// </summary>
@@ -10,5 +12,4 @@ namespace Cratis.Geospatial;
 /// <remarks>
 /// Initializes a new instance of <see cref="LineString"/>.
 /// </remarks>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "GeoJSON spec requires array representation")]
 public record LineString(Point[] Coordinates);
