@@ -104,6 +104,7 @@ If you have existing code using `Coordinate`, you must:
 3. Update any API contracts that consume or produce `Coordinate` JSON
 
 **Old format (Coordinate):**
+
 ```json
 {
     "longitude": 10.5,
@@ -112,6 +113,7 @@ If you have existing code using `Coordinate`, you must:
 ```
 
 **New format (Point):**
+
 ```json
 {
     "type": "Point",

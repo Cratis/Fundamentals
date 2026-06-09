@@ -143,11 +143,13 @@ class Zone {
 Since both C# and TypeScript use the same GeoJSON format for `Polygon`, data round-trips cleanly:
 
 **C# Backend:**
+
 ```csharp
 public record Zone(string Name, string Type, Polygon Boundary);
 ```
 
 **TypeScript Frontend:**
+
 ```typescript
 class Zone {
     @field(String)

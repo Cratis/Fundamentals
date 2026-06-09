@@ -86,11 +86,13 @@ class Location {
 Since both C# and TypeScript use the same GeoJSON format for `Point`, data round-trips cleanly:
 
 **C# Backend:**
+
 ```csharp
 public record Location(string Name, Point Position);
 ```
 
 **TypeScript Frontend:**
+
 ```typescript
 class Location {
     @field(String)
@@ -118,6 +120,7 @@ Both will serialize to the same GeoJSON structure:
 If you have existing code using `Coordinate`, update it to use `Point`. Note the JSON format change:
 
 **Old format (Coordinate):**
+
 ```json
 {
     "longitude": 10.5,
@@ -126,6 +129,7 @@ If you have existing code using `Coordinate`, update it to use `Point`. Note the
 ```
 
 **New format (Point):**
+
 ```json
 {
     "type": "Point",

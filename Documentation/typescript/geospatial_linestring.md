@@ -95,11 +95,13 @@ class Route {
 Since both C# and TypeScript use the same GeoJSON format for `LineString`, data round-trips cleanly:
 
 **C# Backend:**
+
 ```csharp
 public record Route(string Name, LineString Path);
 ```
 
 **TypeScript Frontend:**
+
 ```typescript
 class Route {
     @field(String)

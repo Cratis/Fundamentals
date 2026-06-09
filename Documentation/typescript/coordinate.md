@@ -33,12 +33,14 @@ When using `JsonSerializer`:
 ## Migration
 
 Replace:
+
 ```typescript
 import { Coordinate } from '@cratis/fundamentals';
 const location = new Coordinate(10.5, 20.3);
 ```
 
 With:
+
 ```typescript
 import { Point } from '@cratis/fundamentals';
 const location = new Point(10.5, 20.3);
