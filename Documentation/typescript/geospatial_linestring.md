@@ -1,6 +1,22 @@
 # LineString
 
-`LineString` represents a line composed of two or more connected points. It provides GeoJSON-compliant automatic JSON serialization support, making it easy to work with paths and routes.
+`LineString` represents a connected sequence of two or more points forming a path or line following the [GeoJSON specification](https://www.mongodb.com/docs/manual/reference/geojson/#std-label-geospatial-indexes-store-geojson).
+
+## What is a LineString?
+
+A LineString is a linear feature that connects multiple points in order, representing paths, routes, or boundaries. Unlike a simple array of points, a LineString explicitly represents the connection between consecutive points, forming a continuous line.
+
+The line must have at least two points and represents the shortest path (geodesic) between each consecutive pair of points on Earth's surface.
+
+## Use Cases
+
+LineString is useful for:
+- **Routes and paths**: Hiking trails, bike routes, driving directions, walking paths
+- **Boundaries**: Rivers, roads, property lines, administrative borders
+- **Connections**: Network cables, pipeline routes, power lines, fiber optic networks
+- **Trajectories**: Vehicle tracks, flight paths, ship routes, movement history
+- **Transportation**: Bus routes, train lines, delivery routes
+- **Infrastructure**: Roads, railways, utility lines
 
 ## Creating a LineString
 
@@ -127,11 +143,3 @@ Both will serialize to the same GeoJSON structure:
     }
 }
 ```
-
-## Use Cases
-
-LineString is useful for:
-- **Routes and paths**: Hiking trails, bike routes, driving directions
-- **Boundaries**: Rivers, roads, property lines
-- **Connections**: Network cables, pipeline routes
-- **Trajectories**: Vehicle tracks, flight paths

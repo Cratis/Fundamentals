@@ -1,6 +1,24 @@
 # Point
 
-`Point` represents a geographic location with longitude and latitude values. It provides GeoJSON-compliant automatic JSON serialization support, making it easy to work with geospatial data.
+`Point` represents a geographic location defined by longitude and latitude coordinates following the [GeoJSON specification](https://www.mongodb.com/docs/manual/reference/geojson/#std-label-geospatial-indexes-store-geojson).
+
+## What is a Point?
+
+A Point is the most fundamental geospatial type, representing a single location on Earth's surface. It's defined by:
+- **Longitude**: The east-west position, ranging from -180° to 180°
+- **Latitude**: The north-south position, ranging from -90° to 90°
+
+Points are used to represent discrete locations like addresses, landmarks, sensors, or any entity with a specific geographic position.
+
+## Use Cases
+
+Points are ideal for:
+- **Location tracking**: Store positions of vehicles, people, or assets
+- **Points of interest**: Restaurants, stores, landmarks, monuments
+- **Sensor data**: Weather stations, IoT devices, monitoring equipment
+- **User locations**: Customer addresses, delivery points, meeting locations
+- **Event locations**: Concerts, conferences, incidents
+- **Asset management**: Warehouse locations, equipment positions
 
 ## Creating a Point
 
@@ -114,27 +132,3 @@ Both will serialize to the same GeoJSON structure:
     }
 }
 ```
-
-## Migration from Coordinate
-
-If you have existing code using `Coordinate`, update it to use `Point`. Note the JSON format change:
-
-**Old format (Coordinate):**
-
-```json
-{
-    "longitude": 10.5,
-    "latitude": 20.3
-}
-```
-
-**New format (Point):**
-
-```json
-{
-    "type": "Point",
-    "coordinates": [10.5, 20.3]
-}
-```
-
-The `Coordinate` class is now deprecated but kept for backward compatibility. It extends `Point` but overrides `toJSON()` to maintain the old format.

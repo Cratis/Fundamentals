@@ -1,6 +1,24 @@
 # Geospatial Point
 
-The `Point` record represents a geographic location with longitude and latitude values. It provides GeoJSON-compliant JSON serialization support for both C# and TypeScript, making it easy to share geospatial data between frontend and backend.
+The `Point` record represents a geographic location defined by longitude and latitude coordinates following the [GeoJSON specification](https://www.mongodb.com/docs/manual/reference/geojson/#std-label-geospatial-indexes-store-geojson).
+
+## What is a Point?
+
+A Point is the most fundamental geospatial type, representing a single location on Earth's surface. It's defined by:
+- **Longitude**: The east-west position, ranging from -180° to 180°
+- **Latitude**: The north-south position, ranging from -90° to 90°
+
+Points are used to represent discrete locations like addresses, landmarks, sensors, or any entity with a specific geographic position.
+
+## Use Cases
+
+Points are ideal for:
+- **Location tracking**: Store positions of vehicles, people, or assets
+- **Points of interest**: Restaurants, stores, landmarks, monuments
+- **Sensor data**: Weather stations, IoT devices, monitoring equipment
+- **User locations**: Customer addresses, delivery points, meeting locations
+- **Event locations**: Concerts, conferences, incidents
+- **Asset management**: Warehouse locations, equipment positions
 
 ## Basic Usage
 

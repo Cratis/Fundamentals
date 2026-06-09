@@ -5,7 +5,6 @@ export * from './JsonConverter';
 export * from './DateJsonConverter';
 export * from './GuidJsonConverter';
 export * from './TimeSpanJsonConverter';
-export * from './CoordinateJsonConverter';
 export * from './PointJsonConverter';
 export * from './LineStringJsonConverter';
 export * from './PolygonJsonConverter';

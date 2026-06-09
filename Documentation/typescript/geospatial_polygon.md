@@ -1,6 +1,26 @@
 # Polygon
 
-`Polygon` represents an area with an outer boundary (shell) and optional inner boundaries (holes). It provides GeoJSON-compliant automatic JSON serialization support, making it easy to work with geographic areas.
+`Polygon` represents a bounded area on Earth's surface with an outer boundary (shell) and optional inner boundaries (holes) following the [GeoJSON specification](https://www.mongodb.com/docs/manual/reference/geojson/#std-label-geospatial-indexes-store-geojson).
+
+## What is a Polygon?
+
+A Polygon is a two-dimensional surface feature that encloses an area. It consists of:
+- **Shell (outer boundary)**: A closed LinearRing defining the outer edge of the polygon
+- **Holes (inner boundaries)**: Optional closed LinearRings defining areas excluded from the polygon (like courtyards, lakes within land, etc.)
+
+Each ring must be closed, meaning the first and last points must be identical. Rings are represented as LinearRing objects, which are ordered sequences of at least 4 points (with the last point repeating the first).
+
+## Use Cases
+
+Polygon is useful for:
+- **Areas and regions**: Parks, buildings, administrative boundaries, neighborhoods
+- **Zones**: Parking lots, restricted areas, service coverage, delivery zones
+- **Property**: Land parcels, real estate boundaries, ownership boundaries
+- **Environmental**: Protected areas, flood zones, vegetation coverage, wildlife habitats
+- **Urban planning**: City blocks, development zones, zoning districts
+- **Geofencing**: Define virtual perimeters for location-based triggers and alerts
+- **Agriculture**: Field boundaries, crop areas, irrigation zones
+- **Facilities**: Building footprints, campus boundaries, complex structures with courtyards
 
 ## Creating a Polygon
 
@@ -177,15 +197,6 @@ Both will serialize to the same GeoJSON structure:
     }
 }
 ```
-
-## Use Cases
-
-Polygon is useful for:
-- **Areas and regions**: Parks, buildings, administrative boundaries
-- **Zones**: Parking lots, restricted areas, service coverage
-- **Property**: Land parcels, real estate boundaries
-- **Environmental**: Protected areas, flood zones, vegetation coverage
-- **Urban planning**: City blocks, development zones
 
 ## LinearRing
 
