@@ -33,7 +33,7 @@ A Polygon ring must have at least 4 points, with the first and last points ident
 
 ## JSON Serialization
 
-All types serialize to [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/) format — a standard adopted by geographic databases and mapping services. This ensures your data integrates seamlessly with external tools and services.
+All types serialize to [GeoJSON](https://geojson.org) format — a standard adopted by geographic databases and mapping services. This ensures your data integrates seamlessly with external tools and services.
 
 When you send geospatial types to a database or across the network, they automatically convert to GeoJSON. The same conversion happens in reverse when deserializing.
 

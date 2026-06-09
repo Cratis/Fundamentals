@@ -1,6 +1,6 @@
 # Geospatial Types
 
-Cratis provides strongly-typed geospatial types for working with geographic coordinates following the [GeoJSON specification](https://www.mongodb.com/docs/manual/reference/geojson/).
+Cratis provides strongly-typed geospatial types for working with geographic coordinates following the [GeoJSON specification](https://geojson.org).
 
 ## Types
 
