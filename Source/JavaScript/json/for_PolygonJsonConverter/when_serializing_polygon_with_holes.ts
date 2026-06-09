@@ -1,10 +1,10 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { Point } from '../geospatial/Point';
-import { LinearRing } from '../geospatial/LinearRing';
-import { Polygon } from '../geospatial/Polygon';
-import { JsonSerializer } from '../JsonSerializer';
+import { Point } from '../../geospatial/Point';
+import { LinearRing } from '../../geospatial/LinearRing';
+import { Polygon } from '../../geospatial/Polygon';
+import { JsonSerializer } from '../../JsonSerializer';
 
 describe('when serializing polygon with holes', () => {
     const shell = new LinearRing([

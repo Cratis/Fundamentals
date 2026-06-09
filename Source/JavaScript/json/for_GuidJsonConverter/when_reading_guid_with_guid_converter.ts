@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { Guid } from '../Guid';
-import { GuidJsonConverter } from '../json/GuidJsonConverter';
+import { Guid } from '../../Guid';
+import { GuidJsonConverter } from '../GuidJsonConverter';
 
 describe('when reading guid with guid converter', () => {
     const converter = new GuidJsonConverter();

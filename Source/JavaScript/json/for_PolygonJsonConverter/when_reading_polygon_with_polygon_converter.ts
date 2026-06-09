@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { Polygon } from '../geospatial/Polygon';
-import { PolygonJsonConverter } from '../json/PolygonJsonConverter';
+import { Polygon } from '../../geospatial/Polygon';
+import { PolygonJsonConverter } from '../PolygonJsonConverter';
 
 describe('when reading polygon with polygon converter', () => {
     const converter = new PolygonJsonConverter();

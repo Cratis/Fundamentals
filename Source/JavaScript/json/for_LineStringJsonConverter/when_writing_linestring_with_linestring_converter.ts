@@ -1,9 +1,9 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { Point } from '../geospatial/Point';
-import { LineString } from '../geospatial/LineString';
-import { LineStringJsonConverter } from '../json/LineStringJsonConverter';
+import { Point } from '../../geospatial/Point';
+import { LineString } from '../../geospatial/LineString';
+import { LineStringJsonConverter } from '../LineStringJsonConverter';
 
 describe('when writing linestring with linestring converter', () => {
     const converter = new LineStringJsonConverter();

@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { TimeSpan } from '../TimeSpan';
-import { TimeSpanJsonConverter } from '../json/TimeSpanJsonConverter';
+import { TimeSpan } from '../../TimeSpan';
+import { TimeSpanJsonConverter } from '../TimeSpanJsonConverter';
 
 describe('when reading timespan with timespan converter', () => {
     const converter = new TimeSpanJsonConverter();

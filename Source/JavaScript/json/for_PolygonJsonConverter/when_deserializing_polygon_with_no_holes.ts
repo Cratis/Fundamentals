@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { Polygon } from '../geospatial/Polygon';
-import { JsonSerializer } from '../JsonSerializer';
+import { Polygon } from '../../geospatial/Polygon';
+import { JsonSerializer } from '../../JsonSerializer';
 
 describe('when deserializing polygon with no holes', () => {
     const json = '{"type":"Polygon","coordinates":[[[0,0],[10,0],[10,10],[0,10],[0,0]]]}';

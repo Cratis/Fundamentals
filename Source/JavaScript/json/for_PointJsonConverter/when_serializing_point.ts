@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { Point } from '../geospatial/Point';
-import { JsonSerializer } from '../JsonSerializer';
+import { Point } from '../../geospatial/Point';
+import { JsonSerializer } from '../../JsonSerializer';
 
 describe('when serializing point', () => {
     const point = new Point(10.5, 20.3);

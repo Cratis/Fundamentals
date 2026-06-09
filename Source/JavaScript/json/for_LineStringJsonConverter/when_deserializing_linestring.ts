@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { LineString } from '../geospatial/LineString';
-import { JsonSerializer } from '../JsonSerializer';
+import { LineString } from '../../geospatial/LineString';
+import { JsonSerializer } from '../../JsonSerializer';
 
 describe('when deserializing linestring', () => {
     const json = '{"type":"LineString","coordinates":[[10.5,20.3],[30.1,40.2],[50.7,60.8]]}';

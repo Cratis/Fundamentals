@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { Point } from '../geospatial/Point';
-import { PointJsonConverter } from '../json/PointJsonConverter';
+import { Point } from '../../geospatial/Point';
+import { PointJsonConverter } from '../PointJsonConverter';
 
 describe('when reading point with point converter', () => {
     const converter = new PointJsonConverter();

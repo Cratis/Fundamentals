@@ -1,7 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { DateJsonConverter } from '../json/DateJsonConverter';
+import { DateJsonConverter } from '../DateJsonConverter';
 
 describe('when reading date with date converter', () => {
     const converter = new DateJsonConverter();
