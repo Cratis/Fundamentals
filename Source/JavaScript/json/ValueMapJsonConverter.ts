@@ -10,7 +10,14 @@ import { JsonConverter } from './JsonConverter';
 
 /**
  * JSON converter for ValueMap type.
- * Note: Full serialization logic is handled in JsonSerializer to avoid circular dependencies.
+ * 
+ * Note: This converter is NOT registered in the JsonSerializer converters list.
+ * ValueMap serialization is handled as a special case in JsonSerializer.serializeValueForType
+ * to properly support nested type conversions through convertTypesOnInstance. This avoids
+ * circular dependencies and ensures that map values are recursively serialized correctly.
+ * 
+ * This class exists primarily for consistency with the converter pattern and for potential
+ * future use if ValueMap serialization logic needs to be refactored.
  */
 export class ValueMapJsonConverter extends JsonConverter<ValueMap<any, any>> {
     /** @inheritdoc */
@@ -20,15 +27,17 @@ export class ValueMapJsonConverter extends JsonConverter<ValueMap<any, any>> {
 
     /** @inheritdoc */
     read(_value: any): ValueMap<any, any> {
+        // ValueMap deserialization is handled separately by JsonSerializer.deserializeValueMapFromField
+        // based on field metadata to properly deserialize keys and values according to their types.
+        // This method should not be called directly.
         const valueMap = new ValueMap<any, any>();
-        // Deserialization is handled separately by JsonSerializer based on field metadata
         return valueMap;
     }
 
     /** @inheritdoc */
     write(_value: any): any {
-        // This method is not used directly - serialization is handled by convertTypesOnInstance
-        // in JsonSerializer to properly handle nested type conversions
+        // ValueMap serialization is handled by JsonSerializer.serializeValueForType as a special case
+        // to properly handle nested type conversions. This method should not be called directly.
         return null;
     }
 }

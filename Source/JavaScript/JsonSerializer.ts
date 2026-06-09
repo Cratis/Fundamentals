@@ -24,6 +24,8 @@ import {
 type typeSerializer = (value: any) => any;
 
 // Initialize converters
+// Note: ValueMapJsonConverter is not included because ValueMap serialization
+// is handled as a special case in serializeValueForType to support nested type conversions
 const converters: JsonConverter[] = [
     new DateJsonConverter(),
     new GuidJsonConverter(),
@@ -31,8 +33,7 @@ const converters: JsonConverter[] = [
     new CoordinateJsonConverter(),
     new PointJsonConverter(),
     new LineStringJsonConverter(),
-    new PolygonJsonConverter(),
-    new ValueMapJsonConverter()
+    new PolygonJsonConverter()
 ];
 
 // Build converter maps from the converters
