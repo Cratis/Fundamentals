@@ -38,6 +38,7 @@ All types serialize to [GeoJSON](https://www.mongodb.com/docs/manual/reference/g
 When you send geospatial types to a server or store them, they automatically convert to GeoJSON. The same conversion happens in reverse when deserializing.
 
 **Point example:**
+
 ```json
 {
     "type": "Point",
@@ -46,6 +47,7 @@ When you send geospatial types to a server or store them, they automatically con
 ```
 
 **LineString example:**
+
 ```json
 {
     "type": "LineString",
@@ -54,6 +56,7 @@ When you send geospatial types to a server or store them, they automatically con
 ```
 
 **Polygon example:**
+
 ```json
 {
     "type": "Polygon",

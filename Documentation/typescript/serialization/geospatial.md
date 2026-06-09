@@ -110,6 +110,7 @@ try {
 C# and TypeScript use the same GeoJSON format, so data round-trips cleanly:
 
 **C# Backend:**
+
 ```csharp
 public record Location(string Name, Point Position);
 
@@ -117,6 +118,7 @@ public record Location(string Name, Point Position);
 ```
 
 **TypeScript Frontend:**
+
 ```typescript
 class Location {
     @field(String)

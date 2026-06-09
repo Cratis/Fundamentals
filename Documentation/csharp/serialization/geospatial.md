@@ -88,6 +88,8 @@ With holes:
 }
 ```
 
+
+
 **Validation:**
 - `type` must be "Polygon"
 - `coordinates` must be an array with at least one ring (the shell)
@@ -135,11 +137,13 @@ catch (JsonException ex)
 The deprecated `Coordinate` type used a different JSON format. If you have existing data:
 
 **Old format:**
+
 ```json
 {"longitude": 10.5, "latitude": 20.3}
 ```
 
 **New format (GeoJSON):**
+
 ```json
 {"type": "Point", "coordinates": [10.5, 20.3]}
 ```
