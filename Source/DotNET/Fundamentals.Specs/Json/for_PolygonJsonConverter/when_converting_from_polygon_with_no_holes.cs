@@ -5,13 +5,13 @@ using System.Text;
 using System.Text.Json;
 using Cratis.Geospatial;
 
-namespace Cratis.Json.for_CoordinateJsonConverter;
+namespace Cratis.Json.for_PolygonJsonConverter;
 
-public class when_converting_from_coordinate : Specification
+public class when_converting_from_polygon_with_no_holes : Specification
 {
-    CoordinateJsonConverter converter;
+    PolygonJsonConverter converter;
     MemoryStream stream;
-    Coordinate input;
+    Polygon input;
     Utf8JsonWriter writer;
     string result;
 
@@ -19,7 +19,15 @@ public class when_converting_from_coordinate : Specification
     {
         converter = new();
         stream = new();
-        input = new Coordinate(10.5, 20.3);
+        var shell = new LinearRing(
+        [
+            new Point(0, 0),
+            new Point(4, 0),
+            new Point(4, 4),
+            new Point(0, 4),
+            new Point(0, 0)
+        ]);
+        input = new Polygon(shell, []);
         writer = new(stream);
     }
 
@@ -30,5 +38,5 @@ public class when_converting_from_coordinate : Specification
         result = Encoding.UTF8.GetString(stream.ToArray());
     }
 
-    [Fact] void should_convert_to_correct_json() => result.ShouldEqual("{\"longitude\":10.5,\"latitude\":20.3}");
+    [Fact] void should_convert_to_geojson_format() => result.ShouldEqual("{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[4,0],[4,4],[0,4],[0,0]]]}");
 }
