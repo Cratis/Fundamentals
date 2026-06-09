@@ -3,91 +3,58 @@
 
 import { ConceptAs } from './ConceptAs';
 import { Constructor } from './Constructor';
-import { Coordinate } from './Coordinate';
 import { DerivedType } from './DerivedType';
 import { Field } from './Field';
 import { Fields } from './Fields';
-import { Guid } from './Guid';
-import { TimeSpan } from './TimeSpan';
 import { ValueMap } from './ValueMap';
-import { Point, LineString, LinearRing, Polygon } from './geospatial';
+import { 
+    JsonConverter, 
+    DateJsonConverter, 
+    GuidJsonConverter, 
+    TimeSpanJsonConverter, 
+    CoordinateJsonConverter,
+    PointJsonConverter,
+    LineStringJsonConverter,
+    PolygonJsonConverter,
+    ValueMapJsonConverter
+} from './json';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type typeSerializer = (value: any) => any;
 
-const typeConverters: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
+// Initialize converters
+const converters: JsonConverter[] = [
+    new DateJsonConverter(),
+    new GuidJsonConverter(),
+    new TimeSpanJsonConverter(),
+    new CoordinateJsonConverter(),
+    new PointJsonConverter(),
+    new LineStringJsonConverter(),
+    new PolygonJsonConverter(),
+    new ValueMapJsonConverter()
+];
+
+// Build converter maps from the converters
+const typeConverters: Map<Constructor, JsonConverter> = new Map<Constructor, JsonConverter>();
+const typeSerializers: Map<Constructor, JsonConverter> = new Map<Constructor, JsonConverter>();
+
+for (const converter of converters) {
+    typeConverters.set(converter.type, converter);
+    typeSerializers.set(converter.type, converter);
+}
+
+// Add primitive type converters that don't need a full JsonConverter class
+const primitiveConverters: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
     [Number, (value: number) => value],
     [String, (value: string) => value],
-    [Boolean, (value: boolean) => value],
-    [Date, (value: Date) => value.toISOString()],
-    [Guid, (value: Guid) => value?.toString() ?? ''],
-    [TimeSpan, (value: TimeSpan) => value?.toString() ?? ''],
-    [Coordinate, (value: Coordinate) => value?.toJSON() ?? null],
-    [Point, (value: Point) => value?.toJSON() ?? null],
-    [LineString, (value: LineString) => value?.toJSON() ?? null],
-    [Polygon, (value: Polygon) => value?.toJSON() ?? null],
-    [ValueMap, (value: ValueMap<any, any>) => {
-        const converted: any = {};
-        for (const [key, mapValue] of value.entries()) {
-            converted[serializeMapKey(key)] = convertTypesOnInstance(mapValue);
-        }
-
-        return converted;
-    }]
+    [Boolean, (value: boolean) => value]
 ]);
 
-const typeSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
+const primitiveSerializers: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
     [Number, (value: any) => value],
     [String, (value: any) => value],
-    [Boolean, (value: any) => value],
-    [Date, (value: any) => new Date(value)],
-    [Guid, (value: any) => Guid.parse(value.toString())],
-    [TimeSpan, (value: any) => TimeSpan.parse(value.toString())],
-    [Coordinate, (value: any) => {
-        if (value === null || value === undefined) {
-            throw new Error('Cannot deserialize null or undefined to Coordinate');
-        }
-        if (value.longitude === undefined || value.latitude === undefined) {
-            throw new Error('Cannot deserialize Coordinate: longitude and latitude are required');
-        }
-        const coordinate = new Coordinate();
-        coordinate.longitude = value.longitude;
-        coordinate.latitude = value.latitude;
-        return coordinate;
-    }],
-    [Point, (value: any) => {
-        if (value === null || value === undefined) {
-            throw new Error('Cannot deserialize null or undefined to Point');
-        }
-        if (value.type !== 'Point' || !value.coordinates || value.coordinates.length !== 2) {
-            throw new Error('Cannot deserialize Point: invalid GeoJSON format');
-        }
-        return new Point(value.coordinates[0], value.coordinates[1]);
-    }],
-    [LineString, (value: any) => {
-        if (value === null || value === undefined) {
-            throw new Error('Cannot deserialize null or undefined to LineString');
-        }
-        if (value.type !== 'LineString' || !value.coordinates || value.coordinates.length < 2) {
-            throw new Error('Cannot deserialize LineString: invalid GeoJSON format');
-        }
-        const points = value.coordinates.map((coord: number[]) => new Point(coord[0], coord[1]));
-        return new LineString(points);
-    }],
-    [Polygon, (value: any) => {
-        if (value === null || value === undefined) {
-            throw new Error('Cannot deserialize null or undefined to Polygon');
-        }
-        if (value.type !== 'Polygon' || !value.coordinates || value.coordinates.length === 0) {
-            throw new Error('Cannot deserialize Polygon: invalid GeoJSON format');
-        }
-        const shell = new LinearRing(value.coordinates[0].map((coord: number[]) => new Point(coord[0], coord[1])));
-        const holes = value.coordinates.slice(1).map((ring: number[][]) => 
-            new LinearRing(ring.map((coord: number[]) => new Point(coord[0], coord[1])))
-        );
-        return new Polygon(shell, holes);
-    }],
+    [Boolean, (value: any) => value]
 ]);
 
 /**
@@ -122,11 +89,27 @@ const serializeValueForType = (type: Constructor, value: any) => {
         return serializeValueForType(innerValue.constructor, innerValue);
     }
 
-    if (typeConverters.has(type)) {
-        return typeConverters.get(type)!(value);
-    } else {
-        return convertTypesOnInstance(value);
+    // Special handling for ValueMap to avoid circular dependency
+    if (value instanceof ValueMap) {
+        const converted: any = {};
+        for (const [key, mapValue] of value.entries()) {
+            converted[serializeMapKey(key)] = convertTypesOnInstance(mapValue);
+        }
+        return converted;
     }
+
+    // Check if there's a registered converter
+    if (typeConverters.has(type)) {
+        const converter = typeConverters.get(type)!;
+        return converter.write(value);
+    }
+    
+    // Check primitive converters
+    if (primitiveConverters.has(type)) {
+        return primitiveConverters.get(type)!(value);
+    }
+    
+    return convertTypesOnInstance(value);
 };
 
 const deserializeValueFromType = (type: Constructor, value: any) => {
@@ -135,11 +118,18 @@ const deserializeValueFromType = (type: Constructor, value: any) => {
         return new type(value);
     }
     
+    // Check if there's a registered converter
     if (typeSerializers.has(type)) {
-        return typeSerializers.get(type)!(value);
-    } else {
-        return JsonSerializer.deserialize(type, JSON.stringify(value));
+        const converter = typeSerializers.get(type)!;
+        return converter.read(value);
     }
+    
+    // Check primitive serializers
+    if (primitiveSerializers.has(type)) {
+        return primitiveSerializers.get(type)!(value);
+    }
+    
+    return JsonSerializer.deserialize(type, JSON.stringify(value));
 };
 
 const deserializeValueFromField = (field: Field, value: any) => {
@@ -152,18 +142,25 @@ const deserializeValueFromField = (field: Field, value: any) => {
         return new field.type(value);
     }
 
+    // Check if there's a registered converter
     if (typeSerializers.has(field.type)) {
-        return typeSerializers.get(field.type)!(value);
-    } else {
-        let type = field.type;
-        if (value[JsonSerializer.DerivedTypeIdProperty]) {
-            const derivedTypeId = value[JsonSerializer.DerivedTypeIdProperty];
-            const candidates = [...field.derivatives, ...DerivedType.getDerivedTypesFor(field.type)];
-            type = candidates.find(_ => DerivedType.get(_) == derivedTypeId) || type;
-        }
-
-        return JsonSerializer.deserialize(type, JSON.stringify(value));
+        const converter = typeSerializers.get(field.type)!;
+        return converter.read(value);
     }
+    
+    // Check primitive serializers
+    if (primitiveSerializers.has(field.type)) {
+        return primitiveSerializers.get(field.type)!(value);
+    }
+    
+    let type = field.type;
+    if (value[JsonSerializer.DerivedTypeIdProperty]) {
+        const derivedTypeId = value[JsonSerializer.DerivedTypeIdProperty];
+        const candidates = [...field.derivatives, ...DerivedType.getDerivedTypesFor(field.type)];
+        type = candidates.find(_ => DerivedType.get(_) == derivedTypeId) || type;
+    }
+
+    return JsonSerializer.deserialize(type, JSON.stringify(value));
 };
 
 const serializeMapKey = (key: any): string => {
@@ -199,12 +196,10 @@ const deserializeMapKey = (keyType: Constructor, key: string): any => {
         return key.toLowerCase() === 'true';
     }
 
-    if (keyType === Date) {
-        return new Date(key);
-    }
-
+    // Check if there's a converter for this type
     if (typeSerializers.has(keyType)) {
-        return typeSerializers.get(keyType)!(key);
+        const converter = typeSerializers.get(keyType)!;
+        return converter.read(key);
     }
 
     return JsonSerializer.deserialize(keyType, key);
@@ -215,8 +210,10 @@ const deserializeMapValue = (valueType: Constructor | undefined, value: any): an
         return value;
     }
 
+    // Check if there's a converter for this type
     if (typeSerializers.has(valueType)) {
-        return typeSerializers.get(valueType)!(value);
+        const converter = typeSerializers.get(valueType)!;
+        return converter.read(value);
     }
 
     return JsonSerializer.deserialize(valueType, JSON.stringify(value));
@@ -241,8 +238,14 @@ const deserializeValueMapFromField = (field: Field, value: any): ValueMap<any, a
 };
 
 const convertTypesOnInstance = (instance: any) => {
+    // Check if there's a converter for this type
     if (typeConverters.has(instance.constructor)) {
         return serializeValueForType(instance.constructor, instance);
+    }
+    
+    // Check primitive converters
+    if (primitiveConverters.has(instance.constructor)) {
+        return primitiveConverters.get(instance.constructor)!(instance);
     }
 
     const properties = Object.getOwnPropertyNames(instance);
