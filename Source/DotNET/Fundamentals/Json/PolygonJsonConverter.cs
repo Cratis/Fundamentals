@@ -134,7 +134,7 @@ public class PolygonJsonConverter : JsonConverter<Polygon>
                 // Validate ring closure: first and last points must be identical
                 var firstPoint = points[0];
                 var lastPoint = points[^1];
-                if (firstPoint.Longitude != lastPoint.Longitude || firstPoint.Latitude != lastPoint.Latitude)
+                if (!AreNearlyEqual(firstPoint.Longitude, lastPoint.Longitude) || !AreNearlyEqual(firstPoint.Latitude, lastPoint.Latitude))
                 {
                     throw new JsonException("LinearRing must be closed (first and last points must be identical)");
                 }
@@ -168,4 +168,6 @@ public class PolygonJsonConverter : JsonConverter<Polygon>
 
         throw new JsonException("Unexpected end of linear ring array");
     }
+
+    static bool AreNearlyEqual(double a, double b, double epsilon = 1e-9) => Math.Abs(a - b) <= epsilon;
 }
