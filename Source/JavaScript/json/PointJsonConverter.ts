@@ -21,10 +21,13 @@ export class PointJsonConverter extends JsonConverter<Point> {
         if (value === null || value === undefined) {
             throw new Error('Cannot deserialize null or undefined to Point');
         }
-        if (value.type !== 'Point' || !value.coordinates || value.coordinates.length !== 2) {
-            throw new Error('Cannot deserialize Point: invalid GeoJSON format');
+        if (value.type === 'Point' && value.coordinates && value.coordinates.length === 2) {
+            return new Point(value.coordinates[0], value.coordinates[1]);
         }
-        return new Point(value.coordinates[0], value.coordinates[1]);
+        if (typeof value.longitude === 'number' && typeof value.latitude === 'number') {
+            return new Point(value.longitude, value.latitude);
+        }
+        throw new Error('Cannot deserialize Point: expected GeoJSON format { type, coordinates } or { longitude, latitude }');
     }
 
     /** @inheritdoc */
