@@ -1,4 +1,4 @@
-import 'reflect-metadata';
+import './Source/JavaScript/reflection';
 import * as chai from 'chai';
 chai.should();
 import * as chaiAsPromised from 'chai-as-promised';

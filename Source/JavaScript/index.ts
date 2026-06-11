@@ -18,3 +18,4 @@ export * from './fieldDecorator';
 export * from './derivedTypeDecorator';
 export * from './JsonSerializer';
 export * from './DerivedType';
+export * from './reflection';
