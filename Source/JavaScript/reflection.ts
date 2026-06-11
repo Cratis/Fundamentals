@@ -25,6 +25,7 @@ declare global {
         function getMetadataKeys(target: any, propertyKey?: string | symbol): (string | symbol)[];
         function getOwnMetadataKeys(target: any, propertyKey?: string | symbol): (string | symbol)[];
         function deleteMetadata(metadataKey: string | symbol, target: any, propertyKey?: string | symbol): boolean;
+        function metadata(metadataKey: string | symbol, metadataValue: any): (target: any, propertyKey?: string | symbol) => void;
     }
 }
 
@@ -123,6 +124,15 @@ if (typeof Reflect.defineMetadata !== 'function' || typeof Reflect.getOwnMetadat
     Reflect.deleteMetadata = function (metadataKey: string | symbol, target: any, propertyKey?: string | symbol): boolean {
         const store = getMetadataStoreIfExists(target, propertyKey);
         return store ? store.delete(metadataKey) : false;
+    };
+
+    // Decorator factory used by TypeScript's emitDecoratorMetadata output (the tslib
+    // __metadata helper). Without this, 'design:type'/'design:paramtypes'/'design:returntype'
+    // metadata is never recorded, which breaks constructor parameter type reflection.
+    Reflect.metadata = function (metadataKey: string | symbol, metadataValue: any): (target: any, propertyKey?: string | symbol) => void {
+        return function (target: any, propertyKey?: string | symbol): void {
+            Reflect.defineMetadata(metadataKey, metadataValue, target, propertyKey);
+        };
     };
 }
 
