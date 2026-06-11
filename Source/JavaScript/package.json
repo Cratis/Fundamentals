@@ -34,6 +34,11 @@
             "types": "./dist/esm/json/index.d.ts",
             "import": "./dist/esm/json/index.js",
             "require": "./dist/cjs/json/index.js"
+        },
+        "./reflection": {
+            "types": "./dist/esm/reflection.d.ts",
+            "import": "./dist/esm/reflection.js",
+            "require": "./dist/cjs/reflection.js"
         }
     },
     "scripts": {
