@@ -19,14 +19,29 @@ export class Fields {
     }
 
     static getFieldsForType(target: Constructor): Field[] {
-        const fields: Field[] = [];
-        if (Reflect.hasOwnMetadata('fields', target)) {
-            const fieldsMap = Reflect.getOwnMetadata('fields', target) as Map<string, Field>;
-            for (const field of fieldsMap.entries()) {
-                fields.push(field[1]);
+        // Fields are stored as own-metadata per type, so a derived type only carries the fields it
+        // declares itself. Walk the prototype (inheritance) chain and merge every ancestor's fields so
+        // that deserializing a derived type also populates the fields inherited from its base types.
+        // Process from the base type down to the target so a derived field overrides a base field of the
+        // same name.
+        const chain: Constructor[] = [];
+        let current: Constructor | undefined = target;
+        while (current && current !== Function.prototype && current !== Object) {
+            chain.push(current);
+            current = Object.getPrototypeOf(current) as Constructor | undefined;
+        }
+
+        const fieldsByName = new Map<string, Field>();
+        for (let index = chain.length - 1; index >= 0; index--) {
+            const type = chain[index];
+            if (Reflect.hasOwnMetadata('fields', type)) {
+                const fieldsMap = Reflect.getOwnMetadata('fields', type) as Map<string, Field>;
+                for (const [name, field] of fieldsMap.entries()) {
+                    fieldsByName.set(name, field);
+                }
             }
         }
 
-        return fields;
+        return [...fieldsByName.values()];
     }
 }
