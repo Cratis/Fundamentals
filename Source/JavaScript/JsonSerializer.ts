@@ -240,11 +240,18 @@ const convertTypesOnInstance = (instance: any) => {
     const properties = Object.getOwnPropertyNames(instance);
     const converted: any = {};
 
-    const derivedTypeId = DerivedType.get(instance.constructor);
+    // Emit the polymorphic type discriminator, preferring the registered type for the instance's
+    // constructor and falling back to a discriminator preserved on the instance itself (e.g. a value
+    // that was deserialized before its concrete type could be resolved). This keeps '_derivedTypeId'
+    // flowing through serialization transparently — the caller never has to manage it — and is the
+    // mirror of preserving it on deserialization.
+    const derivedTypeId = DerivedType.get(instance.constructor) ?? instance[JsonSerializer.DerivedTypeIdProperty];
     if (derivedTypeId) {
         converted[JsonSerializer.DerivedTypeIdProperty] = derivedTypeId;
     }
     properties.forEach(property => {
+        // The discriminator is handled above as a meta-property; never treat it as a data field.
+        if (property === JsonSerializer.DerivedTypeIdProperty) return;
         let value = instance[property];
         if (value !== undefined) {
             if (Array.isArray(value)) {
@@ -327,6 +334,16 @@ export class JsonSerializer {
             }
 
             deserialized[field.name] = value;
+        }
+
+        // Preserve the polymorphic type discriminator so it is never lost across (de)serialization
+        // layers. '_derivedTypeId' is not a declared field, so it is otherwise dropped here — and a
+        // derived value whose concrete type could not be resolved (e.g. its type was not yet
+        // registered) would then have no discriminator left to re-resolve or round-trip with, and
+        // would serialize back with no type information at all.
+        const derivedTypeId = instance[JsonSerializer.DerivedTypeIdProperty];
+        if (derivedTypeId !== undefined && derivedTypeId !== null) {
+            (deserialized as Record<string, unknown>)[JsonSerializer.DerivedTypeIdProperty] = derivedTypeId;
         }
 
         if ((targetType as Constructor) == Object) {
