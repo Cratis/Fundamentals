@@ -10,6 +10,4 @@ namespace Cratis.Collections;
 /// Initializes a new instance of the <see cref="ItemAlreadyAddedToBinaryTree"/> class.
 /// </remarks>
 /// <param name="item">Element already added.</param>
-public class ItemAlreadyAddedToBinaryTree(object item) : Exception($"Item '{item}' has already been added to the tree.")
-{
-}
+public class ItemAlreadyAddedToBinaryTree(object item) : Exception($"Item '{item}' has already been added to the tree.");

@@ -3,6 +3,4 @@
 
 namespace Cratis.Reflection.for_TypeExtensions;
 
-public class TypeWithoutDefaultConstructor(string something)
-{
-}
+public class TypeWithoutDefaultConstructor(string something);
