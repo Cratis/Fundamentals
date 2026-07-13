@@ -189,6 +189,16 @@ public static class TypeConversion
                 val = default(TimeSpan);
             }
         }
+        else if (type == typeof(byte[]))
+        {
+            val = value switch
+            {
+                byte[] bytes => bytes,
+                string base64 => System.Convert.FromBase64String(base64),
+                IEnumerable<object> boxedBytes => [.. boxedBytes.Select(System.Convert.ToByte)],
+                _ => []
+            };
+        }
         else if (type.IsAPrimitiveType())
         {
             val = value ?? Activator.CreateInstance(type);
