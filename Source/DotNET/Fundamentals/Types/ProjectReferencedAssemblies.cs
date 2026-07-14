@@ -60,7 +60,17 @@ public class ProjectReferencedAssemblies : ICanProvideAssembliesForDiscovery
                 _assemblies.Add(entryAssembly);
             }
             _assemblies.AddRange(projectReferencedAssemblies);
-            DefinedTypes = [.. _assemblies.SelectMany(_ => _.DefinedTypes)];
+            DefinedTypes = [.. _assemblies.SelectMany(_ =>
+            {
+                try
+                {
+                    return _.DefinedTypes;
+                }
+                catch
+                {
+                    return [];
+                }
+            })];
 
             _initialized = true;
         }

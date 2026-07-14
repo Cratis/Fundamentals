@@ -69,10 +69,20 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
         var implementors = types.Where(IsImplementation);
         Parallel.ForEach(implementors, implementor =>
         {
-            foreach (var contract in implementor.AllBaseAndImplementingTypes())
+            try
             {
-                var implementingTypes = GetImplementingTypesFor(contract);
-                if (!implementingTypes.Contains(implementor)) implementingTypes.Add(implementor);
+                foreach (var contract in implementor.AllBaseAndImplementingTypes())
+                {
+                    var implementingTypes = GetImplementingTypesFor(contract);
+                    if (!implementingTypes.Contains(implementor)) implementingTypes.Add(implementor);
+                }
+            }
+            catch (TypeLoadException)
+            {
+                // Skip an implementor whose base or implemented types cannot be loaded — for example
+                // when a referenced assembly resolves to a version that no longer contains a type another
+                // assembly references. Type discovery is best-effort; a single unloadable type must not
+                // abort the whole scan, which previously crashed application startup.
             }
         });
     }
@@ -89,7 +99,17 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
         }
     }
 
-    bool IsImplementation(Type type) => !type.IsInterface && !type.IsAbstract;
+    bool IsImplementation(Type type)
+    {
+        try
+        {
+            return !type.IsInterface && !type.IsAbstract;
+        }
+        catch (TypeLoadException)
+        {
+            return false;
+        }
+    }
 
     ConcurrentBag<Type> GetImplementingTypesFor(Type contract)
     {
