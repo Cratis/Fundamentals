@@ -54,7 +54,7 @@ public class Types : ITypes
         providers.ForEach(_ => _.Initialize());
         var assemblies = providers.SelectMany(_ => _.Assemblies).Distinct();
         _assemblies.AddRange(assemblies);
-        All = providers.SelectMany(_ => _.DefinedTypes).Distinct();
+        All = providers.SelectMany(static p => SafelyEnumerate(() => p.DefinedTypes)).Distinct();
 
         var precomputedProviders = providers.OfType<ICanProvideContractToImplementorsForDiscovery>().ToArray();
         if (precomputedProviders.Length > 0)
@@ -85,7 +85,7 @@ public class Types : ITypes
             // their implementations are still discoverable.
             var nonPrecomputedTypes = providers
                 .Where(static p => p is not ICanProvideContractToImplementorsForDiscovery)
-                .SelectMany(static p => p.DefinedTypes)
+                .SelectMany(static p => SafelyEnumerate(() => p.DefinedTypes))
                 .Distinct();
             _contractToImplementorsMap.Feed(nonPrecomputedTypes);
 
@@ -97,8 +97,8 @@ public class Types : ITypes
             // discover them without falling back to a full assembly scan.
             var diRegisteredImplementations = providers
                 .OfType<ICanProvideConventionsForDependencyInjection>()
-                .SelectMany(static p => p.SelfBindings.Select(static b => b.ImplementationType)
-                    .Concat(p.ConventionServiceBindings.Select(static b => b.ImplementationType)))
+                .SelectMany(static p => SafelyEnumerate(() => p.SelfBindings.Select(static b => b.ImplementationType)
+                    .Concat(p.ConventionServiceBindings.Select(static b => b.ImplementationType))))
                 .Distinct();
             _contractToImplementorsMap.Feed(diRegisteredImplementations);
 
@@ -139,6 +139,54 @@ public class Types : ITypes
         var typeFound = _contractToImplementorsMap.All.SingleOrDefault(t => t.FullName == fullName);
         ThrowIfTypeNotFound(fullName, typeFound!);
         return typeFound!;
+    }
+
+    /// <summary>
+    /// Enumerates a provider-supplied sequence, tolerating a type that cannot be loaded — for example when a
+    /// referenced assembly resolves to a version that no longer contains a referenced type. Elements collected
+    /// before the failure are kept so type discovery continues instead of crashing application startup.
+    /// </summary>
+    /// <typeparam name="T">Type of element in the sequence.</typeparam>
+    /// <param name="factory">Factory producing the sequence to enumerate.</param>
+    /// <returns>The elements that could be enumerated successfully.</returns>
+    static IEnumerable<T> SafelyEnumerate<T>(Func<IEnumerable<T>> factory)
+    {
+        IEnumerator<T>? enumerator = null;
+        try
+        {
+            enumerator = factory().GetEnumerator();
+        }
+        catch (TypeLoadException)
+        {
+        }
+
+        if (enumerator is null)
+        {
+            yield break;
+        }
+
+        using (enumerator)
+        {
+            while (true)
+            {
+                T current;
+                try
+                {
+                    if (!enumerator.MoveNext())
+                    {
+                        break;
+                    }
+
+                    current = enumerator.Current;
+                }
+                catch (TypeLoadException)
+                {
+                    break;
+                }
+
+                yield return current;
+            }
+        }
     }
 
     void ThrowIfMultipleTypesFound(Type type, IEnumerable<Type> typesFound)
