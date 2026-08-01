@@ -7,7 +7,7 @@ concurrency:
 env:
   NUGET_OUTPUT: ./Artifacts/NuGet 
   DOTNET_VERSION: "10.0.x"
-  NODE_VERSION: "24.x"
+  NODE_VERSION: "20.x"
 
 permissions:
   contents: write
