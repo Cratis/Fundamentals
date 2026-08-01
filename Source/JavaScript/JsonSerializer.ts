@@ -331,6 +331,15 @@ export class JsonSerializer {
                 } else {
                     value = deserializeValueFromField(field, value);
                 }
+            } else if (field.enumerable && value === undefined) {
+                // A collection that is absent from the payload deserializes to an empty one rather than to
+                // undefined. The declared type says the field is an array, and a producer that leaves an
+                // empty collection out - which the Chronicle sink does deliberately, so that a parallel
+                // replay cannot overwrite children a sibling event already wrote - would otherwise hand back
+                // a value contradicting its own type, putting a null guard on every reader of every
+                // collection. An explicit null is left alone: that is the producer saying "no collection"
+                // rather than "an empty one".
+                value = [];
             }
 
             deserialized[field.name] = value;
