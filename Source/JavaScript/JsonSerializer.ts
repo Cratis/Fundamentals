@@ -237,7 +237,7 @@ const convertTypesOnInstance = (instance: any) => {
     // serializeValueForType, and without this they were written as the object a concept happens to be -
     // {"value": ...} where the receiver declared the underlying type.
     if (instance instanceof ConceptAs) {
-        return serializeValueForType(instance.constructor, instance);
+        return serializeValueForType(instance.constructor as Constructor, instance);
     }
 
     // Check if there's a converter for this type
