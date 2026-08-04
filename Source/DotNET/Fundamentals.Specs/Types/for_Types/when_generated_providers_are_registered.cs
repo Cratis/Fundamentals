@@ -7,11 +7,9 @@ public class when_generated_providers_are_registered : Specification
 {
     Types _types;
 
-    void Because()
-    {
-        GeneratedTypeDiscoveryRegistry.Register(new for_GeneratedTypeDiscoveryRegistry.a_provider());
-        _types = new Types();
-    }
+    void Establish() => GeneratedTypeDiscoveryRegistry.Register(new for_GeneratedTypeDiscoveryRegistry.a_provider());
+
+    void Because() => _types = new Types();
 
     [Fact] void should_report_generated_discovery() => _types.DiscoveryMode.ShouldEqual(TypeDiscoveryMode.Generated);
     [Fact] void should_name_the_assembly_that_contributed() => _types.Assemblies.ShouldContain(typeof(for_GeneratedTypeDiscoveryRegistry.a_provider).Assembly);

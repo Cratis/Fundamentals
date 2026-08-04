@@ -7,13 +7,15 @@ namespace Cratis.Types.for_TypesServiceCollectionExtensions;
 
 public class when_adding_type_discovery_with_providers : Specification
 {
+    IServiceCollection _services;
     ITypes _types;
+
+    void Establish() => _services = new ServiceCollection();
 
     void Because()
     {
-        var services = new ServiceCollection();
-        services.AddTypeDiscovery([new for_Types.plain_assembly_provider()]);
-        _types = services.BuildServiceProvider().GetRequiredService<ITypes>();
+        _services.AddTypeDiscovery([new for_Types.plain_assembly_provider()]);
+        _types = _services.BuildServiceProvider().GetRequiredService<ITypes>();
     }
 
     [Fact] void should_report_explicit_discovery() => _types.DiscoveryMode.ShouldEqual(TypeDiscoveryMode.Explicit);

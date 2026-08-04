@@ -1,11 +1,13 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
+
 namespace Cratis.Types.for_GeneratedTypeDiscoveryRegistry;
 
 public class when_the_package_itself_is_loaded : Specification
 {
-    static readonly System.Reflection.Assembly _packageAssembly = typeof(Types).Assembly;
+    static readonly Assembly _packageAssembly = typeof(Types).Assembly;
 
     bool _registeredItsOwnProvider;
 

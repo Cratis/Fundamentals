@@ -7,19 +7,22 @@ namespace Cratis.Types.for_TypesServiceCollectionExtensions;
 
 public class when_adding_type_discovery_without_providers : Specification
 {
+    IServiceCollection _services;
     ITypes _types;
+
+    void Establish()
+    {
+        GeneratedTypeDiscoveryRegistry.Register(new for_GeneratedTypeDiscoveryRegistry.a_provider());
+        _services = new ServiceCollection();
+    }
 
     void Because()
     {
-        GeneratedTypeDiscoveryRegistry.Register(new for_GeneratedTypeDiscoveryRegistry.a_provider());
-
-        var services = new ServiceCollection();
-
         // Defaulting happens in one place, so what a consumer resolves from the container reports the
         // mode that was actually chosen - not the caller-supplied one it would report if the container
         // re-derived the provider set for itself.
-        services.AddTypeDiscovery();
-        _types = services.BuildServiceProvider().GetRequiredService<ITypes>();
+        _services.AddTypeDiscovery();
+        _types = _services.BuildServiceProvider().GetRequiredService<ITypes>();
     }
 
     [Fact] void should_report_the_mode_that_was_chosen_for_it() => _types.DiscoveryMode.ShouldEqual(TypeDiscoveryMode.Generated);
