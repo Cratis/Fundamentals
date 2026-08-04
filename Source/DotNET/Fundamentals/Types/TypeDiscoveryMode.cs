@@ -36,5 +36,13 @@ public enum TypeDiscoveryMode
     /// No generated providers were registered, so the project- and package-reference closures were
     /// walked by reflection.
     /// </summary>
+    /// <remarks>
+    /// This does not currently occur. Cratis.Fundamentals is itself built with the type discovery
+    /// generator, so its own module initializer registers a provider as the CLR loads the assembly -
+    /// which necessarily happens before anything can reach <see cref="Types"/> at all. The registry is
+    /// therefore never empty and the fallback is never taken. The value stays because the fallback is
+    /// still there and still correct; if the generator ever stops running over this assembly, this is
+    /// what a consumer would see.
+    /// </remarks>
     Reflected = 2
 }
