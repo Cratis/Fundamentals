@@ -11,6 +11,18 @@ namespace Cratis.Types;
 public interface ITypes
 {
     /// <summary>
+    /// Gets how the assemblies used for type discovery were arrived at.
+    /// </summary>
+    /// <remarks>
+    /// Together with <see cref="Assemblies"/> this answers, from a running application, which discovery
+    /// strategy is in force and which assemblies reached it. That matters because
+    /// <see cref="TypeDiscoveryMode.Generated"/> captures only the assemblies loaded by the time the type
+    /// universe was built, and an assembly that arrives later contributes nothing to it - silently, since
+    /// a shorter <see cref="FindMultiple{T}"/> result is indistinguishable from a feature nobody wrote.
+    /// </remarks>
+    TypeDiscoveryMode DiscoveryMode { get; }
+
+    /// <summary>
     /// Gets all assemblies used for type discovery.
     /// </summary>
     IEnumerable<Assembly> Assemblies { get; }
