@@ -265,6 +265,78 @@ const methodsJson = `[
 const methods = JsonSerializer.deserializeArray(IPaymentMethod, methodsJson);
 ```
 
+## Custom converters
+
+`Date`, `Guid`, `TimeSpan`, `ValueMap` and the geospatial types come with converters built in. When a
+type needs to cross the wire in a shape only you can decide — or when a built-in shape is not the one
+your backend declared — register a converter for it.
+
+Extend `JsonConverter`, declare the type it handles, and register it once during application start-up:
+
+```typescript
+import { JsonConverter, JsonSerializer, Constructor } from '@cratis/fundamentals';
+
+class CalendarDateJsonConverter extends JsonConverter<Date> {
+    get type(): Constructor<Date> {
+        return Date;
+    }
+
+    read(value: string): Date {
+        return new Date(`${value}T00:00:00`);
+    }
+
+    write(value: Date): string {
+        return value.toISOString().substring(0, 10);
+    }
+}
+
+JsonSerializer.registerConverter(new CalendarDateJsonConverter());
+```
+
+The converter is used for both directions — `read` on the way in, `write` on the way out — and takes
+the place of any converter already registered for the same type, including a built-in one. Registering
+only ever adds, so you can hand back to a built-in by registering a fresh one:
+
+```typescript
+import { DateJsonConverter } from '@cratis/fundamentals';
+
+JsonSerializer.registerConverter(new DateJsonConverter());
+```
+
+### What a converter cannot take over
+
+Two shapes resolve ahead of the converters, so a converter registered for them is not reached:
+
+- A type deriving from `ConceptAs` is unwrapped to its underlying value in both directions and converted
+  as that value's type. Register for the underlying type to reach a concept.
+- A `ValueMap` is read back from the declaring field's generic arguments rather than through a
+  converter. Note the asymmetry: writing a `ValueMap` *does* go through the registered converter, so
+  replacing that one changes the outbound half only.
+
+> [!NOTE]
+> `JsonConverter` also defines `canConvert`. `JsonSerializer` does not call it — a converter is resolved
+> by the type it declares through `type`, which is what `canConvert` would answer anyway — so overriding
+> it has no effect.
+
+## Loaded more than once
+
+`JsonSerializer` keeps its converter registry in module scope and looks types up by constructor
+identity. If two copies of `@cratis/fundamentals` end up in the same JavaScript realm, each has its own
+registry and its own `Guid` and `ConceptAs` class objects, and a value created by one is invisible to
+the other's serializer — a `Guid`-backed value serializes as an object instead of a string, and a
+version pinned at the top level never reaches a copy nested under a dependency.
+
+Both failures are silent, so the package reports it once, on load:
+
+```text
+[@cratis/fundamentals] Loaded 2 times into the same JavaScript realm, and it has to be loaded once.
+```
+
+The report names where each copy was loaded from. Two separate installs collapse with
+`yarn dedupe @cratis/fundamentals` (or `npm dedupe`); confirm with `yarn why @cratis/fundamentals`. If
+the two paths differ only in `dist/esm` against `dist/cjs` it is one install reached as both ESM and
+CommonJS, which no dedupe will fix — make every importer resolve the same one.
+
 ## See Also
 
 - [Field Decorator](./field_decorator.md) - Decorator system for field serialization configuration

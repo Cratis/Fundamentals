@@ -78,13 +78,13 @@ public class MySystem
 {
     public MySystem(ITypes types)
     {
-        // Which strategy built the universe.
-        var mode = types.DiscoveryMode;
+        // Which strategy built the universe...
+        Console.WriteLine($"Type discovery: {types.DiscoveryMode}");
 
-        // And which assemblies reached it.
+        // ... and which assemblies reached it.
         foreach (var assembly in types.Assemblies)
         {
-            Console.WriteLine(assembly.GetName().Name);
+            Console.WriteLine($"  {assembly.GetName().Name}");
         }
     }
 }

@@ -36,8 +36,16 @@ class Projection {
 ## Behavior
 
 - Keys are deserialized using the first generic argument.
-- Values are deserialized using the second generic argument.
+- Values are deserialized using the second generic argument, the same way a value of that type is read
+  anywhere else — so `String`, `Number` and `Boolean` come back as primitives, a `ConceptAs` type comes
+  back wrapped, and a type with a registered converter goes through it.
 - Lookup with a new key instance works when key content is equal.
+
+> [!NOTE]
+> A `ConceptAs` type does not currently round-trip as a **key**. It is written as its underlying value
+> but read back without it, because `ConceptAs<T>` carries no runtime information about `T` and a key
+> arrives as a string with nothing to say what it should be parsed into. Use the underlying type as the
+> key, or a class with `@field`-decorated properties.
 
 ## Example
 
