@@ -3,7 +3,8 @@
 
 import { a_realm } from './given/a_realm';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/** A console that is missing the method the report writes to. */
+type ConsoleWithoutWarn = { warn?: (...values: unknown[]) => void };
 
 describe('when the runtime has no console', () => {
     let realm: a_realm;
@@ -11,7 +12,7 @@ describe('when the runtime has no console', () => {
 
     beforeEach(async () => {
         realm = new a_realm();
-        (console as any).warn = undefined;
+        (console as unknown as ConsoleWithoutWarn).warn = undefined;
 
         try {
             (await realm.loadCopy()).registerModuleInstance();
