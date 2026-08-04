@@ -4,6 +4,7 @@
 import { ConceptAs } from './ConceptAs';
 import { Constructor } from './Constructor';
 import { DerivedType } from './DerivedType';
+import { registerModuleInstance } from './duplicateInstanceGuard';
 import { Field } from './Field';
 import { Fields } from './Fields';
 import { ValueMap } from './ValueMap';
@@ -21,6 +22,12 @@ import {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type typeSerializer = (value: any) => any;
+
+// Everything below is keyed on constructor identity, and every constructor it keys on comes
+// from this copy of the package. A second copy in the same realm is therefore silently fatal
+// rather than merely wasteful, so announce it here, where the state that cannot be shared is
+// built.
+registerModuleInstance();
 
 // Initialize converters
 const converters: JsonConverter[] = [
