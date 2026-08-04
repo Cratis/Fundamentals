@@ -6,8 +6,37 @@ import commonjs from 'rollup-plugin-commonjs';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import pkg from './package.json' with { type: 'json' };
 import path from "path";
-import { writeFileSync, mkdirSync } from 'fs';
+import { existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
+
+/**
+ * Rollup plugin that fails the build when the package manifest exports a path that was not produced.
+ *
+ * Nothing else catches this. `yarn ci` runs `tsc -b` and never rollup, so the bundle it would have
+ * checked does not exist when the gate runs; the declarations resolve on their own, so TypeScript is
+ * happy either way; and the only thing left to notice is a consumer deep-importing the subpath at
+ * runtime. That is how `./json` and `./geospatial` came to be exported and unresolvable.
+ */
+function verifyExportsResolve(pkg, packageRoot) {
+    const collectTargets = value =>
+        typeof value === 'string'
+            ? [value]
+            : Object.values(value ?? {}).flatMap(collectTargets);
+
+    return {
+        name: 'verify-exports-resolve',
+        closeBundle() {
+            const missing = collectTargets(pkg.exports)
+                .filter(target => !existsSync(join(packageRoot, target)));
+
+            if (missing.length > 0) {
+                this.error(`package.json "exports" points at ${missing.length} path(s) the build did not produce:\n  ${missing.join('\n  ')}`);
+            }
+
+            console.log(`✓ Verified every "exports" target resolves`);
+        }
+    };
+}
 
 /**
  * Rollup plugin to generate package.json files in output directories
@@ -42,7 +71,13 @@ function generatePackageJson(cjsPath, esmPath) {
 
 function rollup(cjsPath, esmPath, tsconfigPath, pkg) {
     return {
-        input: "index.ts",
+        // Every subpath the package manifest exports is its own entry. `preserveModules` writes one
+        // output file per module it keeps, but a barrel that only re-exports is not kept: rollup
+        // rewrites importers to reach past it, so nothing references it and it is never emitted. The
+        // manifest still pointed `./json` and `./geospatial` at those files, and TypeScript resolved
+        // them through their declarations, so a consumer deep-importing either one compiled and then
+        // failed at runtime with ERR_MODULE_NOT_FOUND.
+        input: ["index.ts", "json/index.ts", "geospatial/index.ts", "reflection.ts"],
 
         output: [
             {
@@ -83,7 +118,8 @@ function rollup(cjsPath, esmPath, tsconfigPath, pkg) {
                 tsconfig: tsconfigPath,
                 clean: true
             }),
-            generatePackageJson(cjsPath, esmPath)
+            generatePackageJson(cjsPath, esmPath),
+            verifyExportsResolve(pkg, import.meta.dirname)
         ]
     };
 }
