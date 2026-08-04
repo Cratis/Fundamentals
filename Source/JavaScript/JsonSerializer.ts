@@ -206,13 +206,11 @@ const deserializeMapValue = (valueType: Constructor | undefined, value: any): an
         return value;
     }
 
-    // Check if there's a converter for this type
-    if (typeSerializers.has(valueType)) {
-        const converter = typeSerializers.get(valueType)!;
-        return converter.read(value);
-    }
-
-    return JsonSerializer.deserialize(valueType, JSON.stringify(value));
+    // A map value is an ordinary value of its declared type, so read it the way any other value of that
+    // type is read. Resolving it here instead left out the concept and primitive cases, and the
+    // primitive one lost data without a sound: a string value went through JsonSerializer.deserialize,
+    // which built an empty String object because a primitive has no fields to populate.
+    return deserializeValueFromType(valueType, value);
 };
 
 const deserializeValueMapFromField = (field: Field, value: any): ValueMap<any, any> => {
@@ -234,6 +232,14 @@ const deserializeValueMapFromField = (field: Field, value: any): ValueMap<any, a
 };
 
 const convertTypesOnInstance = (instance: any) => {
+    // A concept unwraps to its underlying value wherever it is reached, not only when it is reached
+    // through a declared field. An array element and a map value arrive here rather than at
+    // serializeValueForType, and without this they were written as the object a concept happens to be -
+    // {"value": ...} where the receiver declared the underlying type.
+    if (instance instanceof ConceptAs) {
+        return serializeValueForType(instance.constructor, instance);
+    }
+
     // Check if there's a converter for this type
     if (typeConverters.has(instance.constructor)) {
         return serializeValueForType(instance.constructor, instance);
