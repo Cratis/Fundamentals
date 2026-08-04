@@ -2,11 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { Point } from './Point';
+import { typeKey } from '../typeKey';
 
 /**
  * Represents a line string composed of two or more points.
  */
 export class LineString {
+    static readonly [typeKey] = 'LineString';
+
     coordinates!: Point[];
 
     /**

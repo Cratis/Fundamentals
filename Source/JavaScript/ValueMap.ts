@@ -1,10 +1,13 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+import { typeKey } from './typeKey';
 
 /**
  * Represents a map that compares object keys by value.
  */
 export class ValueMap<TKey, TValue> {
+    static readonly [typeKey] = 'ValueMap';
+
     private readonly _entries: Array<[TKey, TValue]> = [];
 
     /**

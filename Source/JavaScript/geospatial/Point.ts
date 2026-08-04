@@ -2,11 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { field } from '../fieldDecorator';
+import { typeKey } from '../typeKey';
 
 /**
  * Represents a geographic point with longitude and latitude.
  */
 export class Point {
+    static readonly [typeKey] = 'Point';
+
     @field(Number)
     longitude!: number;
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { IEquatable } from './IEquatable';
+import { typeKey } from './typeKey';
 
 const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const lookUpTable: string[] = [];
@@ -22,6 +23,8 @@ const getString = (num: number) => {
  * @class Guid
  */
 export class Guid implements IEquatable {
+    static readonly [typeKey] = 'Guid';
+
 
     /**
      * Gets an empty {Guid}

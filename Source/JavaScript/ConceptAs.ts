@@ -1,11 +1,14 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+import { typeKey } from './typeKey';
 
 /**
  * Expresses a Concept as another type, usually a primitive such as string or number.
  * @template T The type of the underlying value.
  */
 export abstract class ConceptAs<T> {
+    static readonly [typeKey] = 'ConceptAs';
+
     /**
      * Initializes a new instance of ConceptAs.
      * @param {T} value The value to initialize the concept with.

@@ -1,12 +1,12 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { ConceptAs } from './ConceptAs';
 import { Constructor } from './Constructor';
 import { DerivedType } from './DerivedType';
 import { registerModuleInstance } from './duplicateInstanceGuard';
 import { Field } from './Field';
 import { Fields } from './Fields';
+import { conceptAsTypeKey, declaredTypeKey, typeKeyOf, valueMapTypeKey } from './typeKey';
 import { ValueMap } from './ValueMap';
 import { 
     JsonConverter, 
@@ -40,14 +40,44 @@ const converters: JsonConverter[] = [
     new ValueMapJsonConverter()
 ];
 
-// Build converter maps from the converters
+// Converters are found by the key a type declares, and only by the constructor when it declares none.
+// Keying on the constructor alone is what made a second copy of this package silently fatal: each copy
+// brings its own Guid, ConceptAs and ValueMap class objects, so neither recognized the other's. A key
+// crosses that boundary; a class object does not. A consumer's own type has no key and is found by
+// constructor, which is exact and needs nothing to cross.
+const keyedConverters: Map<string, JsonConverter> = new Map<string, JsonConverter>();
 const typeConverters: Map<Constructor, JsonConverter> = new Map<Constructor, JsonConverter>();
-const typeSerializers: Map<Constructor, JsonConverter> = new Map<Constructor, JsonConverter>();
 
-for (const converter of converters) {
+const registerConverterFor = (converter: JsonConverter) => {
+    const key = declaredTypeKey(converter.type);
+    if (key !== undefined) {
+        keyedConverters.set(key, converter);
+    }
+
     typeConverters.set(converter.type, converter);
-    typeSerializers.set(converter.type, converter);
-}
+};
+
+converters.forEach(registerConverterFor);
+
+/**
+ * Finds the converter registered for a type, if any.
+ * @param {Constructor} type The type to convert.
+ * @returns {JsonConverter | undefined} The converter, or undefined when the type has none.
+ */
+const converterFor = (type: Constructor | undefined): JsonConverter | undefined => {
+    if (!type) return undefined;
+
+    const key = declaredTypeKey(type);
+    const keyed = key === undefined ? undefined : keyedConverters.get(key);
+    return keyed ?? typeConverters.get(type);
+};
+
+/**
+ * Checks whether a type is a ValueMap, including one from another copy of this package.
+ * @param {Constructor} type The type to check.
+ * @returns {boolean} True when the type is a ValueMap.
+ */
+const isValueMap = (type: Constructor | undefined): boolean => declaredTypeKey(type) === valueMapTypeKey;
 
 // Add primitive type converters that don't need a full JsonConverter class
 const primitiveConverters: Map<Constructor, typeSerializer> = new Map<Constructor, typeSerializer>([
@@ -66,28 +96,19 @@ const primitiveSerializers: Map<Constructor, typeSerializer> = new Map<Construct
  * Checks if a constructor is a ConceptAs type.
  * @param {Constructor} type The constructor to check.
  * @returns {boolean} True if the type extends ConceptAs.
+ * @remarks
+ * Reads the key rather than walking the prototype chain looking for this copy's ConceptAs. The key is a
+ * static and a static is inherited, so every type deriving from ConceptAs carries it - including one
+ * deriving from another copy's ConceptAs, which a prototype walk could never recognize.
  */
-const isConceptAs = (type: Constructor): boolean => {
-    if (!type || !type.prototype) return false;
-    
-    // Check if the prototype chain includes ConceptAs
-    let proto = type.prototype;
-    while (proto) {
-        // Check if this prototype is ConceptAs.prototype
-        if (proto === ConceptAs.prototype) {
-            return true;
-        }
-        proto = Object.getPrototypeOf(proto);
-    }
-    return false;
-};
+const isConceptAs = (type: Constructor): boolean => typeKeyOf(type) === conceptAsTypeKey;
 
 const serializeValueForType = (type: Constructor, value: any) => {
     if (!value) return value;
 
     // If it's a ConceptAs instance, unwrap it and serialize the inner value recursively
     // This follows the C# pattern: recognize as concept, unwrap, then call serializer
-    if (value instanceof ConceptAs) {
+    if (isConceptAs(value.constructor)) {
         const innerValue = value.value;
         // Recursively serialize the inner value to handle complex types
         // Use .constructor directly which works reliably for both primitives and objects
@@ -95,8 +116,8 @@ const serializeValueForType = (type: Constructor, value: any) => {
     }
 
     // Check if there's a registered converter
-    if (typeConverters.has(type)) {
-        const converter = typeConverters.get(type)!;
+    const converter = converterFor(type);
+    if (converter) {
         return converter.write(value);
     }
     
@@ -115,8 +136,8 @@ const deserializeValueFromType = (type: Constructor, value: any) => {
     }
     
     // Check if there's a registered converter
-    if (typeSerializers.has(type)) {
-        const converter = typeSerializers.get(type)!;
+    const converter = converterFor(type);
+    if (converter) {
         return converter.read(value);
     }
     
@@ -129,7 +150,7 @@ const deserializeValueFromType = (type: Constructor, value: any) => {
 };
 
 const deserializeValueFromField = (field: Field, value: any) => {
-    if (field.type === ValueMap) {
+    if (isValueMap(field.type)) {
         return deserializeValueMapFromField(field, value);
     }
 
@@ -139,8 +160,8 @@ const deserializeValueFromField = (field: Field, value: any) => {
     }
 
     // Check if there's a registered converter
-    if (typeSerializers.has(field.type)) {
-        const converter = typeSerializers.get(field.type)!;
+    const converter = converterFor(field.type);
+    if (converter) {
         return converter.read(value);
     }
     
@@ -193,8 +214,8 @@ const deserializeMapKey = (keyType: Constructor, key: string): any => {
     }
 
     // Check if there's a converter for this type
-    if (typeSerializers.has(keyType)) {
-        const converter = typeSerializers.get(keyType)!;
+    const converter = converterFor(keyType);
+    if (converter) {
         return converter.read(key);
     }
 
@@ -236,12 +257,12 @@ const convertTypesOnInstance = (instance: any) => {
     // through a declared field. An array element and a map value arrive here rather than at
     // serializeValueForType, and without this they were written as the object a concept happens to be -
     // {"value": ...} where the receiver declared the underlying type.
-    if (instance instanceof ConceptAs) {
+    if (isConceptAs(instance.constructor)) {
         return serializeValueForType(instance.constructor as Constructor, instance);
     }
 
     // Check if there's a converter for this type
-    if (typeConverters.has(instance.constructor)) {
+    if (converterFor(instance.constructor)) {
         return serializeValueForType(instance.constructor, instance);
     }
     
@@ -308,8 +329,7 @@ export class JsonSerializer {
      *   so replacing that one changes only the outbound half.
      */
     static registerConverter(converter: JsonConverter): void {
-        typeConverters.set(converter.type, converter);
-        typeSerializers.set(converter.type, converter);
+        registerConverterFor(converter);
     }
 
     /**
@@ -353,7 +373,7 @@ export class JsonSerializer {
     static deserializeFromInstance<TResult extends object>(targetType: Constructor<TResult>, instance: any): TResult {
         const fields = Fields.getFieldsForType(targetType as Constructor);
 
-        if (typeSerializers.has(targetType)) {
+        if (converterFor(targetType)) {
             return deserializeValueFromType(targetType, instance);
         }
 
