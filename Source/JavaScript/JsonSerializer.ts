@@ -23,10 +23,11 @@ import {
 
 type typeSerializer = (value: any) => any;
 
-// Everything below is keyed on constructor identity, and every constructor it keys on comes
-// from this copy of the package. A second copy in the same realm is therefore silently fatal
-// rather than merely wasteful, so announce it here, where the state that cannot be shared is
-// built.
+// A second copy of this package in the same realm builds its own registry here, and brings its own
+// class objects. Convertible values still cross between the copies, because a type is recognized by
+// the key it declares - but a converter registered on one copy reaches only that one, and a version
+// pinned at the top level never reaches a nested copy. Announce it where the state that cannot be
+// shared is built.
 registerModuleInstance();
 
 // Initialize converters

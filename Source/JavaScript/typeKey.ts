@@ -6,11 +6,11 @@ import { Constructor } from './Constructor';
 /**
  * Identifies a type this package converts, by name rather than by the class object itself.
  *
- * `JsonSerializer` used to recognize a type by comparing constructors. That works until a second copy
- * of this package is loaded into the same realm - a nested install, or one install reached as both ESM
- * and CommonJS - because each copy then has its own `Guid`, `ConceptAs` and `ValueMap` class objects
- * and neither recognizes the other's. A `Guid` crossing that boundary serializes as an object instead
- * of a string, and a concept as `{"value": ...}` instead of its underlying value. Both silently.
+ * `JsonSerializer` recognized a type by comparing constructors, which holds until a second copy of this
+ * package is loaded into the same realm - a nested install, or one install reached as both ESM and
+ * CommonJS. Each copy then had its own `Guid`, `ConceptAs` and `ValueMap` class objects and neither
+ * recognized the other's, so a `Guid` crossing that boundary was written as an object rather than a
+ * string, and a concept as `{"value": ...}` rather than its underlying value. Both silently.
  *
  * A name survives the boundary where a class object does not: the key is a registered symbol, so every
  * copy resolves the same one, and the values are plain strings.
@@ -21,7 +21,7 @@ import { Constructor } from './Constructor';
 export const typeKey: unique symbol = Symbol.for('@cratis/fundamentals.typeKey');
 
 /** A type carrying the key. Only this package's own convertible types declare one. */
-export type KeyedType = Constructor & { readonly [typeKey]?: string };
+type KeyedType = Constructor & { readonly [typeKey]?: string };
 
 /**
  * Gets the key a type declares itself, ignoring any inherited from a base type.

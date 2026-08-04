@@ -8,11 +8,14 @@ import { Fields } from '../Fields';
  * Pins why `Fields` and `DerivedType` were left keyed on the constructor while the converter registry
  * was not.
  *
- * Both hold their state as reflect metadata, and the polyfill that provides it installs itself only
- * when the global `Reflect` does not already have it - so a second copy of the package finds it
- * installed, skips installing its own, and the two share one store. Their class objects differ across
- * copies and it does not matter. If that ever changes, this goes red and they need the same treatment
- * the converters got.
+ * Neither holds state in module scope. Both write reflect metadata keyed on the target constructor, so
+ * the state lives with the type being described rather than with the class describing it, and a
+ * duplicated `Fields` reads what another `Fields` wrote. (In a real duplicate install the two copies
+ * also share one metadata store, because the polyfill installs only when the global `Reflect` lacks it
+ * - here a single `reflection` module is loaded, which is the same store by construction.)
+ *
+ * That is the whole reason those two kept comparing constructors while the converter registry stopped.
+ * If it ever stops being true, this goes red and they need the same treatment the converters got.
  */
 describe('when metadata is written by another copy of the package', () => {
     let fieldsAreDistinct: boolean;
