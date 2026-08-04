@@ -56,6 +56,10 @@ public class Types : ITypes
         _assemblies.AddRange(assemblies);
         All = providers.SelectMany(static p => SafelyEnumerate(() => p.DefinedTypes)).Distinct();
 
+        // Reported here rather than at the end of the constructor because this is where the assembly set
+        // is final - what follows only builds the contract map from it, and takes an early exit doing so.
+        ReportUniverse();
+
         var precomputedProviders = providers.OfType<ICanProvideContractToImplementorsForDiscovery>().ToArray();
         if (precomputedProviders.Length > 0)
         {
@@ -216,6 +220,27 @@ public class Types : ITypes
 
                 yield return current;
             }
+        }
+    }
+
+    /// <summary>
+    /// Reports what the universe was built from, and warns when it reached nothing beyond this package.
+    /// </summary>
+    /// <remarks>
+    /// A universe holding only <c>Cratis.Fundamentals</c> is never legitimate for an application - every
+    /// convention-based lookup will come back empty, and a shorter result is indistinguishable from a
+    /// feature nobody wrote. One comparison catches it, where comparing against the reference closure
+    /// would mean running the scan the generator exists to avoid.
+    /// </remarks>
+    void ReportUniverse()
+    {
+        var mode = DiscoveryMode.ToString();
+        var assemblies = string.Join(", ", _assemblies.Select(_ => _.GetName().Name));
+        TypeDiscoveryEventSource.Log.UniverseBuilt(mode, assemblies);
+
+        if (_assemblies.Count == 1 && _assemblies[0] == typeof(Types).Assembly)
+        {
+            TypeDiscoveryEventSource.Log.UniverseContainsOnlyThisPackage(mode, assemblies);
         }
     }
 

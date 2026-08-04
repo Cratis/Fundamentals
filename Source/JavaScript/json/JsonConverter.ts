@@ -19,10 +19,11 @@ export abstract class JsonConverter<T = any> {
      * Determines whether the converter can convert the specified type.
      * @param {Constructor} typeToConvert - The type to check.
      * @returns {boolean} True if the converter can convert the type; otherwise, false.
-     * @remarks
-     * `JsonSerializer` does not call this. It resolves a converter by looking {@link type} up directly,
-     * which is what this would answer anyway, so overriding it does not widen what a converter is asked
-     * to handle - register a converter per type instead.
+     * @deprecated Not called by `JsonSerializer` and scheduled for removal in the next major version.
+     * A converter is resolved by the type it declares through {@link type}, which is what this would
+     * answer anyway, so overriding it has no effect - register a converter per type instead. Wiring it
+     * into the lookup is not the plan either: it would force a scan of every converter on the path
+     * taken by every plain object, to serve a case a second registration already covers.
      */
     canConvert(typeToConvert: Constructor): boolean {
         return typeToConvert === this.type;
