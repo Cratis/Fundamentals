@@ -285,6 +285,24 @@ export class JsonSerializer {
     static readonly DerivedTypeIdProperty: string = "_derivedTypeId";
 
     /**
+     * Register a converter for the type it declares through its `type` property.
+     * @param {JsonConverter} converter The converter to register.
+     * @remarks
+     * The converter is used for both directions - `read` on the way in, `write` on the way out - and
+     * takes the place of any converter already registered for the same type, including the built-in
+     * ones. Replacing a built-in changes the payloads the application produces and consumes, which is
+     * the caller's to decide; nothing here second-guesses it.
+     *
+     * Two shapes are resolved ahead of the converters and cannot be taken over: a `ValueMap` field, and
+     * any type deriving from `ConceptAs`, which is unwrapped to its underlying value and converted as
+     * that. Register a converter for the underlying type to reach a concept.
+     */
+    static registerConverter(converter: JsonConverter): void {
+        typeConverters.set(converter.type, converter);
+        typeSerializers.set(converter.type, converter);
+    }
+
+    /**
      * Serialize with strong type information.
      * @param {*} value The value to serialize.
      * @returns A JSON string.
