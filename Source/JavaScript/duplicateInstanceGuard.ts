@@ -13,7 +13,13 @@
  * silent, and both surface a long way from their cause.
  *
  * A package manager is free to produce that second copy, and this module does not try to stop
- * it. It makes it visible.
+ * it. It makes it visible. Two installs is the usual cause, but one install reached as both ESM
+ * and CommonJS is the same failure with no version mismatch anywhere to find it by - so the
+ * report names where each load came from rather than only how many there were.
+ *
+ * A copy older than this guard does not register itself and leaves nothing behind for a newer
+ * copy to find, so duplication is reported only once every copy in the realm carries the guard.
+ * That is inherent to the approach, not a gap left to close.
  *
  * The bookkeeping lives on `globalThis`, because module scope is the very thing being
  * duplicated. Its two keys are a cross-version contract - a copy of a *different* version of
@@ -75,12 +81,14 @@ const reportDuplicate = (origins: string[]): void => {
     const locations = origins.map((origin, index) => `  ${index + 1}. ${origin}`).join('\n');
 
     console.warn(
-        `[@cratis/fundamentals] Duplicate package detected: ${origins.length} copies are loaded in the same JavaScript realm.\n` +
-        'Each copy has its own JSON converter registry and its own Guid and ConceptAs class objects, and every lookup is keyed on ' +
-        'constructor identity. A value created by one copy is invisible to the other copy\'s serializer, so a Guid-backed value ' +
+        `[@cratis/fundamentals] Loaded ${origins.length} times into the same JavaScript realm, and it has to be loaded once.\n` +
+        'Each load builds its own JSON converter registry and its own Guid and ConceptAs class objects, and every lookup is keyed ' +
+        'on constructor identity. A value created by one is invisible to the other\'s serializer, so a Guid-backed value ' +
         'serializes as an object instead of a string, and a version pinned at the top level does not reach a copy nested under a ' +
         `dependency.\nLoaded from:\n${locations}\n` +
-        'Collapse the copies with `yarn dedupe @cratis/fundamentals` (or `npm dedupe`), then confirm with `yarn why @cratis/fundamentals`.');
+        'If those are separate installs, collapse them with `yarn dedupe @cratis/fundamentals` (or `npm dedupe`) and confirm with ' +
+        '`yarn why @cratis/fundamentals`. If they differ only in dist/esm against dist/cjs it is one install reached as both ESM ' +
+        'and CommonJS, which no dedupe will fix - make every importer resolve the same one.');
 };
 
 /**

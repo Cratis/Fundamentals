@@ -16,5 +16,5 @@ describe('when a third copy is loaded', () => {
     afterEach(() => realm.release());
 
     it('should still warn exactly once', () => realm.warnings.length.should.equal(1));
-    it('should report the count it knew when it warned', () => realm.warnings[0].should.contain('2 copies'));
+    it('should report the count it knew when it warned', () => realm.warnings[0].should.contain('Loaded 2 times'));
 });
