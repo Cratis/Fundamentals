@@ -5,12 +5,13 @@
  * Detects that more than one copy of this package has been loaded into the same JavaScript
  * realm and reports it, once.
  *
- * `JsonSerializer` keeps its converter registry in module scope and looks types up by
- * constructor identity, so a second copy of this package brings its own registry and its own
- * `Guid` and `ConceptAs` class objects. Values then cross a boundary the serializer cannot see
- * across: a `Guid`-backed value serializes as an object instead of a string, and a version
- * pinned at the top level never reaches a copy nested under a dependency. Both failures are
- * silent, and both surface a long way from their cause.
+ * A second copy brings its own converter registry and its own `Guid` and `ConceptAs` class
+ * objects. Values themselves survive the boundary - a convertible type is recognized by the key
+ * it declares rather than by its class object - but three things do not, all of them silent:
+ * a converter registered through `JsonSerializer.registerConverter` reaches only the copy it was
+ * registered on, an `instanceof` against the other copy's class is false, and a version pinned at
+ * the top level never reaches a copy nested under a dependency, so an adopted fix can reach
+ * nothing at all.
  *
  * A package manager is free to produce that second copy, and this module does not try to stop
  * it. It makes it visible. Two installs is the usual cause, but one install reached as both ESM
@@ -82,10 +83,10 @@ const reportDuplicate = (origins: string[]): void => {
 
     console.warn(
         `[@cratis/fundamentals] Loaded ${origins.length} times into the same JavaScript realm, and it has to be loaded once.\n` +
-        'Each load builds its own JSON converter registry and its own Guid and ConceptAs class objects, and every lookup is keyed ' +
-        'on constructor identity. A value created by one is invisible to the other\'s serializer, so a Guid-backed value ' +
-        'serializes as an object instead of a string, and a version pinned at the top level does not reach a copy nested under a ' +
-        `dependency.\nLoaded from:\n${locations}\n` +
+        'Each load builds its own converter registry and its own Guid and ConceptAs class objects. A converter registered through ' +
+        'JsonSerializer.registerConverter reaches only the copy it was registered on, an instanceof against the other copy\'s ' +
+        'class is false, and a version pinned at the top level does not reach a copy nested under a dependency - so an adopted ' +
+        `fix can reach nothing at all.\nLoaded from:\n${locations}\n` +
         'If those are separate installs, collapse them with `yarn dedupe @cratis/fundamentals` (or `npm dedupe`) and confirm with ' +
         '`yarn why @cratis/fundamentals`. If they differ only in dist/esm against dist/cjs it is one install reached as both ESM ' +
         'and CommonJS, which no dedupe will fix - make every importer resolve the same one.');

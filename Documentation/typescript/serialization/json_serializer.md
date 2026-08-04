@@ -320,13 +320,19 @@ Two shapes resolve ahead of the converters, so a converter registered for them i
 
 ## Loaded more than once
 
-`JsonSerializer` keeps its converter registry in module scope and looks types up by constructor
-identity. If two copies of `@cratis/fundamentals` end up in the same JavaScript realm, each has its own
-registry and its own `Guid` and `ConceptAs` class objects, and a value created by one is invisible to
-the other's serializer — a `Guid`-backed value serializes as an object instead of a string, and a
-version pinned at the top level never reaches a copy nested under a dependency.
+If two copies of `@cratis/fundamentals` end up in the same JavaScript realm, each builds its own
+converter registry and its own `Guid` and `ConceptAs` class objects.
 
-Both failures are silent, so the package reports it once, on load:
+Values themselves survive that boundary — a convertible type is recognised by the key it declares
+rather than by its class object, so a `Guid` or a concept created by one copy serialises correctly
+through the other. Three things do not survive it, and all three are silent:
+
+- A converter registered through `registerConverter` reaches only the copy it was registered on.
+- `instanceof` against the other copy's class is `false`, including in your own code.
+- A version pinned at the top level does not reach a copy nested under a dependency, so a fix you
+  adopt can reach nothing at all while every build stays green.
+
+So the package reports it once, on load:
 
 ```text
 [@cratis/fundamentals] Loaded 2 times into the same JavaScript realm, and it has to be loaded once.

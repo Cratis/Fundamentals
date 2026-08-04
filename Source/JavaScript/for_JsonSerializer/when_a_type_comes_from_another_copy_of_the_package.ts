@@ -5,8 +5,6 @@ import { Constructor } from '../Constructor';
 import { Fields } from '../Fields';
 import { JsonSerializer } from '../JsonSerializer';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 /**
  * Loads a module with its own scope, standing in for the second copy of the package a nested install
  * or a dual ESM/CommonJS load produces. A distinct identifier is evaluated rather than served from
@@ -15,20 +13,23 @@ import { JsonSerializer } from '../JsonSerializer';
  * `@vite-ignore` keeps the identifier away from Vite's dynamic-import-vars pass, which would try to
  * resolve the variation by globbing the file system: the variation is in the query, not the path.
  */
-const anotherCopyOf = async (module: string) => await import(/* @vite-ignore */ `../${module}?anotherCopy`);
+const anotherCopyOf = async <TModule>(module: string): Promise<TModule> =>
+    await import(/* @vite-ignore */ `../${module}?anotherCopy`) as TModule;
 
 describe('when a type comes from another copy of the package', () => {
-    let serializedGuid: any;
-    let serializedConcept: any;
-    let deserializedConcept: any;
+    let serializedGuid: { id: string };
+    let serializedConcept: { reference: string };
+    let deserializedConcept: { value: string };
     let deserializedValueMapKeys: unknown[];
     let guidClassIsDistinct: boolean;
     let conceptBaseIsDistinct: boolean;
 
     beforeEach(async () => {
-        const [thisCopyGuid, otherGuid] = [await import('../Guid'), await anotherCopyOf('Guid')];
-        const [thisCopyConceptAs, otherConceptAs] = [await import('../ConceptAs'), await anotherCopyOf('ConceptAs')];
-        const otherValueMap = await anotherCopyOf('ValueMap');
+        const thisCopyGuid = await import('../Guid');
+        const otherGuid = await anotherCopyOf<typeof thisCopyGuid>('Guid');
+        const thisCopyConceptAs = await import('../ConceptAs');
+        const otherConceptAs = await anotherCopyOf<typeof thisCopyConceptAs>('ConceptAs');
+        const otherValueMap = await anotherCopyOf<typeof import('../ValueMap')>('ValueMap');
 
         guidClassIsDistinct = thisCopyGuid.Guid !== otherGuid.Guid;
         conceptBaseIsDistinct = thisCopyConceptAs.ConceptAs !== otherConceptAs.ConceptAs;
@@ -47,8 +48,9 @@ describe('when a type comes from another copy of the package', () => {
         serializedConcept = JSON.parse(JsonSerializer.serialize({ reference: new Reference('the-value') }));
 
         const holder = JsonSerializer.deserialize(Holder, '{"reference":"the-value","entries":{"a":"b"}}');
-        deserializedConcept = holder.reference;
-        deserializedValueMapKeys = [...(holder.entries as { entries(): Iterable<[unknown, unknown]> }).entries()].map(entry => entry[0]);
+        deserializedConcept = holder.reference as { value: string };
+        const entries = holder.entries as InstanceType<typeof otherValueMap.ValueMap>;
+        deserializedValueMapKeys = [...entries.entries()].map(entry => entry[0]);
     });
 
     it('should be a genuinely different Guid class', () => guidClassIsDistinct.should.be.true);
