@@ -343,6 +343,24 @@ The report names where each copy was loaded from. Two separate installs collapse
 the two paths differ only in `dist/esm` against `dist/cjs` it is one install reached as both ESM and
 CommonJS, which no dedupe will fix — make every importer resolve the same one.
 
+### If you publish a package that uses this one
+
+Declare it as a **peer** dependency, not a regular one:
+
+```json
+{
+  "peerDependencies": { "@cratis/fundamentals": "^7" },
+  "devDependencies":  { "@cratis/fundamentals": "7.16.8" }
+}
+```
+
+A regular dependency tells the package manager that a copy each is acceptable, and an exact pin makes
+duplication unavoidable rather than merely possible — an application combining your package with any
+other pinning a different `7.x` ends up with two physical copies that no dedupe can collapse. A peer
+dependency is the mechanism for "exactly one of these in the tree", which is what this is. Keep the
+range wide so a patch release does not force lockstep releases, and pin exactly in `devDependencies` so
+your own build and specs stay where they were.
+
 ## See Also
 
 - [Field Decorator](./field_decorator.md) - Decorator system for field serialization configuration
