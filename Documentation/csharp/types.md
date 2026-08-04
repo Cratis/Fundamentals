@@ -94,6 +94,7 @@ public class MySystem
 
 | Mode | Meaning |
 |---|---|
+| `Unknown` | The `ITypes` implementation does not report one |
 | `Generated` | Compile-time generated providers were registered and used exclusively |
 | `Reflected` | No generated providers were registered, so the reference closures were walked by reflection |
 | `Explicit` | The providers were passed to the `Types` constructor by the caller |

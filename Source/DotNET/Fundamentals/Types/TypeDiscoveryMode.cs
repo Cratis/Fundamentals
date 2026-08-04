@@ -16,9 +16,15 @@ namespace Cratis.Types;
 public enum TypeDiscoveryMode
 {
     /// <summary>
+    /// The <see cref="ITypes"/> did not say - it does not implement <see cref="ITypes.DiscoveryMode"/>
+    /// and took the interface's default.
+    /// </summary>
+    Unknown = 0,
+
+    /// <summary>
     /// The assembly providers were supplied by the caller, so neither automatic strategy was chosen.
     /// </summary>
-    Explicit = 0,
+    Explicit = 1,
 
     /// <summary>
     /// Compile-time generated providers were registered and used exclusively; the reflection fallback
@@ -30,7 +36,7 @@ public enum TypeDiscoveryMode
     /// and an assembly loaded later contributes nothing. <see cref="ITypes.Assemblies"/> is the list of
     /// the ones that did contribute.
     /// </remarks>
-    Generated = 1,
+    Generated = 2,
 
     /// <summary>
     /// No generated providers were registered, so the project- and package-reference closures were
@@ -44,5 +50,5 @@ public enum TypeDiscoveryMode
     /// still there and still correct; if the generator ever stops running over this assembly, this is
     /// what a consumer would see.
     /// </remarks>
-    Reflected = 2
+    Reflected = 3
 }
