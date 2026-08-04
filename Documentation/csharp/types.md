@@ -111,6 +111,45 @@ is the answer.
 > `Cratis.Fundamentals` in `Assemblies` — and none of that project's own types are found. Reference the
 > generator explicitly from such a project.
 
+## Watching discovery happen
+
+The universe is built from a static field initializer, before any container or logger exists, so the
+decision is reported through an event source rather than a log. It costs nothing when nothing is
+listening:
+
+```bash
+dotnet-trace collect --providers Cratis.Fundamentals.TypeDiscovery
+```
+
+Two events are written. `UniverseBuilt` names the discovery mode and the assemblies every time a
+universe is built. `UniverseContainsOnlyThisPackage` is a warning, written when the universe reached
+nothing beyond `Cratis.Fundamentals` — which is never legitimate for an application, because every
+convention-based lookup will then come back empty and none of them will say so.
+
+A host that wants these in its own log can bridge them with an `EventListener`.
+
+## Asking what discovery missed
+
+A generated provider registers itself from a module initializer, which runs when the CLR loads its
+assembly. An assembly loaded after the universe was built therefore contributes nothing to it, silently.
+`TypeDiscoveryDiagnostics` answers which ones those were:
+
+```csharp
+using Cratis.Types;
+
+foreach (var missing in TypeDiscoveryDiagnostics.FindMissingContributors(types))
+{
+    Console.WriteLine($"Referenced but never discovered: {missing}");
+}
+```
+
+This is something to ask rather than something start-up does. Comparing what was discovered against what
+could have been means consulting the dependency model, and doing that on every start-up would spend part
+of the cost the generated providers exist to avoid — so the cost lands only on the caller that wants the
+answer, typically a health check or a start-up self-test.
+
+It reads names and loads nothing, so a library that legitimately contributes no types is reported too.
+
 ## As Instances
 
 A common scenario is to discover types where the implementation has dependencies themselves and instances need to be resolved using
