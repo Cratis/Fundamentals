@@ -293,9 +293,13 @@ export class JsonSerializer {
      * ones. Replacing a built-in changes the payloads the application produces and consumes, which is
      * the caller's to decide; nothing here second-guesses it.
      *
-     * Two shapes are resolved ahead of the converters and cannot be taken over: a `ValueMap` field, and
-     * any type deriving from `ConceptAs`, which is unwrapped to its underlying value and converted as
-     * that. Register a converter for the underlying type to reach a concept.
+     * Two shapes resolve ahead of the converters, so a converter registered for them is not reached:
+     *
+     * - A type deriving from `ConceptAs` is unwrapped to its underlying value in both directions, and
+     *   converted as that value's type. Register for the underlying type to reach a concept.
+     * - A `ValueMap` is read back from the declaring field's generic arguments rather than through a
+     *   converter. Note the asymmetry: writing a `ValueMap` *does* go through the registered converter,
+     *   so replacing that one changes only the outbound half.
      */
     static registerConverter(converter: JsonConverter): void {
         typeConverters.set(converter.type, converter);
