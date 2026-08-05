@@ -8,6 +8,10 @@
   href: constructor.md
 - name: PropertyAccessor
   href: property_accessor.md
+- name: DateOnly
+  href: date_only.md
+- name: TimeOnly
+  href: time_only.md
 - name: TimeSpan
   href: time_span.md
 - name: ValueMap
