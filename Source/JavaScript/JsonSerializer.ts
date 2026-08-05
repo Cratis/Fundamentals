@@ -11,7 +11,9 @@ import { ValueMap } from './ValueMap';
 import { 
     JsonConverter, 
     DateJsonConverter, 
+    DateOnlyJsonConverter,
     GuidJsonConverter, 
+    TimeOnlyJsonConverter,
     TimeSpanJsonConverter, 
     PointJsonConverter,
     LineStringJsonConverter,
@@ -33,7 +35,9 @@ registerModuleInstance();
 // Initialize converters
 const converters: JsonConverter[] = [
     new DateJsonConverter(),
+    new DateOnlyJsonConverter(),
     new GuidJsonConverter(),
+    new TimeOnlyJsonConverter(),
     new TimeSpanJsonConverter(),
     new PointJsonConverter(),
     new LineStringJsonConverter(),
