@@ -65,6 +65,92 @@ public class MySystem
 
 > Note: The `ITypes` interface also has an `All` property where you can basically filter types based on your own custom criteria.
 
+## Knowing what was discovered
+
+Discovery happens once, when the type universe is built, and everything downstream resolves against
+whatever it captured. Two properties on `ITypes` say what that was, so a consumer — or a spec, or a
+readiness probe — can assert the universe is the one it expected instead of inferring it.
+
+```csharp
+using Cratis.Types;
+
+public class MySystem
+{
+    public MySystem(ITypes types)
+    {
+        // Which strategy built the universe...
+        Console.WriteLine($"Type discovery: {types.DiscoveryMode}");
+
+        // ... and which assemblies reached it.
+        foreach (var assembly in types.Assemblies)
+        {
+            Console.WriteLine($"  {assembly.GetName().Name}");
+        }
+    }
+}
+```
+
+`DiscoveryMode` is one of:
+
+| Mode | Meaning |
+|---|---|
+| `Unknown` | The `ITypes` implementation does not report one |
+| `Generated` | Compile-time generated providers were registered and used exclusively |
+| `Reflected` | No generated providers were registered, so the reference closures were walked by reflection |
+| `Explicit` | The providers were passed to the `Types` constructor by the caller |
+
+This matters because the generated strategy sees exactly the assemblies whose module initializers had
+run by the time the universe was built. An assembly that carries a generated provider and arrives later
+contributes nothing — and nothing says so, because a shorter `FindMultiple<T>()` result looks the same
+as a feature nobody wrote. `Assemblies` is the list of the ones that did contribute, so a missing name
+is the answer.
+
+> [!NOTE]
+> A project that consumes Fundamentals through a **project reference** rather than the NuGet package
+> does not get the generator, because the package flows it as an analyzer and a project reference does
+> not. Fundamentals still registers its own provider, so discovery reports `Generated` with only
+> `Cratis.Fundamentals` in `Assemblies` — and none of that project's own types are found. Reference the
+> generator explicitly from such a project.
+
+## Watching discovery happen
+
+The universe is built from a static field initializer, before any container or logger exists, so the
+decision is reported through an event source rather than a log. It costs nothing when nothing is
+listening:
+
+```bash
+dotnet-trace collect --providers Cratis.Fundamentals.TypeDiscovery
+```
+
+Two events are written. `UniverseBuilt` names the discovery mode and the assemblies every time a
+universe is built. `UniverseContainsOnlyThisPackage` is a warning, written when the universe reached
+nothing beyond `Cratis.Fundamentals` — which is never legitimate for an application, because every
+convention-based lookup will then come back empty and none of them will say so.
+
+A host that wants these in its own log can bridge them with an `EventListener`.
+
+## Asking what discovery missed
+
+A generated provider registers itself from a module initializer, which runs when the CLR loads its
+assembly. An assembly loaded after the universe was built therefore contributes nothing to it, silently.
+`TypeDiscoveryDiagnostics` answers which ones those were:
+
+```csharp
+using Cratis.Types;
+
+foreach (var missing in TypeDiscoveryDiagnostics.FindMissingContributors(types))
+{
+    Console.WriteLine($"Referenced but never discovered: {missing}");
+}
+```
+
+This is something to ask rather than something start-up does. Comparing what was discovered against what
+could have been means consulting the dependency model, and doing that on every start-up would spend part
+of the cost the generated providers exist to avoid — so the cost lands only on the caller that wants the
+answer, typically a health check or a start-up self-test.
+
+It reads names and loads nothing, so a library that legitimately contributes no types is reported too.
+
 ## As Instances
 
 A common scenario is to discover types where the implementation has dependencies themselves and instances need to be resolved using

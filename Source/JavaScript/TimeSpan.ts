@@ -1,6 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { typeKey } from './typeKey';
+
 import { field } from './fieldDecorator';
 
 const timeSpanRegex = /^(-)?(?:(\d+)\.)?(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d{1,7}))?$/;
@@ -9,6 +11,8 @@ const timeSpanRegex = /^(-)?(?:(\d+)\.)?(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d{1,7}))
  * Represents a time interval.
  */
 export class TimeSpan {
+    static readonly [typeKey] = 'TimeSpan';
+
    
     @field(Number)
     ticks!: number;

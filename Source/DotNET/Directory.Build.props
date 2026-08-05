@@ -55,4 +55,17 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <Compile Include="$(MSBuildThisFileDirectory)/GlobalUsings.Specs.cs" />
     </ItemGroup>
+
+    <!--
+        A test project without the VSTest adapter beside it is not a failing test project - it is an
+        invisible one. `dotnet test` reports "No test is available", skips it, and exits 0, so its specs
+        simply stop counting and nothing says so. Three projects in this repo were in that state.
+        Assert the adapter landed rather than trusting that referencing the package was enough.
+    -->
+    <Target Name="EnsureTestProjectIsDiscoverable"
+            AfterTargets="Build"
+            Condition="'$(IsTestProject)'=='true' and '$(TargetFramework)'!=''">
+        <Error Condition="!Exists('$(OutputPath)xunit.runner.visualstudio.testadapter.dll')"
+               Text="$(MSBuildProjectName) is a test project but its output has no VSTest adapter, so `dotnet test` will silently skip it. This happens when the project sets the singular &lt;TargetFramework&gt; while Directory.Build.props sets &lt;TargetFrameworks&gt; - use the plural form." />
+    </Target>
 </Project>

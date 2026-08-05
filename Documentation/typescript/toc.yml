@@ -2,14 +2,16 @@
   href: index.md
 - name: ConceptAs
   href: concept_as.md
-- name: Coordinate
-  href: coordinate.md
 - name: GUID
   href: guid.md
 - name: Constructor
   href: constructor.md
 - name: PropertyAccessor
   href: property_accessor.md
+- name: DateOnly
+  href: date_only.md
+- name: TimeOnly
+  href: time_only.md
 - name: TimeSpan
   href: time_span.md
 - name: ValueMap

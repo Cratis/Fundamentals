@@ -3,7 +3,9 @@
 
 export * from './JsonConverter';
 export * from './DateJsonConverter';
+export * from './DateOnlyJsonConverter';
 export * from './GuidJsonConverter';
+export * from './TimeOnlyJsonConverter';
 export * from './TimeSpanJsonConverter';
 export * from './PointJsonConverter';
 export * from './LineStringJsonConverter';

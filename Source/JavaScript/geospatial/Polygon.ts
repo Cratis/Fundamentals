@@ -2,11 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { LinearRing } from './LinearRing';
+import { typeKey } from '../typeKey';
 
 /**
  * Represents a polygon with an outer shell and optional holes.
  */
 export class Polygon {
+    static readonly [typeKey] = 'Polygon';
+
     shell!: LinearRing;
     holes!: LinearRing[];
 
