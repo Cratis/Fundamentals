@@ -15,22 +15,6 @@ The `Cratis.Specifications` library was built to maintain the approach, structur
 - [Cratis.Specifications](https://github.com/Cratis/Specifications) for BDD-style specification by example.
 - Spec projects are named `<Source>.Specs` (e.g. `Infrastructure.Specs`).
 
-> [!IMPORTANT]
-> **Check which mocking library the repository actually references before writing a spec.** NSubstitute
-> is the convention and what the patterns below describe, but **Fundamentals uses Moq** — `global using
-> Moq;` in `Source/DotNET/GlobalUsings.Specs.cs`, with `moq` added to every test project by
-> `Directory.Build.props`. NSubstitute is not referenced there, so a spec written to the patterns below
-> does not compile. The reverse holds in repos that reference NSubstitute and not Moq.
->
-> | Intent | NSubstitute | Moq |
-> |---|---|---|
-> | Create | `Substitute.For<IService>()` | `new Mock<IService>()`, used via `.Object` |
-> | Return | `_service.Get(Arg.Any<string>()).Returns("x")` | `_service.Setup(_ => _.Get(IsAny<string>())).Returns("x")` |
-> | Verify | `_service.Received(1).Do(...)` | `_service.Verify(_ => _.Do(...), Once)` |
->
-> `IsAny` and `Once` come unqualified in Fundamentals from `global using static Moq.It;` and
-> `global using static Moq.Times;`.
-
 ## Base Class
 
 `Specification` from `Cratis.Specifications` must be at the root of every spec's inheritance chain.
