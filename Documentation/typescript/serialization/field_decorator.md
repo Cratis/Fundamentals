@@ -1,6 +1,6 @@
 # `@field` Decorator
 
-The `@field` decorator supplies the runtime type information that `JsonSerializer` uses to serialize and deserialize class fields. The same decorator supports TypeScript's legacy decorator transform and the standard decorator transform.
+The `@field` decorator supplies the runtime type information that `JsonSerializer` uses to deserialize class fields into their declared runtime types. The same decorator supports TypeScript's legacy decorator transform and the standard decorator transform.
 
 ## Signature
 
