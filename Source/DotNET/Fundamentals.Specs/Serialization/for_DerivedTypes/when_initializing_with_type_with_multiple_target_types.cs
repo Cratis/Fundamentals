@@ -9,7 +9,7 @@ public class when_initializing_with_type_with_multiple_target_types : given.deri
     interface ISecond;
 
     [DerivedType("known-type")]
-    record DerivedType : IFirst, ISecond { }
+    record DerivedType : IFirst, ISecond;
 
     Exception result;
 

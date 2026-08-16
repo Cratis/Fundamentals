@@ -9,7 +9,7 @@ public class when_initializing_with_type_with_target_type_mismatch : given.deriv
     interface ISecond;
 
     [DerivedType("known-type", typeof(ISecond))]
-    record DerivedType : IFirst { }
+    record DerivedType : IFirst;
 
     Exception result;
 

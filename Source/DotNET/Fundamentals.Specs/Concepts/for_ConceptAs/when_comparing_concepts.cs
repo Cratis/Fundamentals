@@ -8,7 +8,7 @@ namespace Cratis.Concepts.for_ConceptAs;
 public class when_comparing_concepts : Specification
 {
     [Fact]
-    public void equal_concepts_should_be_equal()
+    public void should_consider_equal_concepts_equal()
     {
         var conceptA = new IntConcept(42);
         var conceptB = new IntConcept(42);
@@ -18,7 +18,7 @@ public class when_comparing_concepts : Specification
     }
 
     [Fact]
-    public void unequal_concepts_should_not_be_equal()
+    public void should_consider_unequal_concepts_unequal()
     {
         var conceptA = new IntConcept(42);
         var conceptB = new IntConcept(24);
@@ -28,7 +28,7 @@ public class when_comparing_concepts : Specification
     }
 
     [Fact]
-    public void greater_concept_should_have_higher_order()
+    public void should_order_greater_concept_higher()
     {
         var conceptA = new IntConcept(42);
         var conceptB = new IntConcept(24);
@@ -38,7 +38,7 @@ public class when_comparing_concepts : Specification
     }
 
     [Fact]
-    public void lesser_concept_should_have_lower_order()
+    public void should_order_lesser_concept_lower()
     {
         var conceptA = new IntConcept(24);
         var conceptB = new IntConcept(42);
@@ -48,7 +48,7 @@ public class when_comparing_concepts : Specification
     }
 
     [Fact]
-    public void equal_concepts_should_have_same_hash_code()
+    public void should_give_equal_concepts_same_hash_code()
     {
         var conceptA = new IntConcept(42);
         var conceptB = new IntConcept(42);
@@ -57,7 +57,7 @@ public class when_comparing_concepts : Specification
     }
 
     [Fact]
-    public void unequal_concepts_should_have_different_hash_codes()
+    public void should_give_unequal_concepts_different_hash_codes()
     {
         var conceptA = new IntConcept(42);
         var conceptB = new IntConcept(24);
