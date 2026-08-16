@@ -4,6 +4,7 @@
 import './reflection';
 import { Constructor } from './Constructor';
 import { Field } from './Field';
+import { getOwnDecoratorFieldsForType } from './fieldDecoratorMetadata';
 
 /**
  * Represents a system working with fields on types.
@@ -19,9 +20,10 @@ export class Fields {
     }
 
     static getFieldsForType(target: Constructor): Field[] {
-        // Fields are stored as own-metadata per type, so a derived type only carries the fields it
-        // declares itself. Walk the prototype (inheritance) chain and merge every ancestor's fields so
-        // that deserializing a derived type also populates the fields inherited from its base types.
+        // Fields are stored as legacy own metadata on the constructor or as standard own metadata on
+        // its Symbol.metadata object, so a derived type only carries the fields it declares itself.
+        // Walk the prototype (inheritance) chain and merge every ancestor's fields so that deserializing
+        // a derived type also populates the fields inherited from its base types.
         // Process from the base type down to the target so a derived field overrides a base field of the
         // same name.
         const chain: Constructor[] = [];
@@ -39,6 +41,10 @@ export class Fields {
                 for (const [name, field] of fieldsMap.entries()) {
                     fieldsByName.set(name, field);
                 }
+            }
+
+            for (const field of getOwnDecoratorFieldsForType(type)) {
+                fieldsByName.set(field.name, field);
             }
         }
 
