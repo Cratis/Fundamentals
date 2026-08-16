@@ -5,7 +5,7 @@ import './reflection';
 import { Constructor } from './Constructor';
 import { Field } from './Field';
 
-const fieldsMetadataKey = 'fields';
+const fieldsMetadataKey = Symbol.for('@cratis/fundamentals.fields');
 
 /**
  * Adds a field to the metadata object supplied to a standard decorator.
