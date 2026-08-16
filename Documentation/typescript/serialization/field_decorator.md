@@ -80,7 +80,7 @@ Set `experimentalDecorators` to `true` for the legacy TypeScript transform:
 
 ### Standard TypeScript Decorators
 
-Omit `experimentalDecorators`, or set it to `false`, to use standard decorators:
+Standard decorator metadata support requires TypeScript 5.2 or later. Omit `experimentalDecorators`, or set it to `false`, to use standard decorators:
 
 ```json
 {

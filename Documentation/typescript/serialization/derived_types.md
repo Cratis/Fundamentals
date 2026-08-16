@@ -205,8 +205,8 @@ isActive!: boolean;
 
 1. **Missing `@derivedType` decorator**: Classes won't be recognized during deserialization
 2. **Mismatched IDs**: Frontend and backend derived type IDs must match exactly
-3. **Missing field decorators**: Properties without `@field` won't be serialized/deserialized
-4. **Missing derivatives list**: Polymorphic fields need the derivatives parameter
+3. **Missing field decorators**: Runtime own properties are serialized even without `@field`, but they have no typed deserialization metadata
+4. **Missing derivatives list for an interface-shaped field**: Erased interfaces cannot provide a runtime constructor, so their possible implementations must be explicit
 
 ### Debugging Tips
 
@@ -260,9 +260,9 @@ export class PayPal implements IPaymentMethod { }
 
 > **Why centralize?** These "magic strings" are critical for serialization consistency. Centralizing them in one place prevents duplicates, makes them easy to maintain, and ensures frontend and backend stay synchronized.
 
-### 3. Complete Field Decoration
+### 3. Typed Field Metadata
 
-Decorate all serializable properties:
+Decorate every public field that requires typed deserialization. Runtime own properties also serialize without `@field`, but concrete-class deserialization only populates declared fields and cannot convert an undecorated value to its intended runtime type.
 
 ```typescript
 export class CreditCard implements IPaymentMethod {
@@ -272,8 +272,8 @@ export class CreditCard implements IPaymentMethod {
     @field(String)
     cardNumber!: string;
 
-    // ❌ This won't be serialized without @field
-    private internalId: string = '';
+    // This runtime own property is serialized, but has no typed deserialization metadata
+    transientNote: string = '';
 
     // Public serializable fields use @field
     @field(String)
@@ -281,19 +281,21 @@ export class CreditCard implements IPaymentMethod {
 }
 ```
 
-### 4. Explicit Derivative Lists
+### 4. Derivative Lists for Erased Types
 
-Always specify derivatives for polymorphic fields:
+Specify derivatives for interface-shaped fields because TypeScript erases the interface at runtime:
 
 ```typescript
 // ✅ Good - explicit derivatives list
 @field(Object, false, [CreditCard, PayPal])
 paymentMethod!: IPaymentMethod;
 
-// ❌ Bad - missing derivatives, won't deserialize correctly
+// Missing runtime candidates for an erased interface
 @field(Object)
 paymentMethod!: IPaymentMethod;
 ```
+
+A field typed with a concrete base class can omit the explicit list when each implementation uses `@derivedType`. The decorator automatically registers subclasses through the class inheritance chain.
 
 ### 5. Interface Consistency
 
