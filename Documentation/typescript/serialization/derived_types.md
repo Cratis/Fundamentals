@@ -18,7 +18,7 @@ The frontend DerivedTypes system consists of:
 
 ### Type Metadata System
 
-The frontend uses TypeScript decorators and reflect-metadata to store type information:
+The frontend uses TypeScript decorators and Fundamentals' metadata support to store type information:
 
 - **Derived Type IDs**: Unique string identifiers that must match exactly with backend `[DerivedType]` attributes
 - **Field Metadata**: Information about properties including their types and possible derivatives
@@ -275,9 +275,9 @@ export class CreditCard implements IPaymentMethod {
     // ❌ This won't be serialized without @field
     private internalId: string = '';
 
-    // ✅ Private fields that should be serialized need @field too
+    // Public serializable fields use @field
     @field(String)
-    private securityCode!: string;
+    cardIssuer!: string;
 }
 ```
 
@@ -375,32 +375,13 @@ With derived types, you benefit from:
 - **Type scanning**: Keep derivative lists focused to avoid unnecessary type checking
 - **Memory usage**: Metadata is stored per-class, not per-instance
 
-## Integration with Build Tools
+## Decorator Compatibility
 
-### TypeScript Configuration
+`@derivedType` supports both legacy and standard decorators. `Fields` merges metadata recorded by both modes across inheritance, so base and derived classes may come from dependencies compiled with different decorator modes. A project may still choose one compiler mode for consistency. See [Decorator Modes](./field_decorator.md#decorator-modes) for the TypeScript and Babel configuration.
 
-Ensure your `tsconfig.json` includes:
-
-```json
-{
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
-  }
-}
-```
-
-### Bundling Considerations
-
-When using module bundlers, ensure reflect-metadata is properly included:
-
-```typescript
-import 'reflect-metadata';
-// Import this before any decorated classes
-```
+Fundamentals loads its metadata support when you import `derivedType`; you do not need a separate `reflect-metadata` import.
 
 ## See Also
 
 - [JsonSerializer](./json_serializer.md) - Core serialization utility for type-safe JSON conversion
 - [Field Decorator](./field_decorator.md) - Comprehensive guide to the `@field` decorator system and runtime type safety
-
