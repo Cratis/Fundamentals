@@ -41,6 +41,13 @@
             "require": "./dist/cjs/reflection.js"
         }
     },
+    "installConfig": {
+        "hoistingLimits": "workspaces"
+    },
+    "devDependencies": {
+        "rollup-plugin-typescript2": "0.37.0",
+        "typescript-programmatic-api": "npm:typescript@6.0.3"
+    },
     "scripts": {
         "prepare": "yarn g:build",
         "clean": "yarn g:clean",
