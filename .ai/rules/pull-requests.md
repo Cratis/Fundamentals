@@ -32,6 +32,14 @@ Quick reminders:
   - **minor** — new features, new slices, non-breaking additions
   - **patch** — bug fixes, docs, refactoring with identical behavior
 
+## Merge Method
+
+- **Never squash-merge a pull request.** Squash merging destroys the PR's commit history and is prohibited without exception.
+- Default to a normal merge commit: GitHub's **Create a merge commit** option, `merge_method: merge` in the GitHub API/MCP tool, or `gh pr merge --merge` in the CLI.
+- Immediately before merging, verify the selected method. Never use `--squash` or `merge_method: squash`.
+- A rebase merge may be used only when the user explicitly requests it or documented repository policy requires it. Never choose rebase merely because normal merge commits are unavailable or to clean up commit history.
+- If the allowed merge method cannot be verified, stop and do not merge. Fix poor commits on the branch before merging; never destroy PR history at merge time.
+
 ## Quality Gates
 
 Before marking a PR ready for review:
