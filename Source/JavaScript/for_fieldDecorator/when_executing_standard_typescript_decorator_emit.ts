@@ -4,7 +4,13 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { Script } from 'node:vm';
-import { createProgram, getPreEmitDiagnostics, ModuleKind, ModuleResolutionKind, ScriptTarget, transpileModule } from 'typescript';
+// TypeScript 7 (the native compiler used for `tsc -b` in this workspace) does not ship the
+// legacy programmatic compiler API (createProgram, transpileModule, etc). This spec needs
+// that API to compile and execute a decorator fixture in-memory, so it imports a nested
+// TypeScript 6 dependency declared under a distinct package name instead of `typescript` -
+// see Source/JavaScript/package.json and the TS6/TS7 side-by-side guidance at
+// https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0
+import { createProgram, getPreEmitDiagnostics, ModuleKind, ModuleResolutionKind, ScriptTarget, transpileModule } from 'typescript-programmatic-api';
 import * as fundamentals from '../index';
 
 describe('when executing standard TypeScript decorator emit', () => {
