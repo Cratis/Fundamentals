@@ -41,6 +41,7 @@ When these instructions don't explicitly cover a situation, apply these values t
 - Always reuse the active terminal for commands.
 - Do not create new terminals unless current one is busy or fails.
 - When asked to commit, push, create a PR, ship, or land changes, always use the **ship-changes** skill.
+- **Never squash-merge a pull request.** Default to a normal merge commit that preserves every PR commit. A rebase merge is permitted only when explicitly requested by the user or required by documented repository policy; never choose it as an unrequested fallback.
 
 ## Development Workflow
 

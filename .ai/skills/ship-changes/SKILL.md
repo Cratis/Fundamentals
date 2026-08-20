@@ -115,8 +115,8 @@ git push -u origin <branch-name>
 
 Use `mcp_github_github_create_pull_request` with:
 
-- `owner`: `Cratis`
-- `repo`: `Chronicle`
+- `owner`: derive from the current repository's `origin` remote
+- `repo`: derive from the current repository's `origin` remote
 - `head`: the branch name
 - `base`: `main`
 - `title`: short imperative sentence describing the overall change
@@ -147,7 +147,7 @@ Rules:
 ### Searching for a related issue
 
 ```
-mcp_github_github_search_issues  query="<keywords> repo:Cratis/Chronicle"
+mcp_github_github_search_issues  query="<keywords> repo:<owner>/<repo>"
 ```
 
 If nothing relevant is found, omit the issue reference from affected bullets.
@@ -166,12 +166,25 @@ Otherwise use `gh pr edit <number> --add-label "<label>"` with one of:
 
 ## Step 7 — Merge the PR
 
+**Never squash-merge. Preserve every commit and its history.**
+
+Immediately before merging:
+
+1. Verify that the PR is mergeable and all required checks pass.
+2. Verify that the selected merge method is not squash.
+3. Default to `merge` / **Create a merge commit** unless the user explicitly requests rebase or documented repository policy requires it.
+4. If the allowed merge method is unavailable or cannot be verified, stop and do not merge. Never fall back to squash.
+
 Use `mcp_github_github_merge_pull_request` with:
 
-- `merge_method`: `merge`
-- `owner`: `Cratis`
-- `repo`: `Chronicle`
+- `merge_method`: `merge` by default; `rebase` only with explicit user direction or documented repository policy; never `squash`
+- `owner`: derive from the current repository's `origin` remote
+- `repo`: derive from the current repository's `origin` remote
 - `pullNumber`: the PR number returned in step 5
+
+For the GitHub CLI, use `gh pr merge <number> --merge` by default. `--rebase` is permitted only with explicit user direction or documented repository policy. Never pass `--squash`.
+
+After merging, verify that every PR commit remains represented in the resulting history. If it does not, report the problem immediately; do not rewrite published history without explicit authorization.
 
 ## Step 8 — Clean up the branch
 
@@ -230,4 +243,5 @@ git checkout main && git pull && git branch -d fix/testing-package-orleans-runti
 - **Never leave placeholder text** in PR bodies (`(#issue)`, `(#123)`).
 - **Never commit code that does not compile** — every commit must be a working state.
 - **Never push directly to `main`** — always go through the branch + PR flow.
+- **Never squash-merge** — use a normal merge commit by default; rebase only when explicitly requested or required by documented repository policy.
 - **Never skip branch cleanup** — delete both the local and remote branch after merging.
