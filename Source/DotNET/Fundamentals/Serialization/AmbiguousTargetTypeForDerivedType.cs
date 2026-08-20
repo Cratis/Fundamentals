@@ -11,6 +11,4 @@ namespace Cratis.Serialization;
 /// </remarks>
 /// <param name="type">Type that has multiple interfaces implemented.</param>
 public class AmbiguousTargetTypeForDerivedType(Type type) :
-    Exception($"Type '{type.FullName}' implements interfaces without specifying which interface it is a derived type of, there can be only one (the Highlander principle). The DerivedTypeAttribute has a parameter for specifying the interface.")
-{
-}
+    Exception($"Type '{type.FullName}' implements interfaces without specifying which interface it is a derived type of, there can be only one (the Highlander principle). The DerivedTypeAttribute has a parameter for specifying the interface.");

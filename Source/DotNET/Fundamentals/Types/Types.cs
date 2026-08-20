@@ -30,16 +30,10 @@ public class Types : ITypes
     /// <remarks>
     /// This will automatically set up <see cref="Types"/> using generated providers when available,
     /// and otherwise use the <see cref="ProjectReferencedAssemblies"/> and <see cref="PackageReferencedAssemblies"/> providers.
+    /// <see cref="DiscoveryMode"/> reports which of the two it chose.
     /// </remarks>
     public Types()
-        : this(
-            GeneratedTypeDiscoveryRegistry.Providers.Any()
-                ? GeneratedTypeDiscoveryRegistry.Providers
-                :
-                [
-                    ProjectReferencedAssemblies.Instance,
-                    PackageReferencedAssemblies.Instance
-                ])
+        : this(SelectDefaultProviders(out var discoveryMode), discoveryMode)
     {
     }
 
@@ -48,13 +42,23 @@ public class Types : ITypes
     /// </summary>
     /// <param name="assemblyProviders">Collection of assembly providers.</param>
     public Types(IEnumerable<ICanProvideAssembliesForDiscovery> assemblyProviders)
+        : this(assemblyProviders, TypeDiscoveryMode.Explicit)
     {
+    }
+
+    Types(IEnumerable<ICanProvideAssembliesForDiscovery> assemblyProviders, TypeDiscoveryMode discoveryMode)
+    {
+        DiscoveryMode = discoveryMode;
         var providers = assemblyProviders.ToArray();
 
         providers.ForEach(_ => _.Initialize());
         var assemblies = providers.SelectMany(_ => _.Assemblies).Distinct();
         _assemblies.AddRange(assemblies);
-        All = providers.SelectMany(_ => _.DefinedTypes).Distinct();
+        All = providers.SelectMany(static p => SafelyEnumerate(() => p.DefinedTypes)).Distinct();
+
+        // Reported here rather than at the end of the constructor because this is where the assembly set
+        // is final - what follows only builds the contract map from it, and takes an early exit doing so.
+        ReportUniverse();
 
         var precomputedProviders = providers.OfType<ICanProvideContractToImplementorsForDiscovery>().ToArray();
         if (precomputedProviders.Length > 0)
@@ -85,7 +89,7 @@ public class Types : ITypes
             // their implementations are still discoverable.
             var nonPrecomputedTypes = providers
                 .Where(static p => p is not ICanProvideContractToImplementorsForDiscovery)
-                .SelectMany(static p => p.DefinedTypes)
+                .SelectMany(static p => SafelyEnumerate(() => p.DefinedTypes))
                 .Distinct();
             _contractToImplementorsMap.Feed(nonPrecomputedTypes);
 
@@ -97,8 +101,8 @@ public class Types : ITypes
             // discover them without falling back to a full assembly scan.
             var diRegisteredImplementations = providers
                 .OfType<ICanProvideConventionsForDependencyInjection>()
-                .SelectMany(static p => p.SelfBindings.Select(static b => b.ImplementationType)
-                    .Concat(p.ConventionServiceBindings.Select(static b => b.ImplementationType)))
+                .SelectMany(static p => SafelyEnumerate(() => p.SelfBindings.Select(static b => b.ImplementationType)
+                    .Concat(p.ConventionServiceBindings.Select(static b => b.ImplementationType))))
                 .Distinct();
             _contractToImplementorsMap.Feed(diRegisteredImplementations);
 
@@ -108,6 +112,9 @@ public class Types : ITypes
 
         _contractToImplementorsMap.Feed(All);
     }
+
+    /// <inheritdoc/>
+    public TypeDiscoveryMode DiscoveryMode { get; }
 
     /// <inheritdoc/>
     public IEnumerable<Assembly> Assemblies => _assemblies;
@@ -139,6 +146,102 @@ public class Types : ITypes
         var typeFound = _contractToImplementorsMap.All.SingleOrDefault(t => t.FullName == fullName);
         ThrowIfTypeNotFound(fullName, typeFound!);
         return typeFound!;
+    }
+
+    /// <summary>
+    /// Picks the assembly providers to build the type universe from when the caller supplied none.
+    /// </summary>
+    /// <param name="discoveryMode">The mode the selection landed on.</param>
+    /// <returns>The providers to build from.</returns>
+    /// <remarks>
+    /// The registry is read once. Reading it twice - to test it and then to take it - would take the
+    /// registry's lock twice and leave a window in which a module initializer registers a provider
+    /// between the two reads, so the mode reported would not be the mode used.
+    /// </remarks>
+    static ICanProvideAssembliesForDiscovery[] SelectDefaultProviders(out TypeDiscoveryMode discoveryMode)
+    {
+        var generatedProviders = GeneratedTypeDiscoveryRegistry.Providers.ToArray();
+        if (generatedProviders.Length > 0)
+        {
+            discoveryMode = TypeDiscoveryMode.Generated;
+            return generatedProviders;
+        }
+
+        discoveryMode = TypeDiscoveryMode.Reflected;
+        return
+        [
+            ProjectReferencedAssemblies.Instance,
+            PackageReferencedAssemblies.Instance
+        ];
+    }
+
+    /// <summary>
+    /// Enumerates a provider-supplied sequence, tolerating a type that cannot be loaded — for example when a
+    /// referenced assembly resolves to a version that no longer contains a referenced type. Elements collected
+    /// before the failure are kept so type discovery continues instead of crashing application startup.
+    /// </summary>
+    /// <typeparam name="T">Type of element in the sequence.</typeparam>
+    /// <param name="factory">Factory producing the sequence to enumerate.</param>
+    /// <returns>The elements that could be enumerated successfully.</returns>
+    static IEnumerable<T> SafelyEnumerate<T>(Func<IEnumerable<T>> factory)
+    {
+        IEnumerator<T>? enumerator = null;
+        try
+        {
+            enumerator = factory().GetEnumerator();
+        }
+        catch (TypeLoadException)
+        {
+        }
+
+        if (enumerator is null)
+        {
+            yield break;
+        }
+
+        using (enumerator)
+        {
+            while (true)
+            {
+                T current;
+                try
+                {
+                    if (!enumerator.MoveNext())
+                    {
+                        break;
+                    }
+
+                    current = enumerator.Current;
+                }
+                catch (TypeLoadException)
+                {
+                    break;
+                }
+
+                yield return current;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reports what the universe was built from, and warns when it reached nothing beyond this package.
+    /// </summary>
+    /// <remarks>
+    /// A universe holding only <c>Cratis.Fundamentals</c> is never legitimate for an application - every
+    /// convention-based lookup will come back empty, and a shorter result is indistinguishable from a
+    /// feature nobody wrote. One comparison catches it, where comparing against the reference closure
+    /// would mean running the scan the generator exists to avoid.
+    /// </remarks>
+    void ReportUniverse()
+    {
+        var mode = DiscoveryMode.ToString();
+        var assemblies = string.Join(", ", _assemblies.Select(_ => _.GetName().Name));
+        TypeDiscoveryEventSource.Log.UniverseBuilt(mode, assemblies);
+
+        if (_assemblies.Count == 1 && _assemblies[0] == typeof(Types).Assembly)
+        {
+            TypeDiscoveryEventSource.Log.UniverseContainsOnlyThisPackage(mode, assemblies);
+        }
     }
 
     void ThrowIfMultipleTypesFound(Type type, IEnumerable<Type> typesFound)

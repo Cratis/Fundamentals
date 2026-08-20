@@ -18,7 +18,7 @@ The frontend DerivedTypes system consists of:
 
 ### Type Metadata System
 
-The frontend uses TypeScript decorators and reflect-metadata to store type information:
+The frontend uses TypeScript decorators and Fundamentals' metadata support to store type information:
 
 - **Derived Type IDs**: Unique string identifiers that must match exactly with backend `[DerivedType]` attributes
 - **Field Metadata**: Information about properties including their types and possible derivatives
@@ -205,8 +205,8 @@ isActive!: boolean;
 
 1. **Missing `@derivedType` decorator**: Classes won't be recognized during deserialization
 2. **Mismatched IDs**: Frontend and backend derived type IDs must match exactly
-3. **Missing field decorators**: Properties without `@field` won't be serialized/deserialized
-4. **Missing derivatives list**: Polymorphic fields need the derivatives parameter
+3. **Missing field decorators**: Runtime own properties are serialized even without `@field`, but they have no typed deserialization metadata
+4. **Missing derivatives list for an interface-shaped field**: Erased interfaces cannot provide a runtime constructor, so their possible implementations must be explicit
 
 ### Debugging Tips
 
@@ -260,9 +260,9 @@ export class PayPal implements IPaymentMethod { }
 
 > **Why centralize?** These "magic strings" are critical for serialization consistency. Centralizing them in one place prevents duplicates, makes them easy to maintain, and ensures frontend and backend stay synchronized.
 
-### 3. Complete Field Decoration
+### 3. Typed Field Metadata
 
-Decorate all serializable properties:
+Decorate every public field that requires typed deserialization. Runtime own properties also serialize without `@field`, but concrete-class deserialization only populates declared fields and cannot convert an undecorated value to its intended runtime type.
 
 ```typescript
 export class CreditCard implements IPaymentMethod {
@@ -272,28 +272,30 @@ export class CreditCard implements IPaymentMethod {
     @field(String)
     cardNumber!: string;
 
-    // ❌ This won't be serialized without @field
-    private internalId: string = '';
+    // This runtime own property is serialized, but has no typed deserialization metadata
+    transientNote: string = '';
 
-    // ✅ Private fields that should be serialized need @field too
+    // Public serializable fields use @field
     @field(String)
-    private securityCode!: string;
+    cardIssuer!: string;
 }
 ```
 
-### 4. Explicit Derivative Lists
+### 4. Derivative Lists for Erased Types
 
-Always specify derivatives for polymorphic fields:
+Specify derivatives for interface-shaped fields because TypeScript erases the interface at runtime:
 
 ```typescript
 // ✅ Good - explicit derivatives list
 @field(Object, false, [CreditCard, PayPal])
 paymentMethod!: IPaymentMethod;
 
-// ❌ Bad - missing derivatives, won't deserialize correctly
+// Missing runtime candidates for an erased interface
 @field(Object)
 paymentMethod!: IPaymentMethod;
 ```
+
+A field typed with a concrete base class can omit the explicit list when each implementation uses `@derivedType`. The decorator automatically registers subclasses through the class inheritance chain.
 
 ### 5. Interface Consistency
 
@@ -375,32 +377,13 @@ With derived types, you benefit from:
 - **Type scanning**: Keep derivative lists focused to avoid unnecessary type checking
 - **Memory usage**: Metadata is stored per-class, not per-instance
 
-## Integration with Build Tools
+## Decorator Compatibility
 
-### TypeScript Configuration
+`@derivedType` supports both legacy and standard decorators. `Fields` merges metadata recorded by both modes across inheritance, so base and derived classes may come from dependencies compiled with different decorator modes. A project may still choose one compiler mode for consistency. See [Decorator Modes](./field_decorator.md#decorator-modes) for the TypeScript and Babel configuration.
 
-Ensure your `tsconfig.json` includes:
-
-```json
-{
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
-  }
-}
-```
-
-### Bundling Considerations
-
-When using module bundlers, ensure reflect-metadata is properly included:
-
-```typescript
-import 'reflect-metadata';
-// Import this before any decorated classes
-```
+Fundamentals loads its metadata support when you import `derivedType`; you do not need a separate `reflect-metadata` import.
 
 ## See Also
 
 - [JsonSerializer](./json_serializer.md) - Core serialization utility for type-safe JSON conversion
 - [Field Decorator](./field_decorator.md) - Comprehensive guide to the `@field` decorator system and runtime type safety
-

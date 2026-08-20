@@ -10,6 +10,4 @@ namespace Cratis.Types;
 /// Initializes a new instance of the <see cref="UnableToResolveTypeByName"/> class.
 /// </remarks>
 /// <param name="typeName">Name of the type that was not possible to resolve.</param>
-public class UnableToResolveTypeByName(string typeName) : ArgumentException($"Unable to resolve '{typeName}'.")
-{
-}
+public class UnableToResolveTypeByName(string typeName) : ArgumentException($"Unable to resolve '{typeName}'.");

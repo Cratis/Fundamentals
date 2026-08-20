@@ -8,10 +8,10 @@ public class when_initializing_with_multiple_types_having_same_identifier : give
     interface ITargetType;
 
     [DerivedType("first-type")]
-    record FirstDerivedType : ITargetType { }
+    record FirstDerivedType : ITargetType;
 
     [DerivedType("first-type")]
-    record SecondDerivedType : ITargetType { }
+    record SecondDerivedType : ITargetType;
 
     Exception result;
 

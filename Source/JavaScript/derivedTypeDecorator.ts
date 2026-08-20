@@ -4,12 +4,27 @@
 import './reflection';
 import { Constructor } from './Constructor';
 import { DerivedType } from './DerivedType';
-
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { StandardClassDecoratorContext } from './StandardClassDecoratorContext';
 
 export function derivedType(identifier: string, targetType?: Constructor) {
-    return function (target: any) {
+    function decorator<Target extends Constructor>(target: Target): void;
+    function decorator<Target extends Constructor>(target: Target, context: StandardClassDecoratorContext<Target>): void;
+    function decorator(target: Constructor, context?: StandardClassDecoratorContext<Constructor>): void {
+        if (typeof target !== 'function') throw new TypeError('@derivedType can only decorate classes');
+        if (context && context.kind !== 'class') throw new TypeError('@derivedType can only decorate classes');
+        if (context && typeof context.addInitializer !== 'function') throw new TypeError('@derivedType requires a standard class decorator context');
+
+        if (context) {
+            context.addInitializer(function (this: Constructor): void {
+                register(this);
+            });
+            return;
+        }
+
+        register(target);
+    }
+
+    function register(target: Constructor): void {
         DerivedType.set(target, identifier, targetType);
 
         // Auto-register with every class in the prototype chain so that JsonSerializer
@@ -20,5 +35,7 @@ export function derivedType(identifier: string, targetType?: Constructor) {
             DerivedType.set(target, identifier, proto.constructor);
             proto = Object.getPrototypeOf(proto);
         }
-    };
+    }
+
+    return decorator;
 }

@@ -18,18 +18,10 @@ public static class TypesServiceCollectionExtensions
     /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
     public static IServiceCollection AddTypeDiscovery(this IServiceCollection services, IEnumerable<ICanProvideAssembliesForDiscovery>? assemblyProviders = default)
     {
-        if (assemblyProviders is null)
-        {
-            var generatedProviders = GeneratedTypeDiscoveryRegistry.Providers.ToArray();
-            assemblyProviders = generatedProviders.Length > 0
-                ? generatedProviders
-                :
-                [
-                    ProjectReferencedAssemblies.Instance,
-                    PackageReferencedAssemblies.Instance
-                ];
-        }
-
+        // Defaulting is left to Types' own parameterless constructor rather than repeated here. Repeating
+        // it made every DI-registered ITypes look caller-supplied, which is exactly what the reported
+        // discovery mode has to distinguish - and it left the ternary below with a branch it could never
+        // take.
         var types = assemblyProviders is null ? new Types() : new Types(assemblyProviders);
         services.AddSingleton<ITypes>(types);
         services

@@ -12,6 +12,4 @@ namespace Cratis.Types;
 /// <param name="type">Type that multiple of it.</param>
 /// <param name="typesFound">The types that was found.</param>
 public class MultipleTypesFound(Type type, IEnumerable<Type> typesFound) :
-    ArgumentException($"More than one type found for '{type.FullName}' - types found : [{string.Join(',', typesFound.Select(_ => _.FullName))}]")
-{
-}
+    ArgumentException($"More than one type found for '{type.FullName}' - types found : [{string.Join(',', typesFound.Select(_ => _.FullName))}]");

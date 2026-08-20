@@ -8,7 +8,7 @@ public class when_initializing_with_type_with_target_type_but_no_target_types_im
     interface ITarget;
 
     [DerivedType("known-type", typeof(ITarget))]
-    record DerivedType { }
+    record DerivedType;
 
     Exception result;
 

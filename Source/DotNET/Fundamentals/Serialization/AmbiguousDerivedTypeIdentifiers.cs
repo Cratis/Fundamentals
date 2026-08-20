@@ -10,6 +10,4 @@ namespace Cratis.Serialization;
 /// Initializes a new instance of the <see cref="AmbiguousDerivedTypeIdentifiers"/> class.
 /// </remarks>
 /// <param name="types">Types that have the same identifier.</param>
-public class AmbiguousDerivedTypeIdentifiers(IEnumerable<Type> types) : Exception($"The types '{string.Join(", ", types.Select(_ => _.FullName))}' have the same derived type identifier.")
-{
-}
+public class AmbiguousDerivedTypeIdentifiers(IEnumerable<Type> types) : Exception($"The types '{string.Join(", ", types.Select(_ => _.FullName))}' have the same derived type identifier.");

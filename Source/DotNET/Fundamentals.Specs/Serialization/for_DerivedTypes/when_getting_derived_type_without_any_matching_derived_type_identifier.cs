@@ -8,7 +8,7 @@ public class when_getting_derived_type_without_any_matching_derived_type_identif
     interface ITargetType;
 
     [DerivedType("known-type")]
-    record DerivedType : ITargetType { }
+    record DerivedType : ITargetType;
 
     DerivedTypes derived_types;
     Exception result;

@@ -40,3 +40,31 @@ The only exception is when the class IS genuinely a service (e.g., a gRPC stub w
 - One top-level declaration per file.
 - File name matches the top-level class or annotation name exactly.
 - Extension functions on a type live in the same file as the type, unless they are so numerous that a dedicated `*Extensions.kt` file is warranted.
+
+## Java compatibility
+
+Java is a first-class target for this client. Kotlin compiling and the specs passing prove nothing
+about it — Java has broken twice on changes that were green everywhere else.
+
+**Every new public type, annotation or member ships a Java usage fixture.** Add it to
+`Source/src/test/java/io/cratis/chronicle/conformance/JavaConformance.java`, which is never run —
+compiling it *is* the assertion — or to a narrower fixture under `src/test/java` when the area
+already has one.
+
+The recurring hazards, each of which has bitten:
+
+| Kotlin construct | What Java sees |
+|---|---|
+| Default arguments | Nothing — every parameter is required unless `@JvmOverloads` |
+| `@Repeatable` | No usable container unless `@JvmRepeatable` names an explicit one |
+| Annotation element not named `value` | No array or single-value shorthand |
+| `suspend fun` | Unusable — needs a blocking bridge in `io.cratis.chronicle.java` |
+| `Flow<T>` | Uncollectable — needs a callback bridge |
+| `@JvmInline value class` | Mangled constructors and accessors — never put one in the Java surface |
+| `KClass<T>` parameter | Awkward — add a `Class<T>` overload |
+| `internal` members | Name-mangled |
+
+`Source/api/Source.api` is the checked-in public ABI, produced by the binary-compatibility-validator.
+A change to it shows up in the diff, which is how an accidental break gets caught in review. Run
+`gradle apiDump` after any intentional public API change and commit the result; `gradle apiCheck`
+runs as part of `gradle build` and fails when the dump is stale.

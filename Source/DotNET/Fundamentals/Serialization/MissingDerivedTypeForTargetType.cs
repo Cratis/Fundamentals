@@ -12,6 +12,4 @@ namespace Cratis.Serialization;
 /// <param name="targetType">Type of target type.</param>
 /// <param name="derivedTypeId">The unique identifier of the expected derived type.</param>
 public class MissingDerivedTypeForTargetType(Type targetType, DerivedTypeId derivedTypeId) :
-    Exception($"Missing derived type with identifier '{derivedTypeId}' for target type '{targetType}'.")
-{
-}
+    Exception($"Missing derived type with identifier '{derivedTypeId}' for target type '{targetType}'.");

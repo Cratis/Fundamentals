@@ -11,6 +11,4 @@ namespace Cratis.Serialization;
 /// </remarks>
 /// <param name="type">Type that is missing interfaces.</param>
 public class MissingTargetTypeForDerivedType(Type type) :
-    Exception($"Type '{type.FullName}' does not implement any interface it is a derived type of. Remember there can be only one (the Highlander principle) it represents as a derived type. The DerivedTypeAttribute has a parameter for specifying this interface if you need multiple")
-{
-}
+    Exception($"Type '{type.FullName}' does not implement any interface it is a derived type of. Remember there can be only one (the Highlander principle) it represents as a derived type. The DerivedTypeAttribute has a parameter for specifying this interface if you need multiple");

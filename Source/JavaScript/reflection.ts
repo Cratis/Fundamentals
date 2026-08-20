@@ -29,6 +29,19 @@ declare global {
     }
 }
 
+// Standard decorators expose their class metadata through Symbol.metadata. Define it before any
+// decorated class is evaluated on runtimes that do not provide it yet. Symbol.for keeps the value
+// stable if more than one copy of this package is loaded in the same realm.
+const symbolConstructor = Symbol as unknown as { metadata?: unknown };
+if (symbolConstructor.metadata === undefined || symbolConstructor.metadata === null) {
+    Object.defineProperty(Symbol, 'metadata', {
+        configurable: true,
+        enumerable: false,
+        value: Symbol.for('Symbol.metadata'),
+        writable: false
+    });
+}
+
 // Check if native metadata API is available by testing for multiple methods
 if (typeof Reflect.defineMetadata !== 'function' || typeof Reflect.getOwnMetadata !== 'function') {
     const metadataMap = new WeakMap<any, Map<string | symbol, any>>();

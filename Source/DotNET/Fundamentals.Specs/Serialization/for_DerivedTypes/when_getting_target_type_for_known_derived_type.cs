@@ -8,7 +8,7 @@ public class when_getting_target_type_for_known_derived_type : given.derived_typ
     interface ITargetType;
 
     [DerivedType("known-type")]
-    record DerivedType : ITargetType { }
+    record DerivedType : ITargetType;
 
     DerivedTypes derived_types;
     Type result;

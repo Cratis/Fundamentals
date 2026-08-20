@@ -11,6 +11,4 @@ namespace Cratis.Serialization;
 /// </remarks>
 /// <param name="type">Type that is missing interfaces.</param>
 public class TargetTypeMismatchForDerivedType(Type type) :
-    Exception($"The specified target type used for '{type.FullName}' does not match any of the interfaces.")
-{
-}
+    Exception($"The specified target type used for '{type.FullName}' does not match any of the interfaces.");

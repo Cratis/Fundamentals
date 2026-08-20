@@ -11,10 +11,16 @@ namespace Cratis.Reactive;
 /// </summary>
 /// <typeparam name="TSource">Type of source.</typeparam>
 /// <typeparam name="TResult">Type of converted result.</typeparam>
+/// <remarks>
+/// The transformed result replays its most recent value to whoever subscribes. The source is subscribed to during
+/// construction, before any consumer can have attached, so a source emitting synchronously on subscribe - a
+/// <see cref="BehaviorSubject{T}"/> seed, a <see cref="ReplaySubject{T}"/> buffer - would otherwise have that first
+/// value dropped on the floor.
+/// </remarks>
 public class TransformingSubject<TSource, TResult> : ISubject<TResult>, IDisposable
 {
     readonly ISubject<TSource> _sourceSubject;
-    readonly Subject<TResult> _resultSubject;
+    readonly ReplaySubject<TResult> _resultSubject;
 
     /// <summary>
     /// Initializes a new instance of <see cref="TransformingSubject{TSource, TResult}"/>.
@@ -24,7 +30,7 @@ public class TransformingSubject<TSource, TResult> : ISubject<TResult>, IDisposa
     public TransformingSubject(ISubject<TSource> sourceSubject, Func<TSource, TResult> transform)
     {
         _sourceSubject = sourceSubject;
-        _resultSubject = new Subject<TResult>();
+        _resultSubject = new ReplaySubject<TResult>(1);
         _sourceSubject.Select(transform).Subscribe(_resultSubject);
         sourceSubject.Subscribe(_ => { }, _ => { }, Dispose);
     }

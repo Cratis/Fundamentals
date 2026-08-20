@@ -124,6 +124,11 @@ public static class JsonValueExtensions
             return TimeSpan.Parse(value.GetValue<string>());
         }
 
+        if (targetType == typeof(byte[]))
+        {
+            return Convert.FromBase64String(value.GetValue<string>());
+        }
+
         return null;
     }
 
@@ -201,6 +206,9 @@ public static class JsonValueExtensions
 
             case Guid actualValue:
                 return JsonValue.Create<Guid>(actualValue);
+
+            case byte[] actualValue:
+                return JsonValue.Create(Convert.ToBase64String(actualValue));
         }
 
         return null;

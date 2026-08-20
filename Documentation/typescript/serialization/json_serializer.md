@@ -265,6 +265,102 @@ const methodsJson = `[
 const methods = JsonSerializer.deserializeArray(IPaymentMethod, methodsJson);
 ```
 
+## Custom converters
+
+`Date`, `Guid`, `TimeSpan`, `ValueMap` and the geospatial types come with converters built in. When a
+type needs to cross the wire in a shape only you can decide — or when a built-in shape is not the one
+your backend declared — register a converter for it.
+
+Extend `JsonConverter`, declare the type it handles, and register it once during application start-up:
+
+```typescript
+import { JsonConverter, JsonSerializer, Constructor } from '@cratis/fundamentals';
+
+class CalendarDateJsonConverter extends JsonConverter<Date> {
+    get type(): Constructor<Date> {
+        return Date;
+    }
+
+    read(value: string): Date {
+        return new Date(`${value}T00:00:00`);
+    }
+
+    write(value: Date): string {
+        return value.toISOString().substring(0, 10);
+    }
+}
+
+JsonSerializer.registerConverter(new CalendarDateJsonConverter());
+```
+
+The converter is used for both directions — `read` on the way in, `write` on the way out — and takes
+the place of any converter already registered for the same type, including a built-in one. Registering
+only ever adds, so you can hand back to a built-in by registering a fresh one:
+
+```typescript
+import { DateJsonConverter } from '@cratis/fundamentals';
+
+JsonSerializer.registerConverter(new DateJsonConverter());
+```
+
+### What a converter cannot take over
+
+Two shapes resolve ahead of the converters, so a converter registered for them is not reached:
+
+- A type deriving from `ConceptAs` is unwrapped to its underlying value in both directions and converted
+  as that value's type. Register for the underlying type to reach a concept.
+- A `ValueMap` is read back from the declaring field's generic arguments rather than through a
+  converter. Note the asymmetry: writing a `ValueMap` *does* go through the registered converter, so
+  replacing that one changes the outbound half only.
+
+> [!NOTE]
+> `JsonConverter` also defines `canConvert`. `JsonSerializer` does not call it — a converter is resolved
+> by the type it declares through `type`, which is what `canConvert` would answer anyway — so overriding
+> it has no effect.
+
+## Loaded more than once
+
+If two copies of `@cratis/fundamentals` end up in the same JavaScript realm, each builds its own
+converter registry and its own `Guid` and `ConceptAs` class objects.
+
+Values themselves survive that boundary — a convertible type is recognised by the key it declares
+rather than by its class object, so a `Guid` or a concept created by one copy serialises correctly
+through the other. Three things do not survive it, and all three are silent:
+
+- A converter registered through `registerConverter` reaches only the copy it was registered on.
+- `instanceof` against the other copy's class is `false`, including in your own code.
+- A version pinned at the top level does not reach a copy nested under a dependency, so a fix you
+  adopt can reach nothing at all while every build stays green.
+
+So the package reports it once, on load:
+
+```text
+[@cratis/fundamentals] Loaded 2 times into the same JavaScript realm, and it has to be loaded once.
+```
+
+The report names where each copy was loaded from. Two separate installs collapse with
+`yarn dedupe @cratis/fundamentals` (or `npm dedupe`); confirm with `yarn why @cratis/fundamentals`. If
+the two paths differ only in `dist/esm` against `dist/cjs` it is one install reached as both ESM and
+CommonJS, which no dedupe will fix — make every importer resolve the same one.
+
+### If you publish a package that uses this one
+
+Declare it as a **peer** dependency, not a regular one:
+
+```json
+{
+  "peerDependencies": { "@cratis/fundamentals": "^7" },
+  "devDependencies":  { "@cratis/fundamentals": "7.16.8" }
+}
+```
+
+A regular dependency tells the package manager that a copy each is acceptable, and an exact pin makes
+duplication unavoidable rather than merely possible — an application combining your package with any
+other pinning a different `7.x` ends up with two physical copies that no dedupe can collapse. A peer
+dependency is the mechanism for "exactly one of these in the tree", which is what this is. Keep the
+range wide so a patch release does not force lockstep releases, and pin exactly in `devDependencies` so
+your own build and specs stay where they were.
+
 ## See Also
 
 - [Field Decorator](./field_decorator.md) - Decorator system for field serialization configuration
