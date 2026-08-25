@@ -21,6 +21,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       version: ${{ steps.release.outputs.version }}
       publish: ${{ steps.release.outputs.should-publish }}
@@ -40,6 +41,7 @@ jobs:
   publish-nuget-packages:
     if: needs.release.outputs.publish == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [release]
 
     steps:
@@ -79,6 +81,7 @@ jobs:
   publish-npm-packages:
     if: needs.release.outputs.publish == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [release]
 
     steps:
