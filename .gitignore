@@ -306,3 +306,5 @@ vite.*.js
 vite*.map
 
 *.lscache
+# Local AI work artifacts (plans, handovers, session notes) — never tracked
+.ai-work/
