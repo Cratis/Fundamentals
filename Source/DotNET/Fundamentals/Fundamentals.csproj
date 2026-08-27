@@ -3,6 +3,8 @@
         <AssemblyName>Cratis.Fundamentals</AssemblyName>
         <RootNamespace>Cratis</RootNamespace>
         <IsAotCompatible>true</IsAotCompatible>
+        <Description>The shared building blocks beneath the Cratis stack — concepts, serialization, dependency injection, and type discovery for .NET</Description>
+        <PackageTags>utilities;concepts;type-discovery;serialization;dependency-injection;cratis</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>

@@ -1,7 +1,17 @@
 {
     "name": "@cratis/fundamentals",
     "version": "1.0.5-test2",
-    "description": "",
+    "description": "The shared building blocks beneath the Cratis stack — GUIDs, concepts, derived-type serialization, property-path proxies, and decorators for TypeScript",
+    "keywords": [
+        "cratis",
+        "fundamentals",
+        "typescript",
+        "serialization",
+        "guid",
+        "concepts",
+        "reflection"
+    ],
+    "homepage": "https://www.cratis.io/fundamentals/",
     "author": "Cratis",
     "license": "MIT",
     "repository": {
