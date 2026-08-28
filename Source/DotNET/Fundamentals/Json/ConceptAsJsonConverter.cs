@@ -17,7 +17,7 @@ public class ConceptAsJsonConverter<T> : JsonConverter<T>
     /// <inheritdoc/>
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        object? value = null;
+        object? value;
         var conceptValueType = typeof(T).GetConceptValueType();
 
         switch (reader.TokenType)
@@ -83,6 +83,13 @@ public class ConceptAsJsonConverter<T> : JsonConverter<T>
                 else if (conceptValueType.IsEnum)
                 {
                     value = Enum.Parse(conceptValueType, reader.GetInt32().ToString());
+                }
+                else
+                {
+                    // A recognized underlying value type that falls through every branch above would otherwise
+                    // leave value null and the concept would silently deserialize to null further down - real
+                    // data quietly dropped rather than a build-time or run-time signal pointing at the cause.
+                    throw new UnsupportedConceptValueType(conceptValueType);
                 }
                 break;
 
