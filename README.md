@@ -98,3 +98,5 @@ This project is part of [Cratis](https://www.cratis.io) — free, MIT-licensed t
 Everything Cratis publishes today is MIT licensed and free to use.
 
 Join the community on [Discord](https://discord.gg/kt4AMpV8WV).
+
+Release notes and announcements: the [Cratis blog](https://blog.cratis.io).
