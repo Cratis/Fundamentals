@@ -8,6 +8,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <Description>Roslyn source generator for compile-time type discovery in .NET applications, part of Cratis Fundamentals</Description>
+        <PackageTags>type-discovery;source-generator;roslyn;utilities;cratis</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>

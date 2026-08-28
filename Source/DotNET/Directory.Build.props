@@ -11,6 +11,8 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <RepositoryUrl>https://github.com/Cratis/Fundamentals</RepositoryUrl>
         <PackageProjectUrl>https://github.com/Cratis/Fundamentals</PackageProjectUrl>
+        <Description>The shared building blocks beneath the Cratis stack — concepts, serialization, dependency injection, and type discovery for .NET</Description>
+        <PackageTags>utilities;concepts;type-discovery;serialization;dependency-injection;cratis</PackageTags>
 
         <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
         <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
