@@ -54,7 +54,10 @@ public class Types : ITypes
         providers.ForEach(_ => _.Initialize());
         var assemblies = providers.SelectMany(_ => _.Assemblies).Distinct();
         _assemblies.AddRange(assemblies);
-        All = providers.SelectMany(static p => SafelyEnumerate(() => p.DefinedTypes)).Distinct();
+
+        // Materialized once - the universe is immutable after construction, and All is iterated by every
+        // convention-based lookup, so a lazy Distinct() would re-enumerate and re-hash the full set each time.
+        All = [.. providers.SelectMany(static p => SafelyEnumerate(() => p.DefinedTypes)).Distinct()];
 
         // Reported here rather than at the end of the constructor because this is where the assembly set
         // is final - what follows only builds the contract map from it, and takes an early exit doing so.
