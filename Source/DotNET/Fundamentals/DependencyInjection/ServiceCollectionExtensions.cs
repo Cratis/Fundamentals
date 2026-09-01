@@ -19,6 +19,12 @@ namespace Cratis.DependencyInjection;
 public static class ServiceCollectionExtensions
 {
     static readonly string[] _namespacesToIgnoreForSelfBinding = ["System", "Microsoft"];
+#if NET9_0_OR_GREATER
+    static readonly Lock _ensureGeneratedProvidersLock = new();
+#else
+    static readonly object _ensureGeneratedProvidersLock = new();
+#endif
+    static readonly HashSet<Assembly> _assembliesProcessedByClosureWalk = [];
 
     /// <summary>
     /// Add service bindings by convention.
@@ -69,11 +75,12 @@ public static class ServiceCollectionExtensions
             return false;
         }
 
-        generatedBindings.ToList().ForEach(binding =>
+        var registeredServiceTypes = new HashSet<Type>(services.Select(_ => _.ServiceType));
+        foreach (var binding in generatedBindings)
         {
-            if (services.Any(_ => _.ServiceType == binding.ServiceType) || binding.ImplementationType.IsAbstract)
+            if (registeredServiceTypes.Contains(binding.ServiceType) || binding.ImplementationType.IsAbstract)
             {
-                return;
+                continue;
             }
 
             _ = binding.Lifetime switch
@@ -82,7 +89,8 @@ public static class ServiceCollectionExtensions
                 ServiceLifetime.Scoped => services.AddScoped(binding.ServiceType, binding.ImplementationType),
                 _ => services.AddTransient(binding.ServiceType, binding.ImplementationType)
             };
-        });
+            registeredServiceTypes.Add(binding.ServiceType);
+        }
 
         return true;
     }
@@ -102,11 +110,12 @@ public static class ServiceCollectionExtensions
             return false;
         }
 
-        generatedBindings.ToList().ForEach(binding =>
+        var registeredServiceTypes = new HashSet<Type>(services.Select(_ => _.ServiceType));
+        foreach (var binding in generatedBindings)
         {
-            if (services.Any(s => s.ServiceType == binding.ImplementationType))
+            if (registeredServiceTypes.Contains(binding.ImplementationType))
             {
-                return;
+                continue;
             }
 
             _ = binding.Lifetime switch
@@ -115,7 +124,8 @@ public static class ServiceCollectionExtensions
                 ServiceLifetime.Scoped => services.AddScoped(binding.ImplementationType, binding.ImplementationType),
                 _ => services.AddTransient(binding.ImplementationType, binding.ImplementationType)
             };
-        });
+            registeredServiceTypes.Add(binding.ImplementationType);
+        }
 
         return true;
     }
@@ -230,6 +240,28 @@ public static class ServiceCollectionExtensions
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Referenced assemblies must be visited to run module initializers that register generated providers.")]
     static void EnsureGeneratedTypeDiscoveryProvidersAreRegistered()
     {
+        // The walk only produces a new outcome when an assembly no previous walk has seen enters the
+        // AppDomain - module constructors run once per process, so re-walking an unchanged assembly set
+        // is pure cost. The gate tracks the exact assemblies a completed walk processed rather than a
+        // once-latch or a loaded-assembly count, which keeps the late-load semantics intact under
+        // concurrency: an assembly loaded after - or concurrently with - a walk is not yet in the set,
+        // so the next registration call walks again and runs its module constructor, while the
+        // steady-state call reduces to one set-containment check per loaded assembly.
+        lock (_ensureGeneratedProvidersLock)
+        {
+            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            if (Array.TrueForAll(loadedAssemblies, _assembliesProcessedByClosureWalk.Contains))
+            {
+                return;
+            }
+
+            WalkAssemblyClosureAndRunModuleConstructors();
+        }
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Referenced assemblies must be visited to run module initializers that register generated providers.")]
+    static void WalkAssemblyClosureAndRunModuleConstructors()
+    {
         var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
         var assemblies = new HashSet<Assembly>(loadedAssemblies);
         var visitedAssemblyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -283,9 +315,16 @@ public static class ServiceCollectionExtensions
             }
         }
 
-        foreach (var assembly in assemblies.Where(static _ => !_.IsDynamic))
+        foreach (var assembly in assemblies)
         {
-            RuntimeHelpers.RunModuleConstructor(assembly.ManifestModule.ModuleHandle);
+            if (!assembly.IsDynamic)
+            {
+                RuntimeHelpers.RunModuleConstructor(assembly.ManifestModule.ModuleHandle);
+            }
+
+            // Dynamic assemblies are marked as processed too - they have no module constructor to run,
+            // and leaving them out would make the gate walk again on every call for as long as one is loaded.
+            _assembliesProcessedByClosureWalk.Add(assembly);
         }
     }
 }
