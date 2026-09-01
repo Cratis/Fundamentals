@@ -5,22 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Cratis.DependencyInjection.for_ServiceCollectionExtensions;
 
-public class when_adding_self_bindings_multiple_times : Specification
+public class when_adding_bindings_by_convention_multiple_times : Specification
 {
     ServiceCollection _services;
-    int _meterBindings;
-    int _activitySourceBindings;
     Type[] _duplicatedServiceTypes;
 
     void Establish() => _services = new ServiceCollection();
 
     void Because()
     {
-        _services.AddSelfBindings();
-        _services.AddSelfBindings();
-
-        _meterBindings = _services.Count(_ => _.ServiceType == typeof(Metrics.IMeter<>));
-        _activitySourceBindings = _services.Count(_ => _.ServiceType == typeof(Traces.IActivitySource<>));
+        _services.AddBindingsByConvention();
+        _services.AddBindingsByConvention();
 
         // Asserted as "no service type twice" rather than comparing counts between the calls -
         // the generated provider registry is process-global and other specs register providers
@@ -28,7 +23,5 @@ public class when_adding_self_bindings_multiple_times : Specification
         _duplicatedServiceTypes = [.. _services.GroupBy(_ => _.ServiceType).Where(_ => _.Count() > 1).Select(_ => _.Key)];
     }
 
-    [Fact] void should_only_add_one_open_generic_meter_registration() => _meterBindings.ShouldEqual(1);
-    [Fact] void should_only_add_one_open_generic_activity_source_registration() => _activitySourceBindings.ShouldEqual(1);
     [Fact] void should_not_register_any_service_type_more_than_once() => _duplicatedServiceTypes.ShouldBeEmpty();
 }
