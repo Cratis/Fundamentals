@@ -55,8 +55,11 @@
         "hoistingLimits": "workspaces"
     },
     "devDependencies": {
+        "@typescript/native": "npm:typescript@^7.0.2",
+        "rollup": "4.63.1",
         "rollup-plugin-typescript2": "0.37.0",
-        "typescript-programmatic-api": "npm:typescript@6.0.3"
+        "typescript": "npm:@typescript/typescript6@^6.0.2",
+        "typescript-programmatic-api": "npm:@typescript/typescript6@^6.0.2"
     },
     "scripts": {
         "prepare": "yarn g:build",

@@ -1,7 +1,9 @@
-/// <reference types="vitest/config" />
-import commonjs from 'vite-plugin-commonjs';
+// Copyright (c) Cratis. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-const cwd = process.cwd();
+/// <reference types="vitest/config" />
+import { fileURLToPath } from 'node:url';
+import commonjs from 'vite-plugin-commonjs';
 
 export function createConfig() {
     return {
@@ -35,7 +37,7 @@ export function createConfig() {
             },
             exclude: ['**/dist/**', '**/node_modules/**', 'node_modules/**', '**/wwwroot/**', 'wwwroot/**'],
             include: ['**/for_*/when_*/**/*.ts', '**/for_*/**/when_*.ts'],
-            setupFiles: `${__dirname}/vitest.setup.ts`
+            setupFiles: fileURLToPath(new URL('./vitest.setup.ts', import.meta.url))
         },
         plugins: [
             commonjs()
