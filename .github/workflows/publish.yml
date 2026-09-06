@@ -11,7 +11,7 @@ concurrency:
 env:
   NUGET_OUTPUT: ./Artifacts/NuGet 
   DOTNET_VERSION: "10.0.x"
-  NODE_VERSION: "20.x"
+  NODE_VERSION: "latest"
 
 permissions:
   contents: write
@@ -128,16 +128,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
 
       - name: Configure npm for OIDC-based publishing
         run: |
-          # setup-node writes a placeholder _authToken (XXXXX-XXXXX-XXXXX-XXXXX) into
-          # .npmrc and exports NODE_AUTH_TOKEN with the same placeholder. npm uses this
-          # token as-is for registry auth → 404. Remove it so npm falls back to OIDC.
+          # Remove token-based registry configuration so npm uses trusted publishing
+          # through OIDC, independent of token placeholders or inherited credentials.
           sed -i '/_authToken/d' "$NPM_CONFIG_USERCONFIG"
           echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
           echo "--- .npmrc after stripping placeholder ---"
@@ -145,7 +145,7 @@ jobs:
 
       - name: Upgrade npm for trusted publishing (requires >= 11.5.1)
         run: |
-          npm install -g npm@11
+          npm install -g npm@latest
           NPM_VER="$(npm --version)"
           echo "Installed npm $NPM_VER"
           node -e "
@@ -155,6 +155,12 @@ jobs:
               process.exit(1);
             }
           "
+
+      - name: Setup Corepack
+        run: |
+          npm install --global corepack@latest
+          corepack enable yarn
+          corepack install
 
       - uses: actions/cache@v4
         id: yarn-cache
