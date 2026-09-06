@@ -1,7 +1,9 @@
+// Copyright (c) Cratis. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 import tseslintPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import noNull from 'eslint-plugin-no-null';
-import react from 'eslint-plugin-react';
 import globals from 'globals';
 import { coreRules } from './lib/coreRules.js';
 
@@ -31,7 +33,6 @@ const base = [
         files: ['**/*.ts', '**/*.tsx'],
         plugins: {
             '@typescript-eslint': tseslintPlugin,
-            react,
             'no-null': noNull,
         },
         languageOptions: {
@@ -39,6 +40,7 @@ const base = [
             parser: tsParser,
             sourceType: 'module',
         },
+        // Preserve version detection for consumers that explicitly provide a React plugin.
         settings: {
             react: { version: 'detect' },
         },

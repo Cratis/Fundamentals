@@ -1,3 +1,6 @@
+// Copyright (c) Cratis. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 import eslintJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
@@ -19,6 +22,7 @@ export const coreRules = {
 
     'no-irregular-whitespace': 0,
     semi: [2, 'always'],
+    // Keep these disabled for consumers that register their own React plugin; no React plugin is required here.
     'react/display-name': 0,
     'react/react-in-jsx-scope': 0,
     'no-prototype-builtins': 0,

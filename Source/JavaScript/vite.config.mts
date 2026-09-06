@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite';
+// Copyright (c) Cratis. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-/* @ts-ignore TypeScript complains that the imported vite.config is not under rootDir, but it works at runtime */
-import { createConfig } from '../../vite.base';
+import { defineConfig } from 'vite';
+import { createConfig } from '../../vite.base.mts';
 
 const config = createConfig();
 export default defineConfig(config);
