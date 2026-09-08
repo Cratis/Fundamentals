@@ -63,10 +63,9 @@ public static class TypesServiceCollectionExtensions
     /// instance being an <c>ImplementationInstance</c> rather than a factory.
     /// </para>
     /// <para>
-    /// It reflects the providers registered at the moment it is called. Call
-    /// <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered"/> first if nothing has run
-    /// the assembly closure walk yet, or the universe returned here - and the one the container gets -
-    /// is missing every provider the walk would have brought in.
+    /// It runs <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered"/> itself before it
+    /// reads the registry, so the universe it returns - and the one the container gets - covers every
+    /// generated provider the assembly closure walk can reach, no matter what has or has not run before.
     /// </para>
     /// <para>
     /// <see cref="AddTypeDiscovery"/> keeps returning this same instance for as long as the registered
@@ -89,12 +88,12 @@ public static class TypesServiceCollectionExtensions
     /// <returns>The default universe.</returns>
     /// <remarks>
     /// <para>
-    /// Keyed on the registered generated provider types rather than cached outright, because the
-    /// registry is not stable across calls: <c>AddBindingsByConvention</c> and <c>AddSelfBindings</c>
-    /// walk the assembly reference closure and run module constructors, so providers appear
-    /// <em>after</em> the first container has already registered type discovery. A universe captured
-    /// before that walk is missing everything the walk brought in, and handing it to later containers
-    /// would silently shrink what they can discover.
+    /// Runs the assembly closure walk first, so the default universe is never built from a provider set
+    /// the walk had not completed yet. Keyed on the registered generated provider types rather than
+    /// cached outright all the same, because the registry is not stable across calls: an assembly loaded
+    /// after a walk brings its providers in on the next one, and a universe captured before that is
+    /// missing everything it brought in. Handing that to later containers would silently shrink what
+    /// they can discover.
     /// </para>
     /// <para>
     /// <see cref="Types.Instance"/> is deliberately not used here for the same reason: it is a static
@@ -118,6 +117,10 @@ public static class TypesServiceCollectionExtensions
     /// </remarks>
     static Types DefaultUniverse()
     {
+        // Outside the gate: the walk holds its own lock across module constructors, and a module
+        // constructor is free to ask for this universe. Nesting the two locks would let that deadlock.
+        GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered();
+
         lock (_defaultUniverseGate)
         {
             // Snapshotted inside the gate and immediately before constructing, so the key describes what
