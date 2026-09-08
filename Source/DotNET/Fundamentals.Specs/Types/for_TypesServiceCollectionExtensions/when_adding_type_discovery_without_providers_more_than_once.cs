@@ -16,7 +16,7 @@ public class when_adding_type_discovery_without_providers_more_than_once : Speci
     {
         // Resolve once first, so a universe for the current provider set is certainly cached before the
         // registration below - that is the state a stale one would be served from.
-        Resolve();
+        _ = Resolve();
 
         GeneratedTypeDiscoveryRegistry.Register(new a_late_provider());
 

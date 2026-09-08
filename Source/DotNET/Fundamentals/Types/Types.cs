@@ -16,8 +16,25 @@ public class Types : ITypes
     /// Gets the global instance of <see cref="Types"/>.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Its recommended to use the singleton defined here, rather than building your own instance.
     /// This is due to the performance impact of scanning all assemblies in the application.
+    /// </para>
+    /// <para>
+    /// Know what it is a snapshot of before relying on it. Being a static field, it is built the first
+    /// time anything touches this type and reads <see cref="GeneratedTypeDiscoveryRegistry"/> exactly
+    /// once, at that moment. Providers registered later never reach it - and they do arrive later:
+    /// <c>AddBindingsByConvention</c> and <c>AddSelfBindings</c> walk the assembly reference closure and
+    /// run module constructors, registering providers for assemblies nothing had touched yet. Touch this
+    /// before that walk and the universe is missing everything the walk would have brought in, silently,
+    /// because a shorter <see cref="FindMultiple{T}"/> result is indistinguishable from a feature nobody
+    /// wrote.
+    /// </para>
+    /// <para>
+    /// A composition root that wants the universe as it stands should let
+    /// <c>AddTypeDiscovery()</c> supply it - that reuses one universe per distinct provider set and
+    /// rebuilds when the set grows - rather than capturing this field early and holding it.
+    /// </para>
     /// </remarks>
     public static readonly Types Instance = new();
 

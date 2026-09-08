@@ -72,7 +72,15 @@ public static class TypesServiceCollectionExtensions
     /// Comparing the provider set keeps the result identical to a fresh construction on every call while
     /// rebuilding only when the inputs actually changed. Registration is append-only and deduplicated by
     /// provider type, so in practice the set stops changing after the first closure walk and every
-    /// container from then on shares one universe.
+    /// container from then on shares one universe. Append-only is also what makes the comparison sound
+    /// rather than a sampling heuristic: equal sets at two points imply the set was equal throughout.
+    /// </para>
+    /// <para>
+    /// Keying on the generated providers alone is enough. The alternative
+    /// <see cref="ProjectReferencedAssemblies"/> and <see cref="PackageReferencedAssemblies"/> fallback
+    /// is a pair of singletons that latch on first initialization, so rebuilding from them would read
+    /// identical content anyway - and that fallback is unreachable for as long as this package ships a
+    /// generated provider for itself.
     /// </para>
     /// </remarks>
     static Types DefaultUniverse()
