@@ -3,7 +3,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using Cratis.Metrics;
 using Cratis.Reflection;
 using Cratis.Traces;
@@ -19,12 +18,6 @@ namespace Cratis.DependencyInjection;
 public static class ServiceCollectionExtensions
 {
     static readonly string[] _namespacesToIgnoreForSelfBinding = ["System", "Microsoft"];
-#if NET9_0_OR_GREATER
-    static readonly Lock _ensureGeneratedProvidersLock = new();
-#else
-    static readonly object _ensureGeneratedProvidersLock = new();
-#endif
-    static readonly HashSet<Assembly> _assembliesProcessedByClosureWalk = [];
 
     /// <summary>
     /// Add service bindings by convention.
@@ -63,7 +56,7 @@ public static class ServiceCollectionExtensions
     [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
     static bool TryAddGeneratedBindingsByConvention(IServiceCollection services)
     {
-        EnsureGeneratedTypeDiscoveryProvidersAreRegistered();
+        GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered();
 
         var generatedBindings = GeneratedTypeDiscoveryRegistry.Providers
             .OfType<ICanProvideConventionsForDependencyInjection>()
@@ -98,7 +91,7 @@ public static class ServiceCollectionExtensions
     [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
     static bool TryAddGeneratedSelfBindings(IServiceCollection services)
     {
-        EnsureGeneratedTypeDiscoveryProvidersAreRegistered();
+        GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered();
 
         var generatedBindings = GeneratedTypeDiscoveryRegistry.Providers
             .OfType<ICanProvideConventionsForDependencyInjection>()
@@ -235,96 +228,5 @@ public static class ServiceCollectionExtensions
         }
 
         return ServiceLifetime.Transient;
-    }
-
-    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Referenced assemblies must be visited to run module initializers that register generated providers.")]
-    static void EnsureGeneratedTypeDiscoveryProvidersAreRegistered()
-    {
-        // The walk only produces a new outcome when an assembly no previous walk has seen enters the
-        // AppDomain - module constructors run once per process, so re-walking an unchanged assembly set
-        // is pure cost. The gate tracks the exact assemblies a completed walk processed rather than a
-        // once-latch or a loaded-assembly count, which keeps the late-load semantics intact under
-        // concurrency: an assembly loaded after - or concurrently with - a walk is not yet in the set,
-        // so the next registration call walks again and runs its module constructor, while the
-        // steady-state call reduces to one set-containment check per loaded assembly.
-        lock (_ensureGeneratedProvidersLock)
-        {
-            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            if (Array.TrueForAll(loadedAssemblies, _assembliesProcessedByClosureWalk.Contains))
-            {
-                return;
-            }
-
-            WalkAssemblyClosureAndRunModuleConstructors();
-        }
-    }
-
-    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Referenced assemblies must be visited to run module initializers that register generated providers.")]
-    static void WalkAssemblyClosureAndRunModuleConstructors()
-    {
-        var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-        var assemblies = new HashSet<Assembly>(loadedAssemblies);
-        var visitedAssemblyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var assemblyNamesToLoad = new Queue<AssemblyName>();
-
-        void EnqueueReferencesFor(Assembly assembly)
-        {
-            foreach (var referencedAssemblyName in assembly.GetReferencedAssemblies().Where(_ => visitedAssemblyNames.Add(_.FullName)))
-            {
-                assemblyNamesToLoad.Enqueue(referencedAssemblyName);
-            }
-        }
-
-        foreach (var loadedAssembly in loadedAssemblies)
-        {
-            EnqueueReferencesFor(loadedAssembly);
-        }
-        if (Assembly.GetEntryAssembly() is { } entryAssembly)
-        {
-            _ = assemblies.Add(entryAssembly);
-            EnqueueReferencesFor(entryAssembly);
-        }
-
-        while (assemblyNamesToLoad.TryDequeue(out var assemblyName))
-        {
-            var assembly = assemblies.SingleOrDefault(_ => AssemblyName.ReferenceMatchesDefinition(_.GetName(), assemblyName));
-
-            if (assembly is null)
-            {
-                try
-                {
-                    assembly = Assembly.Load(assemblyName);
-                }
-                catch (FileNotFoundException)
-                {
-                    continue;
-                }
-                catch (FileLoadException)
-                {
-                    continue;
-                }
-                catch (BadImageFormatException)
-                {
-                    continue;
-                }
-            }
-
-            if (assemblies.Add(assembly))
-            {
-                EnqueueReferencesFor(assembly);
-            }
-        }
-
-        foreach (var assembly in assemblies)
-        {
-            if (!assembly.IsDynamic)
-            {
-                RuntimeHelpers.RunModuleConstructor(assembly.ManifestModule.ModuleHandle);
-            }
-
-            // Dynamic assemblies are marked as processed too - they have no module constructor to run,
-            // and leaving them out would make the gate walk again on every call for as long as one is loaded.
-            _assembliesProcessedByClosureWalk.Add(assembly);
-        }
     }
 }
