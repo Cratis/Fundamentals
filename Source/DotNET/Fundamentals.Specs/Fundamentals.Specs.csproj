@@ -18,5 +18,6 @@
     <ItemGroup Condition="'$(TargetFramework)'!='net10.0'">
         <Compile Remove="DependencyInjection/for_ServiceCollectionExtensions/when_adding_bindings_by_convention_for_assembly_loaded_before_module_initializer.cs" />
         <Compile Remove="Types/for_GeneratedTypeDiscoveryRegistry/when_ensuring_providers_are_registered.cs" />
+        <Compile Remove="Types/for_TypesServiceCollectionExtensions/when_getting_the_current_type_universe_before_any_closure_walk.cs" />
     </ItemGroup>
 </Project>
