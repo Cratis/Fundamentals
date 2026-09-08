@@ -33,7 +33,10 @@ public class Types : ITypes
     /// <para>
     /// A composition root that wants the universe as it stands should let
     /// <c>AddTypeDiscovery()</c> supply it - that reuses one universe per distinct provider set and
-    /// rebuilds when the set grows - rather than capturing this field early and holding it.
+    /// rebuilds when the set grows - rather than capturing this field early and holding it. Outside a
+    /// container, <c>TypesServiceCollectionExtensions.CurrentTypeUniverse()</c> returns that same
+    /// instance, and <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered"/> is what
+    /// makes the provider set complete before either is read.
     /// </para>
     /// </remarks>
     public static readonly Types Instance = new();

@@ -50,6 +50,39 @@ public static class TypesServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Gets the <see cref="ITypes"/> universe <see cref="AddTypeDiscovery"/> registers when it is called
+    /// without providers.
+    /// </summary>
+    /// <returns>The current default <see cref="ITypes"/> universe.</returns>
+    /// <remarks>
+    /// <para>
+    /// The same object, not an equivalent one: a caller that needs to hold the universe its container
+    /// will resolve can take it from here instead of building a second one or reading it back out of a
+    /// service descriptor. Both are the arrangement this exists to remove - a second universe silently
+    /// diverges from the container's, and descriptor probing depends on registration order and on the
+    /// instance being an <c>ImplementationInstance</c> rather than a factory.
+    /// </para>
+    /// <para>
+    /// It reflects the providers registered at the moment it is called. Call
+    /// <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered"/> first if nothing has run
+    /// the assembly closure walk yet, or the universe returned here - and the one the container gets -
+    /// is missing every provider the walk would have brought in.
+    /// </para>
+    /// <para>
+    /// <see cref="AddTypeDiscovery"/> keeps returning this same instance for as long as the registered
+    /// provider set is unchanged. When a provider is registered afterwards, both this and the next
+    /// container's <see cref="ITypes"/> move to the rebuilt universe together; an instance obtained
+    /// earlier is the older one and stays that way.
+    /// </para>
+    /// <para>
+    /// A method rather than a property because it is not always a cheap read: when the provider set has
+    /// changed since the last call it builds the universe, which is the expensive part of type discovery
+    /// described on <see cref="AddTypeDiscovery"/>. A call under an unchanged set returns the built one.
+    /// </para>
+    /// </remarks>
+    public static ITypes CurrentTypeUniverse() => DefaultUniverse();
+
+    /// <summary>
     /// Gets the universe the parameterless <see cref="Types"/> constructor would produce right now,
     /// reusing the previous one when nothing it is built from has changed.
     /// </summary>
