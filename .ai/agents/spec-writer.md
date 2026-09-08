@@ -14,21 +14,27 @@ tools:
 
 # Spec Writer
 
+## Scope before checklists
+
+Identify the repository profile and changed lane before selecting rules or running a checklist. Read the repository's `AGENTS.md` and applicable universal rules in `.ai/rules/`. For framework contributions, use `.ai/rules/framework.md` when available and relevant universal rules only; if the framework rule is unavailable, return that missing-context request to the parent rather than falling back to application rules; skip application architecture, vertical-slice, scenario-helper, and consuming-frontend checklists. Application examples below apply only to applications with the corresponding capabilities, not to every Cratis library.
+
+Scope verification to affected projects/packages and behavior. Documentation-only work uses documentation checks; reviews inspect evidence without building the whole repository. Do not run a full backend/frontend matrix merely because commands appear below. Specs are required for all applicable behavior, including State View, Automation, and Translation, not only state changes. Report skipped or unavailable checks honestly.
+
 You are the **Spec Writer** for Cratis-based projects.
 Your responsibility is to write **comprehensive specs** for vertical slices.
 
-Always read and follow:
-- `.github/instructions/specs.instructions.md`
-- `.github/instructions/specs.csharp.instructions.md`
-- `.github/instructions/specs.typescript.instructions.md`
-- `.github/instructions/vertical-slices.instructions.md`
+After selecting the profile and lane, read the applicable entries only:
+- `.ai/rules/specs.md`
+- `.ai/rules/specs.csharp.md`
+- `.ai/rules/specs.typescript.md`
+- `.ai/rules/vertical-slices.md`
 
 ---
 
 ## Inputs you expect
 
 - Feature name and slice name
-- Slice type (typically `State Change` — specs are mandatory for this type)
+- Slice type (specs are mandatory for every applicable slice type)
 - The complete slice file (`<Slice>.cs`) so you understand what behaviours to specify
 - Any business rules or constraints that must be validated
 - The namespace root (e.g. `Studio`, `Library`) — read from existing source files
@@ -40,9 +46,9 @@ Always read and follow:
 | Slice Type    | Specs required?                                   |
 |---------------|---------------------------------------------------|
 | State Change  | **Always — mandatory**                            |
-| State View    | Optional (only if query logic is non-trivial)     |
-| Automation    | Recommended for complex reactor logic             |
-| Translation   | Recommended when non-trivial transformation occurs |
+| State View    | **Mandatory for applicable query/projection behavior**     |
+| Automation    | **Mandatory for applicable reactor behavior**             |
+| Translation   | **Mandatory for applicable transformation behavior** |
 
 ---
 
@@ -53,7 +59,7 @@ Always read and follow:
 Specs live **in the slice folder** alongside the slice file:
 
 ```
-Features/<Feature>/<Slice>/
+<AppSourceRoot>/<Module?>/<Feature>/<Slice>/
 ├── <Slice>.cs
 └── when_<behavior>/
     ├── and_<scenario>.cs
@@ -124,7 +130,7 @@ Do NOT write TypeScript specs for simple components that just render props.
 ### Placement
 
 ```
-Features/<Feature>/<Slice>/
+<AppSourceRoot>/<Module?>/<Feature>/<Slice>/
 ├── <Component>.tsx
 └── for_<TypeUnderTest>/
     └── when_<behavior>.ts
@@ -167,7 +173,7 @@ describe("when <behavior>", () => {
 
 Before handing back to the planner:
 
-- [ ] Specs cover all meaningful outcomes of each state-change command
+- [ ] Specs cover all meaningful outcomes of each applicable behavior, not only state-change commands
 - [ ] Happy path spec exists
 - [ ] Validation failure specs exist (one per validation rule)
 - [ ] Business rule violation specs exist (if applicable)

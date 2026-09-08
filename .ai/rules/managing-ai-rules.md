@@ -116,14 +116,22 @@ Symlink targets use **relative paths** from the symlink's location to the canoni
 | `.github/copilot-instructions.md` | `../.ai/rules/` |
 | `.claude/CLAUDE.md` | `../.ai/rules/` |
 
-## Propagation and symlinks
+## Distribution and local adapters
 
-The cross-repository propagation workflow reads `.github/instructions/` and `.github/copilot-instructions.md` via the GitHub API. Because the GitHub API returns symlink blob content verbatim (the raw target path string), a naïve script would push path strings instead of actual rule content to target repositories.
+Cross-repository broadcast, all-to-all propagation, and reverse synchronization
+are retired. Do not run legacy propagation or turn a consuming repository into a
+hub. Shared public-safe behavior is authored and reviewed in `Cratis/AI`, generated
+into `Cratis/AI.Distribution`, and consumed only at an immutable reviewed version
+after release gates pass. Propose sanitized reusable improvements upstream for
+review; never reverse-sync private trees or local facts.
 
-The propagation script in this repository handles this correctly: when it encounters a symlink (Git mode `120000`) in the source tree, it resolves the target path and substitutes the real file's SHA before propagating. This means **symlinks work as expected** — target repositories receive the actual instruction content, not path strings.
-
-Both `.claude/` and `.github/instructions/` therefore use symlinks consistently. There is no need to maintain real file copies anywhere.
+These legacy repository-local rules remain locally maintained during canary;
+this is not permission to patch generated immutable distribution bytes or copy
+whole AI trees. Preserve private/project overlays, local skills, and minimal
+host bootstraps. Keep legacy adapters and actual workflows in place until an
+approved replacement passes canary and reviewed retirement gates. Update shared
+packages via approved exact-version pins; roll back by version.
 
 ## Shared workflows
 
-Workflow files intended to be synced to other repositories live in `.ai/workflows/`. They follow the same symlink pattern — the propagate workflow copies `.ai/workflows/` content to target repositories.
+Existing `.ai/workflows/` files are legacy local compatibility assets, not a broadcast source. Do not invoke propagation or remove actual workflows in a rule edit. Shared workflow updates require reviewed immutable references and consuming-repository review.

@@ -1,23 +1,35 @@
 ---
 name: ship-changes
 description: >
-  Ship staged or unstaged local changes: create a branch, make logical commits,
-  push to origin, open a PR with the correct description and label, merge it,
-  and delete the branch locally and on origin. Use whenever the user asks to
-  commit, push, create a PR, ship, or land changes.
+  Use when asked to commit, push, create a PR, ship, or land changes. Stop at
+  the requested verb; separately authorize merge, publication, issue effects,
+  label mutations, and branch deletion. Preserve history and explicit staging.
+
 ---
 
 # Ship Changes
 
-This skill takes local modifications from the working tree and lands them on
-`main` via a properly structured branch, commits, and PR — following all
-project conventions for commits, PR descriptions, and labels.
+This skill handles only the requested shipping endpoint. Preserve repository-specific
+conventions and stricter private/effect gates; do not infer authority for later steps.
+
+## Authorization and stopping points
+
+The requested verb is the stopping point, not permission for the whole workflow:
+
+- **Commit-only:** review, explicitly stage authorized paths, commit, and stop. Do not push or open a PR.
+- **Push-only:** push the authorized branch/commits and stop. Do not create additional commits or a PR unless requested.
+- **PR-only:** prepare/open the requested PR and report required checks; stop before merge.
+- **Ship/land:** clarify the exact intended endpoint and effects. These words alone do not authorize destructive or notification-bearing effects.
+
+Merge, issue comments or closure, label mutations (especially labels that trigger publication/releases), publication, and local or remote branch deletion each require separate explicit authorization for exact targets and effects. Apply the repository's current mutation protocol and stricter local/private gates; tool access and inverse escrow alone supply no authority. For destructive/bulk effects, prepare an exact dry-run, capture pre-state and deterministic inverse escrow in ignored `.ai-work/`, obtain approval, recheck preconditions, and record/read back outcomes through the approved repository-owned adapter. If a required adapter, safe inverse/compensation, or authorization is missing, stop. Preserve any stricter prohibition below.
+
+Never rewrite history: no amend, rebase, squash merge, hard reset, force-push, or forced branch deletion. Use new commits, revert, cherry-pick, and merge instead. A request to ship does not override this prohibition.
 
 ## Inputs
 
 Collect the following before starting:
 
-- **Semantic label** — `patch`, `minor`, `major`, or none. Skip labeling entirely if the user says no label or omits the label. Do not ask — infer from the nature of the change or follow the user's explicit instruction.
+- **Release intent** — propose `major`, `minor`, `patch`, or repository-supported non-release intent (ordinarily `no-release`) from the actual impact; confirm the current workflow contract. Apply a label only with explicit authorization for that exact label and any publication effects. If the user forbids labels but the repository requires one, report the blocker; do not silently omit it or bypass the gate.
 - **Branch name suffix** — short kebab-case description of the work, e.g. `fix/testing-orleans-runtime-assemblies`. Determine from the nature of the changes if not provided.
 - **Related GitHub issue** — search GitHub issues if the change likely relates to one; use the real number or omit the reference when none exists. Never invent or reuse example numbers.
 
@@ -107,11 +119,15 @@ Replace with ReplaceOne using upsert: true.
 
 ## Step 4 — Push the branch
 
+**Stop after step 3 for commit-only.** Run this step only for an authorized push; push-only does not authorize new commits or a PR.
+
 ```
 git push -u origin <branch-name>
 ```
 
 ## Step 5 — Create the PR
+
+**Stop after step 4 for push-only.** Create a PR only when requested; PR-only stops before merge.
 
 Use `mcp_github_github_create_pull_request` with:
 
@@ -152,19 +168,27 @@ mcp_github_github_search_issues  query="<keywords> repo:<owner>/<repo>"
 
 If nothing relevant is found, omit the issue reference from affected bullets.
 
-## Step 6 — Add the label (optional)
+## Step 6 — Confirm release intent
 
-Skip this step entirely if the user said no label or did not provide one.
+**Release intent** — propose `major`, `minor`, `patch`, or repository-supported non-release intent (ordinarily `no-release`) from the actual impact; confirm the current workflow contract. Apply a label only with explicit authorization for that exact label and any publication effects. If the user forbids labels but the repository requires one, report the blocker; do not silently omit it or bypass the gate.
 
-Otherwise use `gh pr edit <number> --add-label "<label>"` with one of:
+Documentation-only changes use repository-supported non-release intent, ordinarily `no-release`; confirm the workflow contract rather than assuming a label or API state. Run relevant content, link, frontmatter, and corpus checks instead of unrelated application builds, and satisfy every repository-required check, including release-intent checks where supported. Documentation is never a blanket exemption from red CI.
 
-| Label | When |
-|-------|------|
-| `patch` | bug fixes, docs, refactoring with identical behavior |
-| `minor` | new features, new slices, non-breaking additions |
-| `major` | breaking changes to public APIs |
+Read back an authorized label/body edit to confirm the exact requested change; API errors or ambiguous results require reconciliation, not blind retries. This skill assumes no external API state.
 
-## Step 7 — Merge the PR
+## Step 7 — Wait for required CI
+
+Documentation-only work is not exempt from required CI or release-intent checks.
+Inspect required checks read-only with the repository-supported tools. Before any
+separately authorized merge, every required check must pass. Diagnose a failure
+within a bounded attempt, fix only in-scope causes with authorized additive
+commits/pushes, and re-run the affected gate. Report unrelated, environmental, or
+unresolved failures as blockers; do not keep editing or retrying indefinitely and
+do not treat an expected failure as green.
+
+## Step 8 — Merge the PR
+
+**Separate explicit merge authorization required for the exact PR/head and declared effects. PR-only stops here.** Required checks must pass; use a true merge commit, never squash or rebase. A release label is not merge/publication authority.
 
 **Never squash-merge. Preserve every commit and its history.**
 
@@ -172,69 +196,52 @@ Immediately before merging:
 
 1. Verify that the PR is mergeable and all required checks pass.
 2. Verify that the selected merge method is not squash.
-3. Default to `merge` / **Create a merge commit** unless the user explicitly requests rebase or documented repository policy requires it.
+3. Use `merge` / **Create a merge commit** only; never rewrite history with rebase.
 4. If the allowed merge method is unavailable or cannot be verified, stop and do not merge. Never fall back to squash.
 
 Use `mcp_github_github_merge_pull_request` with:
 
-- `merge_method`: `merge` by default; `rebase` only with explicit user direction or documented repository policy; never `squash`
+- `merge_method`: `merge` only; never `rebase` or `squash`
 - `owner`: derive from the current repository's `origin` remote
 - `repo`: derive from the current repository's `origin` remote
 - `pullNumber`: the PR number returned in step 5
 
-For the GitHub CLI, use `gh pr merge <number> --merge` by default. `--rebase` is permitted only with explicit user direction or documented repository policy. Never pass `--squash`.
+For the GitHub CLI, use `gh pr merge <number> --merge` only after exact merge authorization. Never pass `--rebase` or `--squash`.
 
-After merging, verify that every PR commit remains represented in the resulting history. If it does not, report the problem immediately; do not rewrite published history without explicit authorization.
+After merging, verify that every PR commit remains represented in the resulting history. If it does not, report the problem immediately; do not rewrite history; use an additive recovery.
 
-## Step 8 — Clean up the branch
+## Step 9 — Clean up the branch
 
-```
-git checkout main && git pull && git branch -d <branch-name> && git push origin --delete <branch-name>
-```
-
-Run all four commands in one shell invocation to avoid partial state.
-After this completes, `main` is fully up to date locally.
+Branch deletion is optional, not completion criteria. Only after a verified merge
+and separate explicit authorization for each exact local/remote ref may cleanup
+proceed through the repository’s mutation protocol. Capture pre-state and inverse
+escrow, recheck refs immediately before each action, and read back each outcome.
+Do not batch checkout, pull, and deletion into one unreviewed command. Use only
+`git branch -d`, never `-D`; stop if it refuses or any ref/precondition drifts.
+Leave branches intact and report pending cleanup when authorization is absent.
 
 ## Full example sequence
 
-Below is the exact sequence used when embedding Orleans assemblies in the
-Testing package — use this as a reference for what a correct execution looks like:
+These are separate authorized endpoints, not one command batch. Paths and IDs
+are placeholders; derive the current repository and real targets before acting.
 
-```
-# 1. Review
-git status
-git diff
-
-# 2. Branch
-git checkout -b fix/testing-package-orleans-runtime-assemblies
-
-# 3a. First commit — infrastructure
-git add Source/Clients/Directory.Build.props
+```bash
+# Commit-only: explicitly authorized paths, review, commit, then STOP.
+git add <authorized-path>
 git diff --cached
-git commit -m "Add _PackPrivateAssemblyGlobs target for runtime-only NuGet package embedding
+git commit -m "Fix the scoped behavior"
 
-Extend the shared client build infrastructure with a new MSBuild target
-_PackPrivateAssemblyGlobs registered via TargetsForTfmSpecificContentInPackage.
-..."
+# Only when push was requested: push authorized commits, then STOP for push-only.
+git push -u origin <authorized-branch>
 
-# 3b. Second commit — consumer usage
-git add Source/Clients/Testing/Testing.csproj
-git commit -m "Embed Orleans assemblies in Testing package as runtime-only
-..."
-
-# 4. Push
-git push -u origin fix/testing-package-orleans-runtime-assemblies
-
-# 5. PR (via mcp_github_github_create_pull_request)
-
-# 6. Label
-gh pr edit 2994 --add-label "patch"
-
-# 7. Merge (via mcp_github_github_merge_pull_request)
-
-# 8. Clean up (pulls main as part of the same command)
-git checkout main && git pull && git branch -d fix/testing-package-orleans-runtime-assemblies && git push origin --delete fix/testing-package-orleans-runtime-assemblies
+# Only when PR creation was requested: use the reviewed template/body.
+gh pr create --base main --head <authorized-branch> --body-file <reviewed-body-path>
+# STOP before merge for PR-only. Report relevant required checks.
 ```
+
+A release-intent label, merge, issue comment/closure, or branch deletion is not an
+implied next command. First obtain separate explicit authorization for the exact
+effect and satisfy the authorization, current workflow, and mutation gates above.
 
 ## Common mistakes to avoid
 
@@ -243,5 +250,5 @@ git checkout main && git pull && git branch -d fix/testing-package-orleans-runti
 - **Never leave placeholder text** in PR bodies (`(#issue)`, `(#123)`).
 - **Never commit code that does not compile** — every commit must be a working state.
 - **Never push directly to `main`** — always go through the branch + PR flow.
-- **Never squash-merge** — use a normal merge commit by default; rebase only when explicitly requested or required by documented repository policy.
-- **Never skip branch cleanup** — delete both the local and remote branch after merging.
+- **Never squash-merge or rebase-merge** — use a normal merge commit only when separately authorized.
+- **Never delete branches automatically** — leave local/remote refs intact unless their exact deletion is separately authorized after verified merge.
