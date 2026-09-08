@@ -34,14 +34,19 @@ public static class Globals
     /// Configure the globals.
     /// </summary>
     /// <param name="derivedTypes"><see cref="IDerivedTypes"/>.</param>
-    public static void Configure(IDerivedTypes derivedTypes)
-    {
-        if (_jsonSerializerOptions is not null)
-        {
-            return;
-        }
+    public static void Configure(IDerivedTypes derivedTypes) =>
+        LazyInitializer.EnsureInitialized(ref _jsonSerializerOptions, () => Build(derivedTypes));
 
-        _jsonSerializerOptions = new()
+    /// <summary>
+    /// Builds the options in full before they are published: a reader that sees the field non-null may
+    /// serialize with it at once, and System.Text.Json freezes the options on first use, so a converter
+    /// added afterwards throws.
+    /// </summary>
+    /// <param name="derivedTypes"><see cref="IDerivedTypes"/> to add the derived-type converter for.</param>
+    /// <returns>The fully configured options.</returns>
+    static JsonSerializerOptions Build(IDerivedTypes derivedTypes)
+    {
+        JsonSerializerOptions options = new()
         {
             PropertyNamingPolicy = AcronymFriendlyJsonCamelCaseNamingPolicy.Instance,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -64,7 +69,9 @@ public static class Globals
 
         if (derivedTypes is not null)
         {
-            _jsonSerializerOptions.Converters.Add(new DerivedTypeJsonConverterFactory(derivedTypes));
+            options.Converters.Add(new DerivedTypeJsonConverterFactory(derivedTypes));
         }
+
+        return options;
     }
 }
