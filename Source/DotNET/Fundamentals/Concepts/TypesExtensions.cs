@@ -14,6 +14,8 @@ namespace Cratis.Concepts;
 /// </summary>
 public static class TypesExtensions
 {
+    static readonly HashSet<Type> _registered = [];
+
     /// <summary>
     /// Register type converters for all <see cref="ConceptAs{T}"/> types.
     /// </summary>
@@ -47,9 +49,17 @@ public static class TypesExtensions
     [RequiresDynamicCode("Uses MakeGenericType to construct the type converter for the concept type.")]
     static void RegisterTypeConverter(Type conceptType)
     {
-        var typeConverterType = typeof(ConceptAsTypeConverter<,>).MakeGenericType(conceptType, conceptType.GetConceptValueType());
-        if (!conceptType.HasAttribute<TypeConverterAttribute>())
+        // TypeDescriptor is process-global, so one registration per concept type is the whole job. Every
+        // repeated AddAttributes wrapped another provider around the type and took TypeDescriptor's global
+        // lock to do it, which a host configuring many containers - a spec suite - paid per container.
+        lock (_registered)
         {
+            if (!_registered.Add(conceptType) || conceptType.HasAttribute<TypeConverterAttribute>())
+            {
+                return;
+            }
+
+            var typeConverterType = typeof(ConceptAsTypeConverter<,>).MakeGenericType(conceptType, conceptType.GetConceptValueType());
             TypeDescriptor.AddAttributes(conceptType, new TypeConverterAttribute(typeConverterType));
         }
     }
