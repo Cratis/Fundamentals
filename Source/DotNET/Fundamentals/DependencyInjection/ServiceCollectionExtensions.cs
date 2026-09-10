@@ -177,7 +177,7 @@ public static class ServiceCollectionExtensions
         const TypeAttributes staticType = TypeAttributes.Abstract | TypeAttributes.Sealed;
 
         Types.Types.Instance.All.Where(_ =>
-            (_.Attributes & staticType) != staticType &&
+            !_.Attributes.HasFlag(staticType) &&
             !_.IsInterface &&
             !_.IsAbstract &&
             !ShouldIgnoreConvention(_) &&
