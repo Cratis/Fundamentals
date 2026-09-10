@@ -4,7 +4,7 @@
 namespace Cratis.Fundamentals.TypeDiscovery.Generator.for_TypeDiscoverySourceGenerator.when_collecting_package_symbols;
 
 /// <summary>
-/// Verifies that assemblies loaded from a NuGet <c>analyzers/</c> folder (Roslyn analyzer or
+/// Verifies that assemblies loaded from a NuGet <c language="csharp">analyzers/</c> folder (Roslyn analyzer or
 /// source generator packages) are excluded from the generated package symbols, because their
 /// DLLs are not copied to the consuming project's runtime output.
 /// </summary>

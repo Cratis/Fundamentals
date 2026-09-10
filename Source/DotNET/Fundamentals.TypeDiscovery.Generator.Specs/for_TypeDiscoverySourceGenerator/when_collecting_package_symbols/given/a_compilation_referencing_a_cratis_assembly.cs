@@ -53,7 +53,7 @@ public class a_compilation_referencing_a_cratis_assembly : Specification
     /// Writes the in-memory assembly to <paramref name="relativeFolder"/> under a fresh temp directory,
     /// builds a compilation that references it from that path, runs the generator, and captures the result.
     /// </summary>
-    /// <param name="relativeFolder">The relative folder (e.g. <c>tasks/net10.0</c>) under which to materialize the assembly.</param>
+    /// <param name="relativeFolder">The relative folder (e.g. <c language="csharp">tasks/net10.0</c>) under which to materialize the assembly.</param>
     protected void RunGeneratorWithAssemblyAt(string relativeFolder)
     {
         var directory = Path.Combine(_tempDir, relativeFolder);

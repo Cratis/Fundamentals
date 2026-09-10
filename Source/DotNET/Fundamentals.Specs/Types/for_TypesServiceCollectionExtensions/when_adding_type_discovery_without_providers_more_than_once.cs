@@ -42,7 +42,7 @@ public class when_adding_type_discovery_without_providers_more_than_once : Speci
     /// </summary>
     /// <remarks>
     /// Reuse is conditional on the provider set standing still, and in this process it does not stand
-    /// still on its own: spec classes running in parallel call <c>AddBindingsByConvention</c>, which
+    /// still on its own: spec classes running in parallel call <c language="csharp">AddBindingsByConvention</c>, which
     /// walks the assembly reference closure and runs module constructors, so a provider type can first
     /// appear at any moment. A registration landing between the two calls rebuilds the universe by
     /// design, and asserting on that pair would be asserting on xUnit's scheduling. Bounded rather than

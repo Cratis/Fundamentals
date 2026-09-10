@@ -4,7 +4,7 @@
 namespace Cratis.Fundamentals.TypeDiscovery.Generator.for_TypeDiscoverySourceGenerator.when_collecting_package_symbols;
 
 /// <summary>
-/// Verifies that assemblies loaded from a NuGet <c>tasks/</c> folder (MSBuild task helpers
+/// Verifies that assemblies loaded from a NuGet <c language="csharp">tasks/</c> folder (MSBuild task helpers
 /// such as Cratis.Arc.ProxyGenerator.Build) are excluded from the generated package symbols,
 /// because their DLLs are not copied to the consuming project's runtime output.
 /// </summary>

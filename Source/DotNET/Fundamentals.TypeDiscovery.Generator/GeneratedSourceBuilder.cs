@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 namespace Cratis.Fundamentals.TypeDiscovery.Generator;
 
 /// <summary>
-/// Builds the C# source text for the generated <c>GeneratedTypeDiscoveryProvider</c> class.
+/// Builds the C# source text for the generated <c language="csharp">GeneratedTypeDiscoveryProvider</c> class.
 /// </summary>
 internal static class GeneratedSourceBuilder
 {

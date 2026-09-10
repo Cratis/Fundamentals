@@ -28,7 +28,7 @@ public static class TypesServiceCollectionExtensions
     /// Without providers the default universe is built once per distinct set of registered generated
     /// providers and shared by every container after that. Building one is the expensive part of type
     /// discovery: every provider re-initialized, every defined type in every discovered assembly
-    /// re-materialized, and a <c>ContractToImplementorsMap</c> fed from all of them. A host that builds
+    /// re-materialized, and a <c language="csharp">ContractToImplementorsMap</c> fed from all of them. A host that builds
     /// many containers in one process - a spec suite constructing one per scenario - used to pay that in
     /// full per container for a result identical every time.
     /// <para>
@@ -60,7 +60,7 @@ public static class TypesServiceCollectionExtensions
     /// will resolve can take it from here instead of building a second one or reading it back out of a
     /// service descriptor. Both are the arrangement this exists to remove - a second universe silently
     /// diverges from the container's, and descriptor probing depends on registration order and on the
-    /// instance being an <c>ImplementationInstance</c> rather than a factory.
+    /// instance being an <c language="csharp">ImplementationInstance</c> rather than a factory.
     /// </para>
     /// <para>
     /// It runs <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered"/> itself before it

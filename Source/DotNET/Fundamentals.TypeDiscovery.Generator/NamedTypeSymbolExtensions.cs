@@ -34,12 +34,12 @@ internal static class NamedTypeSymbolExtensions
 
     /// <summary>
     /// Returns whether the type is declared entirely within auto-generated source files
-    /// produced by another source generator (files whose path ends with <c>.g.cs</c>).
+    /// produced by another source generator (files whose path ends with <c language="csharp">.g.cs</c>).
     /// Such types must be excluded from the type-discovery output to prevent CS0436
     /// conflicts when the same type name is also imported from a referenced assembly.
     /// </summary>
     /// <param name="type">The type to check.</param>
-    /// <returns><see langword="true"/> if every declaring syntax reference is in a <c>.g.cs</c> file; otherwise <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if every declaring syntax reference is in a <c language="csharp">.g.cs</c> file; otherwise <see langword="false"/>.</returns>
     public static bool IsFromSourceGenerator(this INamedTypeSymbol type) =>
         type.DeclaringSyntaxReferences.Length > 0 &&
         type.DeclaringSyntaxReferences.All(
@@ -88,7 +88,7 @@ internal static class NamedTypeSymbolExtensions
     /// <param name="type">The type to check.</param>
     /// <param name="assembly">The assembly into which generated code will be emitted.</param>
     /// <param name="globallyAccessibleAssemblyIdentities">
-    /// Optional set of referenced assembly identities that are visible through <c>global::</c>.
+    /// Optional set of referenced assembly identities that are visible through <c language="csharp">global::</c>.
     /// </param>
     /// <returns><see langword="true"/> if the type is accessible; otherwise <see langword="false"/>.</returns>
     public static bool IsAccessibleFromAssembly(
@@ -125,8 +125,8 @@ internal static class NamedTypeSymbolExtensions
         type.Arity == 0;
 
     /// <summary>
-    /// Returns the C# <c>typeof()</c> argument expression for this type.
-    /// Generic types are represented in their unbound open-generic form: <c>global::Foo.Bar&lt;&gt;</c>.
+    /// Returns the C# <c language="csharp">typeof()</c> argument expression for this type.
+    /// Generic types are represented in their unbound open-generic form: <c language="csharp">global::Foo.Bar&lt;&gt;</c>.
     /// </summary>
     /// <param name="type">The type to convert.</param>
     /// <returns>A fully-qualified C# type expression string.</returns>
@@ -137,7 +137,7 @@ internal static class NamedTypeSymbolExtensions
     }
 
     /// <summary>
-    /// Returns whether the type inherits from <c>System.Exception</c>.
+    /// Returns whether the type inherits from <c language="csharp">System.Exception</c>.
     /// </summary>
     /// <param name="type">The type to check.</param>
     /// <returns><see langword="true"/> if the type is an exception type; otherwise <see langword="false"/>.</returns>
@@ -159,7 +159,7 @@ internal static class NamedTypeSymbolExtensions
     }
 
     /// <summary>
-    /// Returns whether the type carries the <c>[IgnoreConvention]</c> attribute
+    /// Returns whether the type carries the <c language="csharp">[IgnoreConvention]</c> attribute
     /// and should therefore be excluded from all DI convention discovery.
     /// </summary>
     /// <param name="type">The type to check.</param>
@@ -168,7 +168,7 @@ internal static class NamedTypeSymbolExtensions
         type.GetAttributes().Any(_ => _.AttributeClass?.ToDisplayString() == IgnoreConventionAttributeFullName);
 
     /// <summary>
-    /// Returns whether the type lives in a <c>System.*</c> or <c>Microsoft.*</c> namespace
+    /// Returns whether the type lives in a <c language="csharp">System.*</c> or <c language="csharp">Microsoft.*</c> namespace
     /// and should therefore be excluded from DI self-binding convention discovery.
     /// </summary>
     /// <param name="type">The type to check.</param>
@@ -202,11 +202,11 @@ internal static class NamedTypeSymbolExtensions
                          ctor.Parameters.Any(p => p.Type is INamedTypeSymbol n && n.IsRecord));
 
     /// <summary>
-    /// Returns the DI service lifetime expression for the type, based on <c>[Singleton]</c>
-    /// or <c>[Scoped]</c> attributes. Defaults to <c>Transient</c>.
+    /// Returns the DI service lifetime expression for the type, based on <c language="csharp">[Singleton]</c>
+    /// or <c language="csharp">[Scoped]</c> attributes. Defaults to <c language="csharp">Transient</c>.
     /// </summary>
     /// <param name="type">The type to classify.</param>
-    /// <returns>A fully-qualified <c>ServiceLifetime</c> expression string.</returns>
+    /// <returns>A fully-qualified <c language="csharp">ServiceLifetime</c> expression string.</returns>
     public static string GetServiceLifetimeExpression(this INamedTypeSymbol type)
     {
         if (type.GetAttributes().Any(_ => _.AttributeClass?.ToDisplayString() == SingletonAttributeFullName))
@@ -225,14 +225,14 @@ internal static class NamedTypeSymbolExtensions
     /// <summary>
     /// Returns all base types and implemented interface types for the given type,
     /// including their open-generic forms where applicable.
-    /// Excludes <c>System.Object</c>, the type itself, and any contracts that are not
+    /// Excludes <c language="csharp">System.Object</c>, the type itself, and any contracts that are not
     /// accessible from generated code emitted into <paramref name="currentAssembly"/>
     /// (i.e. internal types from external assemblies are excluded to prevent CS0122).
     /// </summary>
     /// <param name="type">The type to inspect.</param>
     /// <param name="currentAssembly">The assembly into which generated code will be emitted.</param>
     /// <param name="globallyAccessibleAssemblyIdentities">
-    /// Optional set of referenced assembly identities that are visible through <c>global::</c>.
+    /// Optional set of referenced assembly identities that are visible through <c language="csharp">global::</c>.
     /// </param>
     /// <returns>The set of all contracts the type fulfils.</returns>
     public static IEnumerable<INamedTypeSymbol> GetAllBaseAndImplementingSymbols(

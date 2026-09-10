@@ -12,7 +12,7 @@ public class when_getting_the_current_type_universe : Specification
     /// Captured once per process rather than once per fact.
     /// </summary>
     /// <remarks>
-    /// xUnit constructs the spec class once per fact, so <c>Because</c> runs once per fact - while the
+    /// xUnit constructs the spec class once per fact, so <c language="csharp">Because</c> runs once per fact - while the
     /// registration below can only change the provider set the first time, because
     /// <see cref="GeneratedTypeDiscoveryRegistry.Register"/> deduplicates by provider type. A rebuild is
     /// therefore owed exactly once in this process, and capturing per fact would assert one on runs
@@ -55,7 +55,7 @@ public class when_getting_the_current_type_universe : Specification
     /// </summary>
     /// <remarks>
     /// The two are only the same object while the provider set stands still, and in this process it does
-    /// not stand still on its own: spec classes running in parallel call <c>AddBindingsByConvention</c>,
+    /// not stand still on its own: spec classes running in parallel call <c language="csharp">AddBindingsByConvention</c>,
     /// which walks the assembly reference closure and runs module constructors, so a provider type can
     /// first appear at any moment. A registration landing between the two calls rebuilds the universe by
     /// design, and asserting on that pair would be asserting on xUnit's scheduling. Bounded rather than

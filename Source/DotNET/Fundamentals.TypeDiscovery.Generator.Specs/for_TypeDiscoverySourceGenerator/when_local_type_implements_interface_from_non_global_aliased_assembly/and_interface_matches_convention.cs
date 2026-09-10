@@ -9,7 +9,7 @@ namespace Cratis.Fundamentals.TypeDiscovery.Generator.for_TypeDiscoverySourceGen
 
 /// <summary>
 /// Verifies that a local implementation of an interface from a non-global aliased assembly does not
-/// cause the generator to emit contract or DI convention references that are unreachable via <c>global::</c>.
+/// cause the generator to emit contract or DI convention references that are unreachable via <c language="csharp">global::</c>.
 /// </summary>
 public class and_interface_matches_convention : Specification
 {

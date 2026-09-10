@@ -11,12 +11,12 @@ namespace Cratis.Types;
 /// <remarks>
 /// <para>
 /// <see cref="Types.Instance"/> is a static field initializer in a leaf package: there is no container,
-/// no configuration and no <c>ILoggerFactory</c> at that point, and taking a logging dependency there
+/// no configuration and no <c language="csharp">ILoggerFactory</c> at that point, and taking a logging dependency there
 /// would buy an initialization-order hazard for a line of text. An event source needs none of that, is
 /// free when nothing is listening, and a host that wants these in its log can bridge them.
 /// </para>
 /// <para>
-/// Listen with <c>dotnet-trace collect --providers Cratis.Fundamentals.TypeDiscovery</c>, or from code
+/// Listen with <c language="csharp">dotnet-trace collect --providers Cratis.Fundamentals.TypeDiscovery</c>, or from code
 /// with an <see cref="EventListener"/>.
 /// </para>
 /// </remarks>

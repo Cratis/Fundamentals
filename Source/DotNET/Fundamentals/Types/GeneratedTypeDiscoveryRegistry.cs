@@ -64,7 +64,7 @@ public static class GeneratedTypeDiscoveryRegistry
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A generated provider registers itself from a <c>[ModuleInitializer]</c> in the assembly that
+    /// A generated provider registers itself from a <c language="csharp">[ModuleInitializer]</c> in the assembly that
     /// declares it, and a module constructor runs only when the runtime first needs that assembly -
     /// which for a referenced assembly nothing has touched yet is never.
     /// <see cref="Assembly.Load(AssemblyName)"/> does not run one either. So this walks the reference
@@ -82,7 +82,7 @@ public static class GeneratedTypeDiscoveryRegistry
     /// in that set, so the next call walks again and picks it up.
     /// </para>
     /// <para>
-    /// <c>AddBindingsByConvention</c> and <c>AddSelfBindings</c> call this for themselves. A host that
+    /// <c language="csharp">AddBindingsByConvention</c> and <c language="csharp">AddSelfBindings</c> call this for themselves. A host that
     /// builds a type universe <em>before</em> either of those - resolving <see cref="ITypes"/> from a
     /// container, or reading <see cref="Types.Instance"/> - has to call this first, or the universe is
     /// built from an incomplete provider set and silently misses everything the walk would have brought

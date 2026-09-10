@@ -26,7 +26,7 @@ internal static class TypeDiscoveryCollector
     /// Contracts whose expression appears in this set are omitted from the output to avoid CS0433.
     /// </param>
     /// <param name="globallyAccessibleAssemblyIdentities">
-    /// Optional set of referenced assembly identities that are visible through <c>global::</c>.
+    /// Optional set of referenced assembly identities that are visible through <c language="csharp">global::</c>.
     /// </param>
     /// <returns>One entry per contract with its ordered list of implementors.</returns>
     public static IEnumerable<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> GetContractsAndImplementors(
@@ -61,7 +61,7 @@ internal static class TypeDiscoveryCollector
     }
 
     /// <summary>
-    /// Returns all <c>I&lt;X&gt;</c> / <c>&lt;X&gt;</c> convention service bindings without
+    /// Returns all <c language="csharp">I&lt;X&gt;</c> / <c language="csharp">&lt;X&gt;</c> convention service bindings without
     /// applying referenced-assembly visibility filtering.
     /// </summary>
     /// <param name="symbols">The set of named type symbols from the assembly.</param>
@@ -71,15 +71,15 @@ internal static class TypeDiscoveryCollector
         GetConventionServiceBindings(symbols, currentAssembly: null, globallyAccessibleAssemblyIdentities: null);
 
     /// <summary>
-    /// Returns all <c>I&lt;X&gt;</c> / <c>&lt;X&gt;</c> convention service bindings
+    /// Returns all <c language="csharp">I&lt;X&gt;</c> / <c language="csharp">&lt;X&gt;</c> convention service bindings
     /// where exactly one implementation of the interface exists in the same namespace.
     /// When <paramref name="currentAssembly"/> is provided, contracts from non-global aliased
-    /// references are excluded because generated code cannot refer to them via <c>global::</c>.
+    /// references are excluded because generated code cannot refer to them via <c language="csharp">global::</c>.
     /// </summary>
     /// <param name="symbols">The set of named type symbols from the assembly.</param>
     /// <param name="currentAssembly">The assembly into which generated code will be emitted.</param>
     /// <param name="globallyAccessibleAssemblyIdentities">
-    /// Optional set of referenced assembly identities that are visible through <c>global::</c>.
+    /// Optional set of referenced assembly identities that are visible through <c language="csharp">global::</c>.
     /// </param>
     /// <returns>One entry per discovered convention binding.</returns>
     public static IEnumerable<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> GetConventionServiceBindings(
@@ -128,7 +128,7 @@ internal static class TypeDiscoveryCollector
     /// under their own type as the service type.
     /// Excludes interfaces, abstract classes, static classes, types in System/Microsoft namespaces,
     /// types with unresolvable constructor parameters, record-typed constructor parameters,
-    /// exception types, and types marked with <c>[IgnoreConvention]</c>.
+    /// exception types, and types marked with <c language="csharp">[IgnoreConvention]</c>.
     /// </summary>
     /// <param name="symbols">The set of named type symbols from the assembly.</param>
     /// <returns>One entry per discovered self-binding type.</returns>

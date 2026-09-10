@@ -24,7 +24,7 @@ public class Types : ITypes
     /// Know what it is a snapshot of before relying on it. Being a static field, it is built the first
     /// time anything touches this type and reads <see cref="GeneratedTypeDiscoveryRegistry"/> exactly
     /// once, at that moment. Providers registered later never reach it - and they do arrive later:
-    /// <c>AddBindingsByConvention</c> and <c>AddSelfBindings</c> walk the assembly reference closure and
+    /// <c language="csharp">AddBindingsByConvention</c> and <c language="csharp">AddSelfBindings</c> walk the assembly reference closure and
     /// run module constructors, registering providers for assemblies nothing had touched yet. Touch this
     /// before that walk and the universe is missing everything the walk would have brought in, silently,
     /// because a shorter <see cref="FindMultiple{T}"/> result is indistinguishable from a feature nobody
@@ -32,9 +32,9 @@ public class Types : ITypes
     /// </para>
     /// <para>
     /// A composition root that wants the universe as it stands should let
-    /// <c>AddTypeDiscovery()</c> supply it - that reuses one universe per distinct provider set and
+    /// <c language="csharp">AddTypeDiscovery()</c> supply it - that reuses one universe per distinct provider set and
     /// rebuilds when the set grows - rather than capturing this field early and holding it. Outside a
-    /// container, <c>TypesServiceCollectionExtensions.CurrentTypeUniverse()</c> returns that same
+    /// container, <c language="csharp">TypesServiceCollectionExtensions.CurrentTypeUniverse()</c> returns that same
     /// instance, and <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered"/> is what
     /// makes the provider set complete before either is read.
     /// </para>
@@ -250,7 +250,7 @@ public class Types : ITypes
     /// Reports what the universe was built from, and warns when it reached nothing beyond this package.
     /// </summary>
     /// <remarks>
-    /// A universe holding only <c>Cratis.Fundamentals</c> is never legitimate for an application - every
+    /// A universe holding only <c language="csharp">Cratis.Fundamentals</c> is never legitimate for an application - every
     /// convention-based lookup will come back empty, and a shorter result is indistinguishable from a
     /// feature nobody wrote. One comparison catches it, where comparing against the reference closure
     /// would mean running the scan the generator exists to avoid.
