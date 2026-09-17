@@ -5,7 +5,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "latest"
+  # Pinned deliberately: "latest" moved to Node 26, which breaks Yarn 4.17.1 during install with
+  # "The `onCancel` handler was attached after the promise settled". 24 satisfies the >=23 engines range.
+  NODE_VERSION: "24"
 
 on:
   workflow_dispatch:
