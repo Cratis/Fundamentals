@@ -102,6 +102,17 @@ export class DateOnly {
     }
 
     /**
+     * Gets the ISO-8601 representation used when this is serialized as JSON.
+     *
+     * Without this, `JSON.stringify` falls back to enumerating `year`, `month` and `day`, so a
+     * request body carries a component object where the server expects the scalar string.
+     * @returns The string.
+     */
+    toJSON(): string {
+        return this.toString();
+    }
+
+    /**
      * Determines whether this is the same calendar date as another.
      * @param other The other date.
      * @returns True when they are the same date.
