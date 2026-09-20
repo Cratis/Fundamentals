@@ -49,7 +49,7 @@
         "typescript": ">=4.8.4"
     },
     "devDependencies": {
-        "eslint": "^10.10.0",
+        "eslint": "^10.11.0",
         "typescript": "npm:@typescript/typescript6@^6.0.2"
     }
 }
