@@ -4,7 +4,7 @@
 /**
  * Defines something that is equatable to something.
  *
- * @export
+ * @public
  * @interface IEquatable
  */
 export interface IEquatable {

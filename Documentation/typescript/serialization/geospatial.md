@@ -29,6 +29,7 @@ const deserialized = JsonSerializer.deserialize(Point, json);
 ```
 
 **Validation:**
+
 - `type` must be "Point"
 - `coordinates` must be an array with exactly two numbers [longitude, latitude]
 
@@ -49,6 +50,7 @@ const deserialized = JsonSerializer.deserialize(LineString, json);
 ```
 
 **Validation:**
+
 - `type` must be "LineString"
 - `coordinates` must be an array with at least two coordinate pairs
 - Each pair must be an array of two numbers [longitude, latitude]
@@ -87,6 +89,7 @@ With holes:
 ```
 
 **Validation:**
+
 - `type` must be "Polygon"
 - `coordinates` must be an array with at least one ring (the shell)
 - Each ring must have coordinate pairs

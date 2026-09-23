@@ -19,7 +19,7 @@ const getString = (num: number) => {
 /**
  * Represents a Guid according to the http://www.ietf.org/rfc/rfc4122.txt
  *
- * @export
+ * @public
  * @class Guid
  */
 export class Guid implements IEquatable {

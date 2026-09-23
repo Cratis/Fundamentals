@@ -5,6 +5,7 @@ import { Constructor } from './Constructor';
 
 /**
  * Represents the standard decorator context used for a class.
+ * @inline
  */
 export type StandardClassDecoratorContext<Target extends Constructor> = {
     readonly kind: 'class';

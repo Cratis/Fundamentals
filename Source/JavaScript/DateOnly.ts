@@ -69,7 +69,7 @@ export class DateOnly {
     }
 
     /**
-     * Creates a {@link DateOnly} for the calendar date a {@link Date} falls on in the local time zone.
+     * Creates a {@link DateOnly} for the calendar date a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date | Date} falls on in the local time zone.
      * @param date The date to take the calendar date of.
      * @returns The {@link DateOnly}.
      * @remarks
@@ -81,8 +81,8 @@ export class DateOnly {
     }
 
     /**
-     * Converts to a {@link Date} at midnight in the local time zone.
-     * @returns The {@link Date}.
+     * Converts to a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date | Date} at midnight in the local time zone.
+     * @returns The {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date | Date}.
      * @remarks
      * Local rather than UTC, so the date a caller reads back with `getDate()` is the one they started with. This
      * invents a time that was never sent, which is why it is a method to call rather than what the value is.

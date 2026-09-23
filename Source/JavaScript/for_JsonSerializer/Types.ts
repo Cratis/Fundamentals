@@ -27,7 +27,6 @@ export class OtherType {
     collectionOfNumbers!: number[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ITargetType { }
 

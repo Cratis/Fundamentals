@@ -3,6 +3,7 @@
 
 /**
  * Represents the standard decorator context used for a class field.
+ * @inline
  */
 export type StandardFieldDecoratorContext = {
     readonly kind: 'field';
