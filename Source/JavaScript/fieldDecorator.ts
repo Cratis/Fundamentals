@@ -7,6 +7,10 @@ import { Fields } from './Fields';
 import { addFieldToDecoratorMetadata } from './fieldDecoratorMetadata';
 import { StandardFieldDecoratorContext } from './StandardFieldDecoratorContext';
 
+/**
+ * Serialization options for a decorated field's collection, derived, and generic types.
+ * @inline
+ */
 type fieldOptions = {
     enumerable?: boolean;
     derivatives?: Constructor[];

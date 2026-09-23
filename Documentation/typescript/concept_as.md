@@ -114,6 +114,7 @@ export type IsActive = IsActiveConcept | boolean;
 ```
 
 This pattern provides:
+
 - **Convenience**: Consumers can assign either the concept instance or the primitive value
 - **Readability**: The exported type name is clean and matches domain language
 - **Type Safety**: The `@field` decorator metadata ensures correct serialization/deserialization
@@ -215,6 +216,7 @@ export type OrderCount = OrderCountConcept | number;
 ```
 
 **Benefits of this pattern:**
+
 - **Convenience**: Consumers can assign either the concept instance or the primitive value
 - **Readability**: The exported type name (`UserId`) is clean and matches domain language
 - **Encapsulation**: The concept class name (`UserIdConcept`) is an implementation detail
@@ -311,6 +313,7 @@ The JsonSerializer follows the C# pattern for handling ConceptAs types:
 3. **Recursive Serialization**: Calls the serializer recursively on the inner value to handle complex types properly
 
 This ensures that:
+
 - Simple primitives (string, number, boolean) are serialized directly
 - Complex inner types are properly serialized using their own serialization logic
 - Union types work seamlessly without special handling
@@ -391,6 +394,7 @@ constructor(readonly value: T)
 Creates a new instance of the concept with the specified value.
 
 **Parameters:**
+
 - `value: T` - The underlying value to wrap
 
 **Example:**

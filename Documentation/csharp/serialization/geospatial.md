@@ -29,6 +29,7 @@ var deserialized = JsonSerializer.Deserialize<Point>(json, Globals.JsonSerialize
 ```
 
 **Validation:**
+
 - `type` must be "Point"
 - `coordinates` must be an array with exactly two numbers [longitude, latitude]
 
@@ -50,6 +51,7 @@ var deserialized = JsonSerializer.Deserialize<LineString>(json, Globals.JsonSeri
 ```
 
 **Validation:**
+
 - `type` must be "LineString"
 - `coordinates` must be an array with at least two coordinate pairs
 - Each pair must be an array of two numbers [longitude, latitude]
@@ -91,6 +93,7 @@ With holes:
 
 
 **Validation:**
+
 - `type` must be "Polygon"
 - `coordinates` must be an array with at least one ring (the shell)
 - Each ring must have at least 4 coordinate pairs
