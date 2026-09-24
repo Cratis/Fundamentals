@@ -137,7 +137,8 @@ const serializeValueForType = (type: Constructor, value: any) => {
 const deserializeValueFromType = (type: Constructor, value: any) => {
     // If it's a ConceptAs type, instantiate it with the value
     if (isConceptAs(type)) {
-        return new type(value);
+        const valueType = (type as Constructor & { valueType?: Constructor }).valueType;
+        return new type(valueType ? deserializeValueFromType(valueType, value) : value);
     }
     
     // Check if there's a registered converter
@@ -161,7 +162,7 @@ const deserializeValueFromField = (field: Field, value: any) => {
 
     // If it's a ConceptAs type, instantiate it with the value
     if (isConceptAs(field.type)) {
-        return new field.type(value);
+        return deserializeValueFromType(field.type, value);
     }
 
     // Check if there's a registered converter
@@ -378,20 +379,26 @@ export class JsonSerializer {
     static deserializeFromInstance<TResult extends object>(targetType: Constructor<TResult>, instance: any): TResult {
         const fields = Fields.getFieldsForType(targetType as Constructor);
 
-        if (converterFor(targetType)) {
+        if (converterFor(targetType) || isConceptAs(targetType)) {
             return deserializeValueFromType(targetType, instance);
         }
 
         const deserialized = new targetType();
         for (const field of fields) {
             let value = instance[field.name];
-            if (value) {
-                if (field.enumerable) {
+            if (value !== undefined && value !== null) {
+                if (field.type === Array) {
+                    const elementType = field.genericArguments[0];
+                    if (elementType) {
+                        const elementField = new Field(field.name, elementType, false, field.derivatives, []);
+                        value = value.map(_ => deserializeValueFromField(elementField, _));
+                    }
+                } else if (field.enumerable) {
                     value = value.map(_ => deserializeValueFromField(field, _));
                 } else {
                     value = deserializeValueFromField(field, value);
                 }
-            } else if (field.enumerable && value === undefined) {
+            } else if ((field.enumerable || field.type === Array) && value === undefined) {
                 // A collection that is absent from the payload deserializes to an empty one rather than to
                 // undefined. The declared type says the field is an array, and a producer that leaves an
                 // empty collection out - which the Chronicle sink does deliberately, so that a parallel

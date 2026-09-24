@@ -19,19 +19,34 @@ describe('when executing standard TypeScript decorator emit', () => {
     let symbolMetadataWasAbsent: boolean;
     let symbolMetadataWasPolyfilled: boolean;
     let executionResult: {
+        Child: fundamentals.Constructor;
         Circle: fundamentals.Constructor;
         Drawing: fundamentals.Constructor;
+        Enabled: fundamentals.Constructor;
+        Identifier: fundamentals.Constructor;
+        Label: fundamentals.Constructor;
+        Quantity: fundamentals.Constructor;
         Rectangle: fundamentals.Constructor;
         ReplacedShape: fundamentals.Constructor;
         Shape: fundamentals.Constructor;
         drawing: {
+            child: { identifier: { value: fundamentals.Guid } };
+            children: object[];
             createdAt: Date;
+            enabled: { value: boolean };
+            identifier: { value: fundamentals.Guid };
+            identifiers: { value: fundamentals.Guid }[];
+            label: { value: string };
+            legacyLabels: { value: string }[];
+            names: string[];
+            quantity: { value: number };
             scores: fundamentals.ValueMap<string, number>;
             shapes: object[];
             title: string;
         };
         instanceCountAfterDeserialize: number;
         instanceCountBeforeDeserialize: number;
+        serializedDrawing: string;
     };
     let registeredDerivedTypes: fundamentals.Constructor[];
     let legacySemanticDiagnosticCount: number;
@@ -86,7 +101,7 @@ describe('when executing standard TypeScript decorator emit', () => {
             reportDiagnostics: true
         }).outputText;
 
-        const script = new Script(`${emittedJavaScript}\n({ Circle, Drawing, Rectangle, ReplacedShape, Shape, drawing, instanceCountAfterDeserialize, instanceCountBeforeDeserialize })`);
+        const script = new Script(`${emittedJavaScript}\n({ Child, Circle, Drawing, Enabled, Identifier, Label, Quantity, Rectangle, ReplacedShape, Shape, drawing, instanceCountAfterDeserialize, instanceCountBeforeDeserialize, serializedDrawing })`);
         executionResult = script.runInNewContext({ Array, Boolean, Date, fundamentals, JSON, Number, Object, String, Symbol }) as typeof executionResult;
         registeredDerivedTypes = fundamentals.DerivedType.getDerivedTypesFor(executionResult.Shape);
     });
@@ -104,6 +119,36 @@ describe('when executing standard TypeScript decorator emit', () => {
     it('should expose field metadata before constructing an instance', () => executionResult.instanceCountBeforeDeserialize.should.equal(0));
     it('should construct the target only during first-call deserialization', () => executionResult.instanceCountAfterDeserialize.should.equal(1));
     it('should deserialize primitive fields', () => executionResult.drawing.title.should.equal('Standard decorators'));
+    it('should read array elements declared through generic arguments', () => executionResult.drawing.names.should.deep.equal(['one', 'two']));
+    it('should read a concept underlying Guid as a Guid', () => executionResult.drawing.identifier.value.should.be.instanceOf(fundamentals.Guid));
+    it('should wrap an empty string in its concept', () => {
+        (executionResult.drawing.label instanceof executionResult.Label).should.be.true;
+        executionResult.drawing.label.value.should.equal('');
+    });
+    it('should wrap zero in its concept', () => {
+        (executionResult.drawing.quantity instanceof executionResult.Quantity).should.be.true;
+        executionResult.drawing.quantity.value.should.equal(0);
+    });
+    it('should wrap false in its concept', () => {
+        (executionResult.drawing.enabled instanceof executionResult.Enabled).should.be.true;
+        executionResult.drawing.enabled.value.should.equal(false);
+    });
+    it('should read a nested model and its concept', () => {
+        (executionResult.drawing.child instanceof executionResult.Child).should.be.true;
+        executionResult.drawing.child.identifier.value.should.be.instanceOf(fundamentals.Guid);
+    });
+    it('should read an array of concepts', () => {
+        (executionResult.drawing.identifiers[0] instanceof executionResult.Identifier).should.be.true;
+        executionResult.drawing.identifiers[0].value.should.be.instanceOf(fundamentals.Guid);
+    });
+    it('should read an array of nested models', () => (executionResult.drawing.children[0] instanceof executionResult.Child).should.be.true);
+    it('should keep reading legacy enumerable fields', () => executionResult.drawing.legacyLabels[0].value.should.equal('older'));
+    it('should serialize generic arrays of concepts as values', () => JSON.parse(executionResult.serializedDrawing).identifiers.should.deep.equal(['f0fa7c5e-9f7b-4688-8851-e0b6eeebe28b']));
+    it('should serialize generic arrays of nested models', () => JSON.parse(executionResult.serializedDrawing).children.should.deep.equal([{ identifier: 'f0fa7c5e-9f7b-4688-8851-e0b6eeebe28b' }]));
+    it('should serialize falsy concept values', () => {
+        const written = JSON.parse(executionResult.serializedDrawing);
+        [written.label, written.quantity, written.enabled].should.deep.equal(['', 0, false]);
+    });
     it('should deserialize date fields', () => executionResult.drawing.createdAt.should.be.instanceOf(Date));
     it('should deserialize polymorphic array entries', () => (executionResult.drawing.shapes[0] instanceof executionResult.Circle).should.be.true);
     it('should deserialize every registered derivative', () => (executionResult.drawing.shapes[1] instanceof executionResult.Rectangle).should.be.true);
