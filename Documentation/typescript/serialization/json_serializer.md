@@ -148,7 +148,11 @@ const users = JsonSerializer.deserializeArray(User, json);
 
 ## Integration with Field Decorators
 
-The `JsonSerializer` relies on the `@field` decorator to understand your class structure. For comprehensive details about decorators, field configuration, and advanced patterns, see:
+The `JsonSerializer` relies on the `@field` decorator to understand your class structure. It reads collections declared either as `@field(ItemType, true)` or as `@field(Array, { genericArguments: [ItemType] })`. Both forms deserialize each element using its declared type, including concepts and nested models. An absent collection becomes `[]`; an explicit `null` stays `null`.
+
+For a concept whose underlying value needs conversion, declare its runtime type on the concept. For example, `class Identifier extends ConceptAs<Guid> { static readonly valueType = Guid; }` converts a JSON string into a `Guid` before wrapping it in `Identifier`. Concepts wrapping `""`, `0`, or `false` are also reconstructed; a field omitted from the JSON remains absent.
+
+For comprehensive details about decorators, field configuration, and advanced patterns, see:
 
 - [Field Decorator Documentation](./field_decorator.md) - Complete guide to the `@field` decorator system, runtime type safety, and advanced serialization patterns
 
