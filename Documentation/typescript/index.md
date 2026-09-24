@@ -25,3 +25,18 @@ To install the package:
 ```bash
 npm install @cratis/fundamentals
 ```
+
+## Module imports
+
+Use the package root for shared types, or import from `@cratis/fundamentals/geospatial`,
+`@cratis/fundamentals/json`, and `@cratis/fundamentals/reflection`. These entry points
+work in Node.js ESM, CommonJS, and TypeScript projects using NodeNext or Bundler
+module resolution.
+
+```typescript
+import { Guid } from '@cratis/fundamentals';
+import { Point } from '@cratis/fundamentals/geospatial';
+
+const origin = new Point(0, 0);
+const id = Guid.empty;
+```

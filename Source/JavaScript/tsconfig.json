@@ -9,6 +9,7 @@
     "exclude": [
         "dist",
         "**/for_*/**",
+        "scripts",
         "vite.config.mts"
     ]
 }
