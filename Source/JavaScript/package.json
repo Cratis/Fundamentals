@@ -31,24 +31,44 @@
     "exports": {
         "./package.json": "./package.json",
         ".": {
-            "types": "./dist/esm/index.d.ts",
-            "require": "./dist/cjs/index.js",
-            "import": "./dist/esm/index.js"
+            "import": {
+                "types": "./dist/esm/index.d.ts",
+                "default": "./dist/esm/index.js"
+            },
+            "require": {
+                "types": "./dist/cjs/index.d.ts",
+                "default": "./dist/cjs/index.js"
+            }
         },
         "./geospatial": {
-            "types": "./dist/esm/geospatial/index.d.ts",
-            "import": "./dist/esm/geospatial/index.js",
-            "require": "./dist/cjs/geospatial/index.js"
+            "import": {
+                "types": "./dist/esm/geospatial/index.d.ts",
+                "default": "./dist/esm/geospatial/index.js"
+            },
+            "require": {
+                "types": "./dist/cjs/geospatial/index.d.ts",
+                "default": "./dist/cjs/geospatial/index.js"
+            }
         },
         "./json": {
-            "types": "./dist/esm/json/index.d.ts",
-            "import": "./dist/esm/json/index.js",
-            "require": "./dist/cjs/json/index.js"
+            "import": {
+                "types": "./dist/esm/json/index.d.ts",
+                "default": "./dist/esm/json/index.js"
+            },
+            "require": {
+                "types": "./dist/cjs/json/index.d.ts",
+                "default": "./dist/cjs/json/index.js"
+            }
         },
         "./reflection": {
-            "types": "./dist/esm/reflection.d.ts",
-            "import": "./dist/esm/reflection.js",
-            "require": "./dist/cjs/reflection.js"
+            "import": {
+                "types": "./dist/esm/reflection.d.ts",
+                "default": "./dist/esm/reflection.js"
+            },
+            "require": {
+                "types": "./dist/cjs/reflection.d.ts",
+                "default": "./dist/cjs/reflection.js"
+            }
         }
     },
     "installConfig": {
@@ -62,14 +82,15 @@
         "typescript-programmatic-api": "npm:@typescript/typescript6@^6.0.2"
     },
     "scripts": {
-        "prepare": "yarn g:build",
+        "prepare": "yarn build",
         "clean": "yarn g:clean",
-        "build": "yarn g:build",
+        "build": "yarn g:build && node scripts/fix-declarations.mjs",
         "lint": "yarn g:lint",
         "lint:ci": "yarn g:lint:ci",
         "test": "yarn g:test",
         "test:watch": "yarn g:test:watch",
-        "ci": "yarn g:ci",
+        "ci": "yarn clean && yarn lint:ci && yarn build && yarn test:consumers && yarn test",
+        "test:consumers": "node scripts/check-consumers.mjs",
         "up": "yarn g:up"
     }
 }
