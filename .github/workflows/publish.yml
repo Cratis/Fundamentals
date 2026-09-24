@@ -16,6 +16,7 @@ env:
   NODE_VERSION: "24"
 
 permissions:
+  issues: write
   contents: write
 
 on:
