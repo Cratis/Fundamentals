@@ -13,13 +13,18 @@ namespace Cratis.Json;
 public class EnumConverter<T> : JsonConverter<T>
     where T : struct, Enum
 {
+    static readonly bool _isFlags = typeof(T).IsDefined(typeof(FlagsAttribute), false);
+    static readonly int _declaredFlags = _isFlags
+        ? Enum.GetValues<T>().Aggregate(0, (mask, value) => mask | Convert.ToInt32(value))
+        : 0;
+
     /// <inheritdoc/>
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Number)
         {
             var intValue = reader.GetInt32();
-            if (!Enum.IsDefined(typeof(T), intValue))
+            if (!IsAcceptable(intValue))
             {
                 throw new JsonException($"Unable to convert \"{intValue}\" to Enum \"{typeof(T).FullName}\". Value is not defined.");
             }
@@ -46,4 +51,20 @@ public class EnumConverter<T> : JsonConverter<T>
     {
         writer.WriteNumberValue(Convert.ToInt32(value));
     }
+
+    /// <summary>
+    /// Decides whether a numeric value may be converted to <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="value">The numeric value read from the document.</param>
+    /// <returns>True if the value can be represented by the enum, false otherwise.</returns>
+    /// <remarks>
+    /// A [Flags] enum is a set, so a combination of declared flags is a legitimate value even though no single
+    /// member carries it - Enum.IsDefined answers false for every combination, which made Write and Read
+    /// disagree: the combination was written happily and then rejected on the way back in. Any bit outside the
+    /// declared flags is still refused, so the check stays a real one.
+    /// </remarks>
+    static bool IsAcceptable(int value) =>
+        _isFlags
+            ? (value & ~_declaredFlags) == 0
+            : Enum.IsDefined(typeof(T), value);
 }
