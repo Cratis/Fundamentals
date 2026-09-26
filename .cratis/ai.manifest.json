@@ -1,5 +1,5 @@
 {
-  "SourceRevision": "cc9c6312a748913c90d20c4c91b9ebd2e83edfb0",
+  "SourceRevision": "3d7160381c87bc73c7b26c260350f8f3fb3a81e7",
   "Files": [
     {
       "Source": "agents/backend-developer.md",
@@ -289,7 +289,7 @@
     {
       "Source": "profile-catalog.json",
       "Destination": "profile-catalog.json",
-      "Hash": "FDDE9B57C02E3684F844B2E6E17D5FF3FDC2826548584CBBBE277E153E378AB5"
+      "Hash": "465E60D02E0546129C07960C771A7FADB3CD68810A9587BB87773B463B9B7DA6"
     },
     {
       "Source": "prompts/add-business-rule.prompt.md",
@@ -494,7 +494,7 @@
     {
       "Source": "rules/profiles.md",
       "Destination": "rules/profiles.md",
-      "Hash": "4DBEE9C03E3A731CADD05DF71A70562EF58755BC4ABF908DBD8C1268A48504B9"
+      "Hash": "0147BEB4788AF092DE1FC53EABD0F0C22730BD4ECD6E04CF5EA6069382396569"
     },
     {
       "Source": "rules/pull-requests.md",
@@ -669,7 +669,12 @@
     {
       "Source": "skills/cratis-writing-voice-and-cadence/SKILL.md",
       "Destination": "skills/cratis-writing-voice-and-cadence/SKILL.md",
-      "Hash": "3D63F68E9E81C01975F7BFDFB231A27A69B483EB0839651805AAE70D197743B7"
+      "Hash": "C95D5B48CC8895FC70EFAE01C11878A099B3C6BAC2B0C5D524E748EB3EBEDB07"
+    },
+    {
+      "Source": "skills/cratis-writing-voice-and-cadence/references/ai-tells.md",
+      "Destination": "skills/cratis-writing-voice-and-cadence/references/ai-tells.md",
+      "Hash": "E5D1B2B3E22DB764B9F77706234F54F179C8DAE7BCE6EB8F4F6D0A19E0A6E290"
     }
   ],
   "Integrations": [
