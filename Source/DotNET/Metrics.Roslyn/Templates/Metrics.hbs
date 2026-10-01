@@ -17,7 +17,7 @@ namespace {{Namespace}};
     {{/Gauges}}
 
     {{#Histograms}}
-    static Histogram<{{Type}}>? {{MethodName}}Metric;
+    static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<Meter, Histogram<{{Type}}>> {{MethodName}}Metric = new();
     {{/Histograms}}
 
     {{#Counters}}
@@ -96,18 +96,6 @@ namespace {{Namespace}};
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
     {{{MethodSignature}}}
     {
-        {{#if IsScoped}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateHistogram<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}});
-        }
-        {{else}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateHistogram<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}});
-        }
-        {{/if}}
-
         var {{TagsVariable}} = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
@@ -122,7 +110,14 @@ namespace {{Namespace}};
         }
         {{/if}}
 
-        {{MethodName}}Metric?.Record({{ValueParameter}}, {{TagsVariable}});
+        {{#if IsScoped}}
+        if ({{ScopeParameter}}.Meter is { } {{MeterVariable}})
+        {{else}}
+        if ({{ScopeParameter}}.ActualMeter is { } {{MeterVariable}})
+        {{/if}}
+        {
+            {{MethodName}}Metric.GetValue({{MeterVariable}}, static {{HistogramMeterVariable}} => {{HistogramMeterVariable}}.CreateHistogram<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}})).Record({{ValueParameter}}, {{TagsVariable}});
+        }
     }
     {{/Histograms}}
 

@@ -86,6 +86,16 @@ public class MetricTemplateData
     public string ScopeTagVariable { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the collision-free local name for the actual meter.
+    /// </summary>
+    public string MeterVariable { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the collision-free factory parameter name for the histogram meter.
+    /// </summary>
+    public string HistogramMeterVariable { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the tags for the counter.
     /// </summary>
     public IEnumerable<TagTemplateData> Tags { get; set; } = [];

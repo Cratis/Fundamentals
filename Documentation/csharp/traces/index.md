@@ -51,7 +51,7 @@ public interface IActivitySource<T>
 }
 ```
 
-When you resolve unkeyed `IActivitySource<T>` from dependency injection, Fundamentals creates an `ActivitySource` named after `T`. These per-type names are not subscribed by the default `Cratis.*` OpenTelemetry subscription unless the type's full name matches that wildcard. Register a named source such as `Cratis.MyProduct` and inject it by key, or explicitly subscribe to the per-type source.
+When you resolve unkeyed `IActivitySource<T>` from dependency injection, Fundamentals creates an `ActivitySource` named after `T`. Per-type sources are not subscribed by default; explicitly subscribe to the source name in your telemetry provider, or use a named source that your provider subscribes to.
 
 `AddNamedActivitySource("Cratis.MyProduct", version: "1.2.3")` and `AddNamedMeter("Cratis.MyProduct", version: "1.2.3")` set the instrumentation scope version. The existing overloads without a version remain supported.
 

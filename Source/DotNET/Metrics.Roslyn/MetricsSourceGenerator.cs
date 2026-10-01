@@ -331,6 +331,8 @@ public class MetricsSourceGenerator : IIncrementalGenerator
                         HasValueParameter = hasValueParameter,
                         TagsVariable = GetLocalName(method, "tags"),
                         ScopeTagVariable = GetLocalName(method, "scopeTag"),
+                        MeterVariable = GetLocalName(method, "actualMeter"),
+                        HistogramMeterVariable = GetLocalName(method, "histogramMeter"),
                         Tags = tags
                     });
         }
