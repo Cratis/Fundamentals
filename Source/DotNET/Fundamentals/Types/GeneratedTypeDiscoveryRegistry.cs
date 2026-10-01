@@ -112,35 +112,47 @@ public static class GeneratedTypeDiscoveryRegistry
         }
     }
 
+    /// <summary>
+    /// Walks the reference closure of every assembly no previous walk processed, loads what is missing and runs
+    /// each newly reached module constructor.
+    /// </summary>
+    /// <remarks>
+    /// The walk is incremental. An assembly a previous walk processed had its whole reference closure loaded
+    /// and processed by that walk, so only what is new since then - an assembly loaded by the application, a
+    /// late-loaded plugin, a dynamic or collectible assembly a library emitted - is walked from. Starting over
+    /// from every loaded assembly on each call made a walk cost the size of the whole closure, and with every
+    /// name resolved by asking each loaded assembly for its <see cref="AssemblyName"/> the cost of one walk grew
+    /// with the square of it. A process that emits an assembly between calls - a spec harness building a service
+    /// provider per spec does - paid that on every call.
+    /// </remarks>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Referenced assemblies must be visited to run module initializers that register generated providers.")]
     static void WalkAssemblyClosureAndRunModuleConstructors()
     {
         var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-        var assemblies = new HashSet<Assembly>(loadedAssemblies);
+        var loadedByName = new Dictionary<string, List<(AssemblyName Name, Assembly Assembly)>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var loadedAssembly in loadedAssemblies)
+        {
+            AddByName(loadedAssembly);
+        }
+
+        var newlyReached = new List<Assembly>();
+        var reached = new HashSet<Assembly>();
         var visitedAssemblyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var assemblyNamesToLoad = new Queue<AssemblyName>();
 
-        void EnqueueReferencesFor(Assembly assembly)
-        {
-            foreach (var referencedAssemblyName in assembly.GetReferencedAssemblies().Where(_ => visitedAssemblyNames.Add(_.FullName)))
-            {
-                assemblyNamesToLoad.Enqueue(referencedAssemblyName);
-            }
-        }
-
         foreach (var loadedAssembly in loadedAssemblies)
         {
-            EnqueueReferencesFor(loadedAssembly);
+            Reach(loadedAssembly);
         }
+
         if (Assembly.GetEntryAssembly() is { } entryAssembly)
         {
-            _ = assemblies.Add(entryAssembly);
-            EnqueueReferencesFor(entryAssembly);
+            Reach(entryAssembly);
         }
 
         while (assemblyNamesToLoad.TryDequeue(out var assemblyName))
         {
-            var assembly = assemblies.SingleOrDefault(_ => AssemblyName.ReferenceMatchesDefinition(_.GetName(), assemblyName));
+            var assembly = Find(assemblyName);
 
             if (assembly is null)
             {
@@ -160,15 +172,14 @@ public static class GeneratedTypeDiscoveryRegistry
                 {
                     continue;
                 }
+
+                AddByName(assembly);
             }
 
-            if (assemblies.Add(assembly))
-            {
-                EnqueueReferencesFor(assembly);
-            }
+            Reach(assembly);
         }
 
-        foreach (var assembly in assemblies)
+        foreach (var assembly in newlyReached)
         {
             if (!assembly.IsDynamic)
             {
@@ -178,6 +189,59 @@ public static class GeneratedTypeDiscoveryRegistry
             // Dynamic assemblies are marked as processed too - they have no module constructor to run,
             // and leaving them out would make the gate walk again on every call for as long as one is loaded.
             _assembliesProcessedByClosureWalk.Add(assembly);
+        }
+
+        void Reach(Assembly assembly)
+        {
+            // A processed assembly's closure was walked when it was processed; walking it again finds nothing.
+            if (_assembliesProcessedByClosureWalk.Contains(assembly) || !reached.Add(assembly))
+            {
+                return;
+            }
+
+            newlyReached.Add(assembly);
+            foreach (var referencedAssemblyName in assembly.GetReferencedAssemblies())
+            {
+                if (visitedAssemblyNames.Add(referencedAssemblyName.FullName))
+                {
+                    assemblyNamesToLoad.Enqueue(referencedAssemblyName);
+                }
+            }
+        }
+
+        void AddByName(Assembly assembly)
+        {
+            var name = assembly.GetName();
+            if (name.Name is null)
+            {
+                return;
+            }
+
+            if (!loadedByName.TryGetValue(name.Name, out var candidates))
+            {
+                candidates = [];
+                loadedByName[name.Name] = candidates;
+            }
+
+            candidates.Add((name, assembly));
+        }
+
+        Assembly? Find(AssemblyName reference)
+        {
+            if (reference.Name is null || !loadedByName.TryGetValue(reference.Name, out var candidates))
+            {
+                return null;
+            }
+
+            foreach (var (name, assembly) in candidates)
+            {
+                if (AssemblyName.ReferenceMatchesDefinition(name, reference))
+                {
+                    return assembly;
+                }
+            }
+
+            return null;
         }
     }
 }
