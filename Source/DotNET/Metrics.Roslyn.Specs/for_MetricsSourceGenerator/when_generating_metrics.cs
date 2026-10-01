@@ -34,8 +34,8 @@ public static partial class Metrics
     }
 
     [Fact] void should_not_report_diagnostics() => _result.Diagnostics.ShouldBeEmpty();
-    [Fact] void should_create_a_counter_with_description_and_no_unit() => _generatedSource.ShouldContain("meter.ActualMeter.CreateCounter<int>(name: \"requests\", unit: null, description: \"Number of requests\")");
-    [Fact] void should_create_a_scoped_counter_with_description_and_no_unit() => _generatedSource.ShouldContain("scope.Meter.CreateCounter<long>(name: \"scoped_requests\", unit: null, description: \"Number of scoped requests\")");
-    [Fact] void should_create_a_gauge_with_description_and_no_unit() => _generatedSource.ShouldContain("meter.ActualMeter.CreateGauge<double>(name: \"temperature\", unit: null, description: \"Current temperature\")");
-    [Fact] void should_create_a_scoped_gauge_with_description_and_no_unit() => _generatedSource.ShouldContain("scope.Meter.CreateGauge<int>(name: \"scoped_temperature\", unit: null, description: \"Current scoped temperature\")");
+    [Fact] void should_create_a_counter_with_description_and_no_unit() => _generatedSource.ShouldContain("histogramMeter.CreateCounter<int>(name: \"requests\", unit: null, description: \"Number of requests\")");
+    [Fact] void should_create_a_scoped_counter_with_description_and_no_unit() => _generatedSource.ShouldContain("histogramMeter.CreateCounter<long>(name: \"scoped_requests\", unit: null, description: \"Number of scoped requests\")");
+    [Fact] void should_create_a_gauge_with_description_and_no_unit() => _generatedSource.ShouldContain("histogramMeter.CreateGauge<double>(name: \"temperature\", unit: null, description: \"Current temperature\")");
+    [Fact] void should_create_a_scoped_gauge_with_description_and_no_unit() => _generatedSource.ShouldContain("histogramMeter.CreateGauge<int>(name: \"scoped_temperature\", unit: null, description: \"Current scoped temperature\")");
 }

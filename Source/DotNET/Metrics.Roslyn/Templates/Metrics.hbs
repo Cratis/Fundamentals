@@ -9,11 +9,11 @@ namespace {{Namespace}};
 {{ClassDefinition}}
 {
     {{#Counters}}
-    static Counter<{{Type}}>? {{MethodName}}Metric;
+    static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<Meter, Counter<{{Type}}>> {{MethodName}}Metric = new();
     {{/Counters}}
 
     {{#Gauges}}
-    static Gauge<{{Type}}>? {{MethodName}}Metric;
+    static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<Meter, Gauge<{{Type}}>> {{MethodName}}Metric = new();
     {{/Gauges}}
 
     {{#Histograms}}
@@ -24,18 +24,6 @@ namespace {{Namespace}};
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
     {{{MethodSignature}}}
     {
-        {{#if IsScoped}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}});
-        }
-        {{else}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}});
-        }
-        {{/if}}
-
         var {{TagsVariable}} = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
@@ -50,11 +38,18 @@ namespace {{Namespace}};
         }
         {{/if}}
 
-        {{#if HasValueParameter }}
-        {{MethodName}}Metric?.Add({{ValueParameter}}, {{TagsVariable}});
+        {{#if IsScoped}}
+        if ({{ScopeParameter}}.Meter is { } {{MeterVariable}})
         {{else}}
-        {{MethodName}}Metric?.Add(1, {{TagsVariable}});
+        if ({{ScopeParameter}}.ActualMeter is { } {{MeterVariable}})
         {{/if}}
+        {
+            {{#if HasValueParameter }}
+            {{MethodName}}Metric.GetValue({{MeterVariable}}, static {{HistogramMeterVariable}} => {{HistogramMeterVariable}}.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}})).Add({{ValueParameter}}, {{TagsVariable}});
+            {{else}}
+            {{MethodName}}Metric.GetValue({{MeterVariable}}, static {{HistogramMeterVariable}} => {{HistogramMeterVariable}}.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}})).Add(1, {{TagsVariable}});
+            {{/if}}
+        }
     }
     {{/Counters}}
 
@@ -62,18 +57,6 @@ namespace {{Namespace}};
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
     {{{MethodSignature}}}
     {
-        {{#if IsScoped}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateGauge<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}});
-        }
-        {{else}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateGauge<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}});
-        }
-        {{/if}}
-
         var {{TagsVariable}} = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
@@ -88,7 +71,14 @@ namespace {{Namespace}};
         }
         {{/if}}
 
-        {{MethodName}}Metric?.Record({{ValueParameter}}, {{TagsVariable}});
+        {{#if IsScoped}}
+        if ({{ScopeParameter}}.Meter is { } {{MeterVariable}})
+        {{else}}
+        if ({{ScopeParameter}}.ActualMeter is { } {{MeterVariable}})
+        {{/if}}
+        {
+            {{MethodName}}Metric.GetValue({{MeterVariable}}, static {{HistogramMeterVariable}} => {{HistogramMeterVariable}}.CreateGauge<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}})).Record({{ValueParameter}}, {{TagsVariable}});
+        }
     }
     {{/Gauges}}
 

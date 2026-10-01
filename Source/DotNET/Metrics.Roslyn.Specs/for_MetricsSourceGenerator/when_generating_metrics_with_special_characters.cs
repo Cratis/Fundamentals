@@ -16,17 +16,22 @@ public class when_generating_metrics_with_special_characters : Specification
 {
     const string Description = "Number of \"requests\" in C:\\metrics\n<all> & 'scoped'\r\t";
     const string SpanName = "requests_\"span\"\\total\n<all> & 'scoped'";
+    const string Unit = "unit_\"quoted\"\\path\n<all> & 'scoped'";
+    const string TagKey = "tag_\"quoted\"\\path\n<all> & 'scoped'";
     readonly List<Instrument> _instruments = [];
+    readonly List<KeyValuePair<string, object?>> _measurementTags = [];
     ImmutableArray<Diagnostic> _generatorDiagnostics = [];
     EmitResult _emission = null!;
     string _generatedSource = string.Empty;
     string? _activityName;
+    object? _activityTag;
 
     void Because()
     {
         var compilation = CompilationFactory.CreateCompilation(@"
 using System;
 using System.Collections.Generic;
+using Cratis.Diagnostics;
 using Cratis.Metrics;
 using Cratis.Traces;
 
@@ -34,8 +39,8 @@ namespace TestApp;
 
 public static partial class Metrics
 {
-    [Counter<int>(""requests_\""count\""\\total"", ""Number of \""requests\"" in C:\\metrics\n<all> & 'scoped'\r\t"")]
-    public static partial void Count(IMeter<object> meter);
+    [Counter<int>(""requests_\""count\""\\total"", ""Number of \""requests\"" in C:\\metrics\n<all> & 'scoped'\r\t"", ""unit_\""quoted\""\\path\n<all> & 'scoped'"")]
+    public static partial void Count(IMeter<object> meter, [Tag(""tag_\""quoted\""\\path\n<all> & 'scoped'"")] string label);
 
     [Counter<long>(""scoped_\""count\""\\total"", ""Number of \""requests\"" in C:\\metrics\n<all> & 'scoped'\r\t"")]
     public static partial void CountScoped(IMeterScope<object> scope, long increment);
@@ -47,7 +52,7 @@ public static partial class Metrics
     public static partial void RecordScoped(IMeterScope<object> scope, int measurement);
 
     [Span(""requests_\""span\""\\total\n<all> & 'scoped'"")]
-    public static partial IActivityScope<object> StartSpan(IActivitySource<object> source);
+    public static partial IActivityScope<object> StartSpan(IActivitySource<object> source, [Tag(""tag_\""quoted\""\\path\n<all> & 'scoped'"")] string label);
 }
 ");
         var driver = CSharpGeneratorDriver.Create(new MetricsSourceGenerator())
@@ -65,17 +70,19 @@ public static partial class Metrics
         var typedMeter = new UnkeyedMeter<object>();
         using var meter = typedMeter.ActualMeter;
         using var listener = new MeterListener();
-        listener.InstrumentPublished = (instrument, _) =>
+        listener.InstrumentPublished = (instrument, meterListener) =>
         {
             if (ReferenceEquals(instrument.Meter, meter))
             {
                 _instruments.Add(instrument);
+                meterListener.EnableMeasurementEvents(instrument);
             }
         };
+        listener.SetMeasurementEventCallback<int>((_, _, tags, _) => _measurementTags.AddRange(tags.ToArray()));
         listener.Start();
 
         using var scope = new MeterScope<object>(typedMeter, new Dictionary<string, object>());
-        metrics.GetMethod("Count")!.Invoke(null, [typedMeter]);
+        metrics.GetMethod("Count")!.Invoke(null, [typedMeter, "metric-tag-value"]);
         metrics.GetMethod("CountScoped")!.Invoke(null, [scope, 2L]);
         metrics.GetMethod("Record")!.Invoke(null, [typedMeter, 3.0]);
         metrics.GetMethod("RecordScoped")!.Invoke(null, [scope, 4]);
@@ -88,8 +95,9 @@ public static partial class Metrics
             Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
         };
         ActivitySource.AddActivityListener(activityListener);
-        using var activityScope = (IActivityScope<object>)metrics.GetMethod("StartSpan")!.Invoke(null, [typedSource])!;
+        using var activityScope = (IActivityScope<object>)metrics.GetMethod("StartSpan")!.Invoke(null, [typedSource, "span-tag-value"])!;
         _activityName = activityScope.Activity?.OperationName;
+        _activityTag = activityScope.Activity?.GetTagItem(TagKey);
     }
 
     [Fact] void should_not_report_generator_diagnostics() => _generatorDiagnostics.ShouldBeEmpty();
@@ -99,6 +107,9 @@ public static partial class Metrics
     [Fact] void should_emit_csharp_string_literals_without_html_escaping() => _generatedSource.ShouldContain("description: \"Number of \\\"requests\\\" in C:\\\\metrics\\n<all> & 'scoped'\\r\\t\"");
     [Fact] void should_publish_all_four_generated_instruments() => _instruments.Count.ShouldEqual(4);
     [Fact] void should_preserve_instrument_names() => _instruments.Select(_ => _.Name).ShouldContainOnly("requests_\"count\"\\total", "scoped_\"count\"\\total", "requests_\"gauge\"\\current", "scoped_\"gauge\"\\current");
-    [Fact] void should_leave_all_instrument_units_null() => _instruments.Select(_ => _.Unit).ShouldContainOnly(null, null, null, null);
+    [Fact] void should_preserve_the_explicit_instrument_unit() => _instruments.Single(_ => _.Name == "requests_\"count\"\\total").Unit.ShouldEqual(Unit);
+    [Fact] void should_leave_unspecified_instrument_units_null() => _instruments.Where(_ => _.Name != "requests_\"count\"\\total").Select(_ => _.Unit).ShouldContainOnly(null, null, null);
+    [Fact] void should_preserve_the_explicit_metric_tag_key() => _measurementTags.ShouldContainOnly(new KeyValuePair<string, object?>(TagKey, "metric-tag-value"));
+    [Fact] void should_preserve_the_explicit_span_tag_key() => _activityTag.ShouldEqual("span-tag-value");
     [Fact] void should_preserve_all_instrument_descriptions() => _instruments.Select(_ => _.Description).ShouldContainOnly(Description, Description, Description, Description);
 }
