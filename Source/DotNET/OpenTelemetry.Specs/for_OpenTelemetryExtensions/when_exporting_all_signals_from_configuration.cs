@@ -11,9 +11,9 @@ public class when_exporting_all_signals_from_configuration : given.a_recording_e
         _configuration["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"] = "http://logs:4318/custom";
         _configuration["OTEL_EXPORTER_OTLP_LOGS_HEADERS"] = "test-key=logs-value";
         _configuration["OTEL_EXPORTER_OTLP_PROTOCOL"] = "grpc";
-        _configuration["OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"] = "http/protobuf";
-        _configuration["OTEL_EXPORTER_OTLP_METRICS_PROTOCOL"] = "http/protobuf";
-        _configuration["OTEL_EXPORTER_OTLP_LOGS_PROTOCOL"] = "http/protobuf";
+        _configuration["OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"] = " http/protobuf ";
+        _configuration["OTEL_EXPORTER_OTLP_METRICS_PROTOCOL"] = " http/protobuf ";
+        _configuration["OTEL_EXPORTER_OTLP_LOGS_PROTOCOL"] = " http/protobuf ";
     }
 
     void Because() => Export();

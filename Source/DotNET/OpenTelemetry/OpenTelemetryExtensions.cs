@@ -1,9 +1,11 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
@@ -34,18 +36,13 @@ public static class OpenTelemetryExtensions
     }
 
     /// <summary>
-    /// Adds Cratis telemetry, using a registered configuration instance or standard environment variables.
+    /// Adds Cratis telemetry, resolving application configuration from the service provider or using standard environment variables.
     /// </summary>
     /// <param name="builder">The OpenTelemetry builder.</param>
     /// <param name="configure">Optional application defaults and extra instrumentation.</param>
     /// <returns>The OpenTelemetry builder for continuation.</returns>
     public static OpenTelemetryBuilder WithCratis(this OpenTelemetryBuilder builder, Action<CratisOpenTelemetryOptions>? configure = null)
-    {
-        var configuration = builder.Services.LastOrDefault(descriptor => descriptor.ServiceType == typeof(IConfiguration))?.ImplementationInstance as IConfiguration
-            ?? new ConfigurationBuilder().Build();
-
-        return builder.WithCratis(configuration, configure);
-    }
+        => WithCratis(builder, provider => provider.GetRequiredService<IConfiguration>(), configure);
 
     /// <summary>
     /// Adds Cratis telemetry with standard OTEL configuration keys supplied by the application.
@@ -62,35 +59,128 @@ public static class OpenTelemetryExtensions
             return builder;
         }
 
+        ValidateEndpoints(configuration);
+
+        return WithCratis(builder, _ => configuration, configure);
+    }
+
+    static OpenTelemetryBuilder WithCratis(OpenTelemetryBuilder builder, Func<IServiceProvider, IConfiguration> resolveConfiguration, Action<CratisOpenTelemetryOptions>? configure)
+    {
         var options = new CratisOpenTelemetryOptions();
         configure?.Invoke(options);
-
-        // AddOpenTelemetry has already registered an environment-only fallback. The
-        // supplied configuration must be the effective configuration for SDK options too.
-        var keys = configuration.AsEnumerable().Select(entry => entry.Key.ToUpperInvariant())
-            .Concat(Environment.GetEnvironmentVariables().Keys.Cast<string>())
-            .Where(key => key.StartsWith("OTEL_", StringComparison.Ordinal))
-            .Distinct(StringComparer.Ordinal);
-        var sdkConfiguration = new ConfigurationBuilder().AddConfiguration(configuration)
-            .AddInMemoryCollection(keys.Select(key => new KeyValuePair<string, string?>(key, Read(configuration, key))))
-            .Build();
-        builder.Services.AddSingleton<IConfiguration>(sdkConfiguration);
-        builder.ConfigureResource(resource => ConfigureResource(resource, configuration, options)).WithLogging(_ => { }, logging =>
+        builder.WithLogging(_ => { }, logging =>
         {
             logging.IncludeScopes = true;
             logging.IncludeFormattedMessage = true;
-        }).WithTracing(tracing =>
+        }).WithTracing(_ => { }).WithMetrics(_ => { });
+        builder.Services.AddOptions<OtlpExporterOptions>();
+        builder.Services.AddOptions<PeriodicExportingMetricReaderOptions>().Configure<IServiceProvider>((reader, provider) => ConfigureReader(reader, resolveConfiguration(provider)));
+        builder.Services.ConfigureOpenTelemetryTracerProvider((provider, tracing) =>
         {
-            tracing.AddCratisInstrumentation().AddAspNetCoreInstrumentation().AddHttpClientInstrumentation();
+            var configuration = resolveConfiguration(provider);
+            if (IsDisabled(configuration))
+            {
+                tracing.SetSampler(new AlwaysOffSampler());
+                return;
+            }
+            ValidateEndpoints(configuration);
+            tracing.ConfigureResource(resource => ConfigureResource(resource, configuration, options));
+            ConfigureSampler(tracing, configuration);
+            tracing.AddCratisInstrumentation();
+            if (ShouldExport(configuration, "TRACES"))
+            {
+                var exporter = ExporterOptions(provider, configuration, "TRACES", "traces");
+                var batch = exporter.BatchExportProcessorOptions;
+                tracing.AddProcessor(exporter.ExportProcessorType is ExportProcessorType.Simple
+                    ? new SimpleActivityExportProcessor(new OtlpTraceExporter(exporter))
+                    : new BatchActivityExportProcessor(new OtlpTraceExporter(exporter), batch.MaxQueueSize, batch.ScheduledDelayMilliseconds, batch.ExporterTimeoutMilliseconds, batch.MaxExportBatchSize));
+            }
+        });
+        builder.Services.ConfigureOpenTelemetryMeterProvider((provider, metrics) =>
+        {
+            var configuration = resolveConfiguration(provider);
+            if (IsDisabled(configuration))
+            {
+                return;
+            }
+            ValidateEndpoints(configuration);
+            metrics.ConfigureResource(resource => ConfigureResource(resource, configuration, options));
+            metrics.AddCratisInstrumentation();
+            if (ShouldExport(configuration, "METRICS"))
+            {
+                var reader = provider.GetRequiredService<IOptions<PeriodicExportingMetricReaderOptions>>().Value;
+                metrics.AddReader(new PeriodicExportingMetricReader(new OtlpMetricExporter(ExporterOptions(provider, configuration, "METRICS", "metrics")), reader.ExportIntervalMilliseconds ?? 60_000, reader.ExportTimeoutMilliseconds ?? 30_000));
+            }
+        });
+        builder.Services.ConfigureOpenTelemetryLoggerProvider((provider, logging) =>
+        {
+            var configuration = resolveConfiguration(provider);
+            if (IsDisabled(configuration))
+            {
+                return;
+            }
+            ValidateEndpoints(configuration);
+            logging.ConfigureResource(resource => ConfigureResource(resource, configuration, options));
+            if (ShouldExport(configuration, "LOGS"))
+            {
+                logging.AddProcessor(new BatchLogRecordExportProcessor(new OtlpLogExporter(ExporterOptions(provider, configuration, "LOGS", "logs"))));
+            }
+        });
+
+        // Instrumentation extensions register services, so they must run before DI
+        // is built. Keep application callbacks after the shared provider defaults.
+        builder.WithTracing(tracing =>
+        {
+            tracing.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation();
             options.ConfigureTracing?.Invoke(tracing);
         }).WithMetrics(metrics =>
         {
-            metrics.AddCratisInstrumentation().AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddRuntimeInstrumentation();
+            metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddRuntimeInstrumentation();
             options.ConfigureMetrics?.Invoke(metrics);
         });
-        ConfigureExport(builder, configuration);
 
         return builder;
+    }
+
+    static OtlpExporterOptions ExporterOptions(IServiceProvider provider, IConfiguration configuration, string signal, string path)
+    {
+        var exporter = provider.GetRequiredService<IOptionsFactory<OtlpExporterOptions>>().Create(Options.DefaultName);
+        ConfigureExporter(exporter, configuration, signal, path);
+
+        return exporter;
+    }
+
+    static bool IsDisabled(IConfiguration configuration) => string.Equals(Read(configuration, "OTEL_SDK_DISABLED"), "true", StringComparison.OrdinalIgnoreCase);
+
+    static void ConfigureReader(PeriodicExportingMetricReaderOptions reader, IConfiguration configuration)
+    {
+        if (int.TryParse(Read(configuration, "OTEL_METRIC_EXPORT_INTERVAL"), CultureInfo.InvariantCulture, out var interval) && interval > 0)
+        {
+            reader.ExportIntervalMilliseconds = interval;
+        }
+        if (int.TryParse(Read(configuration, "OTEL_METRIC_EXPORT_TIMEOUT"), CultureInfo.InvariantCulture, out var timeout) && timeout >= 0)
+        {
+            reader.ExportTimeoutMilliseconds = timeout;
+        }
+    }
+
+    static void ConfigureSampler(TracerProviderBuilder tracing, IConfiguration configuration)
+    {
+        var ratio = double.TryParse(Read(configuration, "OTEL_TRACES_SAMPLER_ARG"), CultureInfo.InvariantCulture, out var value) && value is >= 0 and <= 1 ? value : 1;
+        Sampler? sampler = Read(configuration, "OTEL_TRACES_SAMPLER")?.Trim() switch
+        {
+            "always_on" => new AlwaysOnSampler(),
+            "always_off" => new AlwaysOffSampler(),
+            "traceidratio" => new TraceIdRatioBasedSampler(ratio),
+            "parentbased_always_on" => new ParentBasedSampler(new AlwaysOnSampler()),
+            "parentbased_always_off" => new ParentBasedSampler(new AlwaysOffSampler()),
+            "parentbased_traceidratio" => new ParentBasedSampler(new TraceIdRatioBasedSampler(ratio)),
+            _ => null
+        };
+        if (sampler is not null)
+        {
+            tracing.SetSampler(sampler);
+        }
     }
 
     static string? Read(IConfiguration configuration, string key)
@@ -123,28 +213,13 @@ public static class OpenTelemetryExtensions
         !string.IsNullOrWhiteSpace(Read(configuration, $"OTEL_EXPORTER_OTLP_{signal}_ENDPOINT") ?? Read(configuration, "OTEL_EXPORTER_OTLP_ENDPOINT")) &&
         (Read(configuration, $"OTEL_{signal}_EXPORTER") is not { } exporters || exporters.Split(',').Any(exporter => exporter.Trim().Equals("otlp", StringComparison.OrdinalIgnoreCase)));
 
-    static void ConfigureExport(OpenTelemetryBuilder builder, IConfiguration configuration)
+    static void ValidateEndpoints(IConfiguration configuration)
     {
-        var traces = ShouldExport(configuration, "TRACES");
-        var metrics = ShouldExport(configuration, "METRICS");
-        var logs = ShouldExport(configuration, "LOGS");
-        var commonEndpoint = Read(configuration, "OTEL_EXPORTER_OTLP_ENDPOINT");
         foreach (var signal in _signals.Where(signal => ShouldExport(configuration, signal)))
         {
-            var key = $"OTEL_EXPORTER_OTLP_{signal}_ENDPOINT";
-            _ = Endpoint(Read(configuration, key) ?? commonEndpoint!, key);
-        }
-        if (traces)
-        {
-            builder.WithTracing(tracing => tracing.AddOtlpExporter(exporter => ConfigureExporter(exporter, configuration, "TRACES", "traces")));
-        }
-        if (metrics)
-        {
-            builder.WithMetrics(meter => meter.AddOtlpExporter(exporter => ConfigureExporter(exporter, configuration, "METRICS", "metrics")));
-        }
-        if (logs)
-        {
-            builder.WithLogging(logging => logging.AddOtlpExporter(exporter => ConfigureExporter(exporter, configuration, "LOGS", "logs")));
+            var signalKey = $"OTEL_EXPORTER_OTLP_{signal}_ENDPOINT";
+            var key = Read(configuration, signalKey) is null ? "OTEL_EXPORTER_OTLP_ENDPOINT" : signalKey;
+            _ = Endpoint(Read(configuration, key)!, key);
         }
     }
 
@@ -152,7 +227,7 @@ public static class OpenTelemetryExtensions
     {
         var protocol = (signal is null ? null : Read(configuration, $"OTEL_EXPORTER_OTLP_{signal}_PROTOCOL")) ?? Read(configuration, "OTEL_EXPORTER_OTLP_PROTOCOL");
 
-        return string.Equals(protocol, "http/protobuf", StringComparison.Ordinal) ? OtlpExportProtocol.HttpProtobuf : OtlpExportProtocol.Grpc;
+        return string.Equals(protocol?.Trim(), "http/protobuf", StringComparison.Ordinal) ? OtlpExportProtocol.HttpProtobuf : OtlpExportProtocol.Grpc;
     }
 
     static void ConfigureExporter(OtlpExporterOptions exporter, IConfiguration configuration, string signal, string path)
@@ -160,7 +235,7 @@ public static class OpenTelemetryExtensions
         var signalEndpoint = Read(configuration, $"OTEL_EXPORTER_OTLP_{signal}_ENDPOINT");
         var endpoint = signalEndpoint ?? Read(configuration, "OTEL_EXPORTER_OTLP_ENDPOINT")!;
         exporter.Protocol = Protocol(configuration, signal);
-        var uri = Endpoint(endpoint, $"OTEL_EXPORTER_OTLP_{signal}_ENDPOINT");
+        var uri = Endpoint(endpoint, signalEndpoint is null ? "OTEL_EXPORTER_OTLP_ENDPOINT" : $"OTEL_EXPORTER_OTLP_{signal}_ENDPOINT");
         exporter.Endpoint = exporter.Protocol is OtlpExportProtocol.HttpProtobuf && signalEndpoint is null
             ? new Uri($"{uri.AbsoluteUri.TrimEnd('/')}/v1/{path}")
             : uri;

@@ -50,7 +50,7 @@ This registration excerpt requires a `ServiceCollection` named `services` and th
 services.AddOpenTelemetry().WithCratis();
 ```
 
-`WithCratis()` uses a registered `IConfiguration` instance and standard environment variables. If your configuration is registered through a factory, pass it explicitly with `WithCratis(configuration)`. The host extension always passes the host's configuration.
+`WithCratis()` resolves `IConfiguration` from the service provider when telemetry providers are built, including configuration registered through a factory by worker and web hosts. You can supply separate telemetry settings with `WithCratis(configuration)`. Neither overload replaces the application's `IConfiguration`; environment precedence applies only to telemetry settings. The host extension always passes the host's configuration.
 
 If you already own the resource, logging, instrumentation, and export pipeline, subscribe only to Cratis with `tracing.AddCratisInstrumentation()` and `metrics.AddCratisInstrumentation()`. These extensions do not add exporters or host instrumentation.
 

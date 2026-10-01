@@ -33,6 +33,7 @@ public class when_sdk_settings_come_from_environment : given.a_clean_environment
             ["Application:Setting"] = "application-value"
         }).Build();
         var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(configuration);
         services.AddOpenTelemetry().WithCratis(configuration);
         _provider = services.BuildServiceProvider();
         _provider.GetRequiredService<TracerProvider>();
