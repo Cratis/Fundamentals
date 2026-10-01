@@ -54,8 +54,11 @@ public static class OpenTelemetryExtensions
     /// <exception cref="InvalidOpenTelemetryEndpoint">An enabled OTLP endpoint is invalid.</exception>
     public static OpenTelemetryBuilder WithCratis(this OpenTelemetryBuilder builder, IConfiguration configuration, Action<CratisOpenTelemetryOptions>? configure = null)
     {
-        if (string.Equals(Read(configuration, "OTEL_SDK_DISABLED"), "true", StringComparison.OrdinalIgnoreCase))
+        if (IsDisabled(configuration))
         {
+            ConfigureProviderFactory<TracerProvider>(builder.Services, _ => configuration);
+            ConfigureProviderFactory<MeterProvider>(builder.Services, _ => configuration);
+            ConfigureProviderFactory<LoggerProvider>(builder.Services, _ => configuration);
             return builder;
         }
 
@@ -68,6 +71,7 @@ public static class OpenTelemetryExtensions
     {
         var options = new CratisOpenTelemetryOptions();
         configure?.Invoke(options);
+        ConfigureResourceDefaults(builder.Services, options);
         builder.WithLogging(_ => { }, logging =>
         {
             logging.IncludeScopes = true;
@@ -87,7 +91,7 @@ public static class OpenTelemetryExtensions
                 return;
             }
             ValidateEndpoints(configuration);
-            tracing.ConfigureResource(resource => ConfigureResource(resource, configuration, options));
+            tracing.ConfigureResource(resource => ConfigureResource(resource, configuration));
             ConfigureSampler(tracing, configuration);
             tracing.AddCratisInstrumentation();
             if (ShouldExport(configuration, "TRACES"))
@@ -107,7 +111,7 @@ public static class OpenTelemetryExtensions
                 return;
             }
             ValidateEndpoints(configuration);
-            metrics.ConfigureResource(resource => ConfigureResource(resource, configuration, options));
+            metrics.ConfigureResource(resource => ConfigureResource(resource, configuration));
             metrics.AddCratisInstrumentation();
             if (ShouldExport(configuration, "METRICS"))
             {
@@ -123,7 +127,7 @@ public static class OpenTelemetryExtensions
                 return;
             }
             ValidateEndpoints(configuration);
-            logging.ConfigureResource(resource => ConfigureResource(resource, configuration, options));
+            logging.ConfigureResource(resource => ConfigureResource(resource, configuration));
             if (ShouldExport(configuration, "LOGS"))
             {
                 logging.AddProcessor(new BatchLogRecordExportProcessor(new OtlpLogExporter(ExporterOptions(provider, configuration, "LOGS", "logs"))));
@@ -147,8 +151,8 @@ public static class OpenTelemetryExtensions
 
     static void ConfigureProviderFactory<TProvider>(IServiceCollection services, Func<IServiceProvider, IConfiguration> resolveConfiguration)
     {
-        var descriptor = services.Last(service => service.ServiceType == typeof(TProvider));
-        if (descriptor.ImplementationFactory is not { } factory)
+        var descriptor = services.LastOrDefault(service => service.ServiceType == typeof(TProvider));
+        if (descriptor?.ImplementationFactory is not { } factory)
         {
             return;
         }
@@ -219,19 +223,8 @@ public static class OpenTelemetryExtensions
         return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
-    static void ConfigureResource(ResourceBuilder resource, IConfiguration configuration, CratisOpenTelemetryOptions options)
+    static void ConfigureResource(ResourceBuilder resource, IConfiguration configuration)
     {
-        var existing = resource.Build().Attributes.ToDictionary(attribute => attribute.Key, attribute => attribute.Value);
-        var name = existing.GetValueOrDefault("service.name") as string;
-        var version = existing.GetValueOrDefault("service.version") as string;
-        if (string.IsNullOrWhiteSpace(name) || name == "unknown_service" || name.StartsWith("unknown_service:", StringComparison.Ordinal))
-        {
-            resource.AddService(options.ServiceName, serviceVersion: version ?? options.ServiceVersion);
-        }
-        else if (string.IsNullOrWhiteSpace(version) && options.ServiceVersion is not null)
-        {
-            resource.AddAttributes([new("service.version", options.ServiceVersion)]);
-        }
         var attributes = Read(configuration, "OTEL_RESOURCE_ATTRIBUTES");
         if (!string.IsNullOrWhiteSpace(attributes))
         {
@@ -290,8 +283,34 @@ public static class OpenTelemetryExtensions
         return endpoint;
     }
 
-    sealed class TelemetryServiceProvider(IServiceProvider provider, IConfiguration configuration) : IServiceProvider
+    static void ConfigureResourceDefaults(IServiceCollection services, CratisOpenTelemetryOptions options)
+    {
+        // The callback interfaces are internal to the SDK. Register through its
+        // public API, then move the new descriptors before application callbacks.
+        // Never build resources before the SDK supplies DI to resource detectors.
+        var count = services.Count;
+        services.ConfigureOpenTelemetryTracerProvider((_, tracing) => tracing.ConfigureResource(AddDefaults));
+        services.ConfigureOpenTelemetryMeterProvider((_, metrics) => metrics.ConfigureResource(AddDefaults));
+        services.ConfigureOpenTelemetryLoggerProvider((_, logging) => logging.ConfigureResource(AddDefaults));
+        foreach (var descriptor in services.Skip(count).Reverse().ToArray())
+        {
+            services.Remove(descriptor);
+            services.Insert(0, descriptor);
+        }
+
+        void AddDefaults(ResourceBuilder resource) => resource.AddService(options.ServiceName, serviceVersion: options.ServiceVersion);
+    }
+
+    sealed class TelemetryServiceProvider(IServiceProvider provider, IConfiguration configuration) : IKeyedServiceProvider, ISupportRequiredService
     {
         public object? GetService(Type serviceType) => serviceType == typeof(IConfiguration) ? configuration : provider.GetService(serviceType);
+
+        public object GetRequiredService(Type serviceType) => serviceType == typeof(IConfiguration) ? configuration : provider.GetRequiredService(serviceType);
+
+        public object? GetKeyedService(Type serviceType, object? serviceKey) => provider is IKeyedServiceProvider keyedProvider
+            ? keyedProvider.GetKeyedService(serviceType, serviceKey)
+            : throw new InvalidOperationException("This service provider doesn't support keyed services.");
+
+        public object GetRequiredKeyedService(Type serviceType, object? serviceKey) => provider.GetRequiredKeyedService(serviceType, serviceKey);
     }
 }
