@@ -20,6 +20,7 @@ public class a_recording_exporter : a_clean_environment
     protected ServiceCollection _services;
     protected IConfiguration _configuration;
     protected readonly ConcurrentQueue<(string Endpoint, string? Header)> _requests = new();
+    protected int _clientsCreated;
     protected bool _tracesFlushed;
     protected bool _metricsFlushed;
     protected bool _logsFlushed;
@@ -34,23 +35,32 @@ public class a_recording_exporter : a_clean_environment
             ["OTEL_EXPORTER_OTLP_PROTOCOL"] = "http/protobuf",
             ["OTEL_EXPORTER_OTLP_HEADERS"] = "test-key=common-value"
         }).Build();
-        _services.Configure<OtlpExporterOptions>(options => options.HttpClientFactory = () => new HttpClient(new recording_http(_requests)));
+        _services.Configure<OtlpExporterOptions>(options => options.HttpClientFactory = () =>
+        {
+            Interlocked.Increment(ref _clientsCreated);
+            return new HttpClient(new recording_http(_requests));
+        });
     }
 
     protected void Export()
     {
         _services.AddOpenTelemetry().WithCratis(_configuration);
         _provider = _services.BuildServiceProvider();
-        var traces = _provider.GetRequiredService<TracerProvider>();
-        var metrics = _provider.GetRequiredService<MeterProvider>();
-        var logs = _provider.GetRequiredService<LoggerProvider>();
+        ExportSignals(_provider);
+    }
+
+    protected void ExportSignals(IServiceProvider provider)
+    {
+        var traces = provider.GetRequiredService<TracerProvider>();
+        var metrics = provider.GetRequiredService<MeterProvider>();
+        var logs = provider.GetRequiredService<LoggerProvider>();
         using var source = new ActivitySource("Cratis.Test.Exporter");
         using (source.StartActivity("cratis.test.export"))
         {
         }
         using var meter = new Meter("Cratis.Test.Exporter");
         meter.CreateCounter<long>("cratis.test.count").Add(1);
-        var logger = _provider.GetRequiredService<ILoggerFactory>().CreateLogger("Cratis.Test.Exporter");
+        var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Cratis.Test.Exporter");
         LoggerMessage.Define(LogLevel.Information, new EventId(1), "Export a log")(logger, null);
         _tracesFlushed = traces.ForceFlush(5_000);
         _metricsFlushed = metrics.ForceFlush(5_000);

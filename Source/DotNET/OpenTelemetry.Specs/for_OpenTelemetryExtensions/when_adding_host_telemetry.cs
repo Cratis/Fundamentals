@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using OpenTelemetry;
-using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -42,7 +41,6 @@ public class when_adding_host_telemetry : given.a_clean_environment
     [Fact] void should_set_the_service_version() => _metrics.GetResource().Attributes.Single(attribute => attribute.Key == "service.version").Value.ShouldEqual("1.2.3");
     [Fact] void should_include_log_scopes() => _logs.IncludeScopes.ShouldBeTrue();
     [Fact] void should_include_formatted_log_messages() => _logs.IncludeFormattedMessage.ShouldBeTrue();
-    [Fact] void should_not_register_an_otlp_exporter_without_an_endpoint() => _builder.Services.Any(descriptor => descriptor.ServiceType == typeof(IOptionsFactory<OtlpExporterOptions>)).ShouldBeFalse();
     [Fact] void should_subscribe_to_future_cratis_sources()
     {
         using var source = new ActivitySource("Cratis.Future.Product");

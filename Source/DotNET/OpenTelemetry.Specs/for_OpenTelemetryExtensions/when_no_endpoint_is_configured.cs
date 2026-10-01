@@ -3,14 +3,9 @@
 
 namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
 
-public class when_all_exporters_are_disabled : given.a_recording_exporter
+public class when_no_endpoint_is_configured : given.a_recording_exporter
 {
-    void Establish()
-    {
-        Environment.SetEnvironmentVariable("OTEL_TRACES_EXPORTER", "none");
-        Environment.SetEnvironmentVariable("OTEL_METRICS_EXPORTER", "none");
-        Environment.SetEnvironmentVariable("OTEL_LOGS_EXPORTER", "none");
-    }
+    void Establish() => _configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] = null;
 
     void Because() => Export();
 

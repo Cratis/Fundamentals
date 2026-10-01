@@ -73,6 +73,9 @@ public static class OpenTelemetryExtensions
             logging.IncludeScopes = true;
             logging.IncludeFormattedMessage = true;
         }).WithTracing(_ => { }).WithMetrics(_ => { });
+        ConfigureProviderFactory<TracerProvider>(builder.Services, resolveConfiguration);
+        ConfigureProviderFactory<MeterProvider>(builder.Services, resolveConfiguration);
+        ConfigureProviderFactory<LoggerProvider>(builder.Services, resolveConfiguration);
         builder.Services.AddOptions<OtlpExporterOptions>();
         builder.Services.AddOptions<PeriodicExportingMetricReaderOptions>().Configure<IServiceProvider>((reader, provider) => ConfigureReader(reader, resolveConfiguration(provider)));
         builder.Services.ConfigureOpenTelemetryTracerProvider((provider, tracing) =>
@@ -142,6 +145,31 @@ public static class OpenTelemetryExtensions
         return builder;
     }
 
+    static void ConfigureProviderFactory<TProvider>(IServiceCollection services, Func<IServiceProvider, IConfiguration> resolveConfiguration)
+    {
+        var descriptor = services.Last(service => service.ServiceType == typeof(TProvider));
+        if (descriptor.ImplementationFactory is not { } factory)
+        {
+            return;
+        }
+
+        // The SDK checks disablement before invoking provider callbacks. Give only
+        // that factory the effective setting; leave application DI configuration intact.
+        services[services.IndexOf(descriptor)] = new ServiceDescriptor(
+            typeof(TProvider),
+            provider =>
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddConfiguration(provider.GetRequiredService<IConfiguration>())
+                    .AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["OTEL_SDK_DISABLED"] = IsDisabled(resolveConfiguration(provider)) ? "true" : "false"
+                    }).Build();
+                return factory(new TelemetryServiceProvider(provider, configuration));
+            },
+            descriptor.Lifetime);
+    }
+
     static OtlpExporterOptions ExporterOptions(IServiceProvider provider, IConfiguration configuration, string signal, string path)
     {
         var exporter = provider.GetRequiredService<IOptionsFactory<OtlpExporterOptions>>().Create(Options.DefaultName);
@@ -167,7 +195,7 @@ public static class OpenTelemetryExtensions
     static void ConfigureSampler(TracerProviderBuilder tracing, IConfiguration configuration)
     {
         var ratio = double.TryParse(Read(configuration, "OTEL_TRACES_SAMPLER_ARG"), CultureInfo.InvariantCulture, out var value) && value is >= 0 and <= 1 ? value : 1;
-        Sampler? sampler = Read(configuration, "OTEL_TRACES_SAMPLER")?.Trim() switch
+        Sampler? sampler = Read(configuration, "OTEL_TRACES_SAMPLER")?.Trim().ToLowerInvariant() switch
         {
             "always_on" => new AlwaysOnSampler(),
             "always_off" => new AlwaysOffSampler(),
@@ -193,7 +221,17 @@ public static class OpenTelemetryExtensions
 
     static void ConfigureResource(ResourceBuilder resource, IConfiguration configuration, CratisOpenTelemetryOptions options)
     {
-        resource.AddService(options.ServiceName, serviceVersion: options.ServiceVersion);
+        var existing = resource.Build().Attributes.ToDictionary(attribute => attribute.Key, attribute => attribute.Value);
+        var name = existing.GetValueOrDefault("service.name") as string;
+        var version = existing.GetValueOrDefault("service.version") as string;
+        if (string.IsNullOrWhiteSpace(name) || name == "unknown_service" || name.StartsWith("unknown_service:", StringComparison.Ordinal))
+        {
+            resource.AddService(options.ServiceName, serviceVersion: version ?? options.ServiceVersion);
+        }
+        else if (string.IsNullOrWhiteSpace(version) && options.ServiceVersion is not null)
+        {
+            resource.AddAttributes([new("service.version", options.ServiceVersion)]);
+        }
         var attributes = Read(configuration, "OTEL_RESOURCE_ATTRIBUTES");
         if (!string.IsNullOrWhiteSpace(attributes))
         {
@@ -250,5 +288,10 @@ public static class OpenTelemetryExtensions
         }
 
         return endpoint;
+    }
+
+    sealed class TelemetryServiceProvider(IServiceProvider provider, IConfiguration configuration) : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => serviceType == typeof(IConfiguration) ? configuration : provider.GetService(serviceType);
     }
 }
