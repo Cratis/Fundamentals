@@ -12,8 +12,8 @@
         <PackageReference Include="Microsoft.Extensions.DependencyModel"  />
         <PackageReference Include="System.IO.FileSystem.Primitives" />
         <PackageReference Include="System.Reactive" />
+        <PackageReference Include="System.Diagnostics.DiagnosticSource" />
         <PackageReference Include="Humanizer" />
-        <PackageReference Include="OpenTelemetry" />
         <PackageReference Include="OneOf" />
         <PackageReference Include="OneOf.SourceGenerator" />
     </ItemGroup>
