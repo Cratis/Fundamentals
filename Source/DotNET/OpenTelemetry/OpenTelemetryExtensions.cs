@@ -19,6 +19,8 @@ namespace Cratis.OpenTelemetry;
 /// </summary>
 public static class OpenTelemetryExtensions
 {
+    static readonly string[] _signals = ["TRACES", "METRICS", "LOGS"];
+
     /// <summary>
     /// Adds Cratis sources, meters, host instrumentation, scoped logs and resource defaults.
     /// </summary>
@@ -64,18 +66,15 @@ public static class OpenTelemetryExtensions
         var options = new CratisOpenTelemetryOptions();
         configure?.Invoke(options);
         builder.Services.TryAddSingleton(configuration);
-        builder.ConfigureResource(resource => ConfigureResource(resource, configuration, options));
-        builder.WithLogging(_ => { }, logging =>
+        builder.ConfigureResource(resource => ConfigureResource(resource, configuration, options)).WithLogging(_ => { }, logging =>
         {
             logging.IncludeScopes = true;
             logging.IncludeFormattedMessage = true;
-        });
-        builder.WithTracing(tracing =>
+        }).WithTracing(tracing =>
         {
             tracing.AddCratisInstrumentation().AddAspNetCoreInstrumentation().AddHttpClientInstrumentation();
             options.ConfigureTracing?.Invoke(tracing);
-        });
-        builder.WithMetrics(metrics =>
+        }).WithMetrics(metrics =>
         {
             metrics.AddCratisInstrumentation().AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddRuntimeInstrumentation();
             options.ConfigureMetrics?.Invoke(metrics);
@@ -115,7 +114,7 @@ public static class OpenTelemetryExtensions
         var metrics = ShouldExport(configuration, "METRICS");
         var logs = ShouldExport(configuration, "LOGS");
         var commonEndpoint = Read(configuration, "OTEL_EXPORTER_OTLP_ENDPOINT");
-        foreach (var signal in new[] { "TRACES", "METRICS", "LOGS" }.Where(signal => ShouldExport(configuration, signal)))
+        foreach (var signal in _signals.Where(signal => ShouldExport(configuration, signal)))
         {
             var key = $"OTEL_EXPORTER_OTLP_{signal}_ENDPOINT";
             _ = Endpoint(Read(configuration, key) ?? commonEndpoint!, key);
@@ -145,7 +144,7 @@ public static class OpenTelemetryExtensions
     {
         var protocol = (signal is null ? null : Read(configuration, $"OTEL_EXPORTER_OTLP_{signal}_PROTOCOL")) ?? Read(configuration, "OTEL_EXPORTER_OTLP_PROTOCOL");
 
-        return protocol is "http/protobuf" ? OtlpExportProtocol.HttpProtobuf : OtlpExportProtocol.Grpc;
+        return string.Equals(protocol, "http/protobuf", StringComparison.Ordinal) ? OtlpExportProtocol.HttpProtobuf : OtlpExportProtocol.Grpc;
     }
 
     static void ConfigureExporter(OtlpExporterOptions exporter, IConfiguration configuration, string signal, string path)

@@ -47,12 +47,16 @@ public class when_exporting_only_traces : given.a_clean_environment
         public List<string> Requests { get; } = [];
         public string? Header { get; private set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(Record(request));
+
+        protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken) => Record(request);
+
+        HttpResponseMessage Record(HttpRequestMessage request)
         {
             Requests.Add(request.RequestUri!.AbsoluteUri);
             Header = request.Headers.GetValues("test-key").Single();
 
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent([]) });
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent([]) };
         }
     }
 }

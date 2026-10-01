@@ -6,6 +6,11 @@
         <IsPackable>false</IsPackable>
     </PropertyGroup>
     <ItemGroup>
+        <Compile Remove="$(MSBuildThisFileDirectory)/../GlobalUsings.Specs.cs" />
+        <Using Include="Cratis.Specifications" />
+        <Using Include="Xunit" />
+    </ItemGroup>
+    <ItemGroup>
         <ProjectReference Include="../OpenTelemetry/OpenTelemetry.csproj" />
         <PackageReference Include="Microsoft.Extensions.Hosting" />
     </ItemGroup>
