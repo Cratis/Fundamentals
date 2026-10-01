@@ -46,6 +46,16 @@ public class MetricTemplateData
     public string DescriptionLiteral => SymbolDisplay.FormatLiteral(Description, quote: true);
 
     /// <summary>
+    /// Gets or sets the unit of the instrument.
+    /// </summary>
+    public string? Unit { get; set; }
+
+    /// <summary>
+    /// Gets the unit as an escaped C# string literal.
+    /// </summary>
+    public string UnitLiteral => Unit is null ? "null" : SymbolDisplay.FormatLiteral(Unit, quote: true);
+
+    /// <summary>
     /// Gets or sets whether or the metric is scoped.
     /// </summary>
     public bool IsScoped { get; set; }

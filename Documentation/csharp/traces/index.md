@@ -51,7 +51,9 @@ public interface IActivitySource<T>
 }
 ```
 
-When you resolve `IActivitySource<T>` from dependency injection, Fundamentals creates an `ActivitySource` named after `T`.
+When you resolve unkeyed `IActivitySource<T>` from dependency injection, Fundamentals creates an `ActivitySource` named after `T`. These per-type names are not subscribed by the default `Cratis.*` OpenTelemetry subscription unless the type's full name matches that wildcard. Register a named source such as `Cratis.MyProduct` and inject it by key, or explicitly subscribe to the per-type source.
+
+`AddNamedActivitySource("Cratis.MyProduct", version: "1.2.3")` and `AddNamedMeter("Cratis.MyProduct", version: "1.2.3")` set the instrumentation scope version. The existing overloads without a version remain supported.
 
 ### Activity scopes
 
@@ -112,7 +114,7 @@ public static partial class OrderTraces
 The generator:
 
 - starts the activity with the configured name and kind
-- converts additional parameter names to `snake_case` tags
+- uses `[Cratis.Diagnostics.Tag("cratis.…")]` for explicit attribute keys, or converts untagged parameter names to `snake_case` for compatibility
 - returns an `ActivityScope<T>` that stops the activity on disposal
 
 ## Examples

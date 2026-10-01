@@ -186,7 +186,23 @@ static partial void CountUserLogin(IMeter<AuthService> meter, string result, str
 }
 ```
 
-Counters and gauges pass the attribute's name and description as named arguments to the .NET instrument creation APIs. Instrument units are `null`; the attributes do not currently support declaring a unit. Names and descriptions are escaped as C# string literals, preserving quotes, backslashes, and line breaks.
+Counters, gauges, and histograms pass the name, unit, and description as named arguments to the .NET instrument creation APIs. Existing two-argument counters and gauges keep compiling and have a `null` unit. Use a third argument for a UCUM unit. Names, units, descriptions, and tag keys preserve quotes, backslashes, and line breaks.
+
+### Explicit tags and histograms
+
+Import `Cratis.Diagnostics` to use `[Tag("…")]` on a span or metric parameter. Untagged metric parameters keep their parameter names; untagged span parameters keep their snake_case names for compatibility. Prefer explicit keys for new instrumentation.
+
+This declaration excerpt requires a partial class and `Cratis.Metrics.Roslyn`:
+
+```csharp
+[Histogram<double>("cratis.my_app.request.duration", "Request duration", "s")]
+internal static partial void RequestDuration(
+    this IMeter<RequestHandler> meter,
+    double seconds,
+    [Tag("cratis.my_app.request.outcome")] string outcome);
+```
+
+Histograms require a numeric measurement parameter matching the attribute's type. Use seconds for durations. `IMeterScope<T>` is also supported; scope tags are added alongside the method's tags.
 
 ### Exported Metric Names
 
