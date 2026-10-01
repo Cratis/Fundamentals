@@ -18,7 +18,7 @@ public class when_generating_explicit_tags_and_histograms : Specification
 
     void Because()
     {
-        var compilation = CompilationFactory.CreateCompilation("""
+        var compilation = CompilationFactory.CreateCompilation(@"
 using System;
 using System.Collections.Generic;
 using Cratis.Diagnostics;
@@ -29,22 +29,22 @@ namespace TestApp;
 
 public static partial class Telemetry
 {
-    [Counter<int>("cratis.test.requests", "Request count", "{request}")]
-    public static partial void Count(IMeter<object> meter, [Tag("cratis.test.outcome")] string outcome);
+    [Counter<int>(""cratis.test.requests"", ""Request count"", ""{request}"")]
+    public static partial void Count(IMeter<object> meter, [Tag(""cratis.test.outcome"")] string outcome);
 
-    [Gauge<int>("cratis.test.active", "Active requests", "{request}")]
-    public static partial void Gauge(IMeter<object> meter, int value, [Tag("cratis.test.outcome")] string outcome);
+    [Gauge<int>(""cratis.test.active"", ""Active requests"", ""{request}"")]
+    public static partial void Gauge(IMeter<object> meter, int value, [Tag(""cratis.test.outcome"")] string outcome);
 
-    [Histogram<double>("cratis.test.duration", "Request duration", "s")]
-    public static partial void Duration(IMeter<object> meter, double seconds, [Tag("cratis.test.outcome")] string outcome);
+    [Histogram<double>(""cratis.test.duration"", ""Request duration"", ""s"")]
+    public static partial void Duration(IMeter<object> meter, double seconds, [Tag(""cratis.test.outcome"")] string outcome);
 
-    [Histogram<double>("cratis.test.scoped.duration", "Scoped duration", "s")]
-    public static partial void ScopedDuration(IMeterScope<object> scope, double seconds, [Tag("cratis.test.outcome")] string outcome);
+    [Histogram<double>(""cratis.test.scoped.duration"", ""Scoped duration"", ""s"")]
+    public static partial void ScopedDuration(IMeterScope<object> scope, double seconds, [Tag(""cratis.test.outcome"")] string outcome);
 
-    [Span("cratis.test.request")]
-    public static partial IActivityScope<object> Request(IActivitySource<object> source, [Tag("cratis.test.outcome")] string outcome, string legacyTag);
+    [Span(""cratis.test.request"")]
+    public static partial IActivityScope<object> Request(IActivitySource<object> source, [Tag(""cratis.test.outcome"")] string outcome, string legacyTag);
 }
-""");
+");
         CSharpGeneratorDriver.Create(new MetricsSourceGenerator())
             .RunGeneratorsAndUpdateCompilation(compilation, out var generated, out var diagnostics);
         diagnostics.ShouldBeEmpty();
@@ -90,8 +90,8 @@ public static partial class Telemetry
     [Fact] void should_preserve_units() => _instruments.Select(_ => _.Unit).ShouldContainOnly("{request}", "{request}", "s", "s");
     [Fact] void should_preserve_descriptions() => _instruments.Select(_ => _.Description).ShouldContainOnly("Request count", "Active requests", "Request duration", "Scoped duration");
     [Fact] void should_record_histogram_measurements() => _measurements.ShouldContainOnly(0.25, 0.5);
-    [Fact] void should_use_explicit_metric_tags() => _tags.ShouldContain(new("cratis.test.outcome", "ok"));
-    [Fact] void should_include_scoped_tags() => _tags.ShouldContain(new("cratis.test.scope", "scoped"));
+    [Fact] void should_use_explicit_metric_tags() => _tags.ShouldContain(new KeyValuePair<string, object?>("cratis.test.outcome", "ok"));
+    [Fact] void should_include_scoped_tags() => _tags.ShouldContain(new KeyValuePair<string, object?>("cratis.test.scope", "scoped"));
     [Fact] void should_use_explicit_span_tags() => _activity!.GetTagItem("cratis.test.outcome").ShouldEqual("ok");
     [Fact] void should_preserve_legacy_span_tags() => _activity!.GetTagItem("legacy_tag").ShouldEqual("legacy");
 }
