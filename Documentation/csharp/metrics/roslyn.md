@@ -169,27 +169,25 @@ static partial void CountUserLogin(IMeter<AuthService> meter, string result, str
 ### Generated Implementation
 
 ```csharp
-static Counter<int>? CountUserLoginMetric;
+static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<Meter, Counter<int>> CountUserLoginMetric = new();
 
 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
 static partial void CountUserLogin(IMeter<AuthService> meter, string result, string userId)
 {
-    if (CountUserLoginMetric is null && meter.ActualMeter is not null)
-    {
-        CountUserLoginMetric = meter.ActualMeter.CreateCounter<int>(name: "user_logins", unit: null, description: "User login attempts");
-    }
-
     var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
     {
         new("result", result),
         new("userId", userId)
     }));
 
-    CountUserLoginMetric?.Add(1, tags);
+    if (meter.ActualMeter is { } actualMeter)
+    {
+        CountUserLoginMetric.GetValue(actualMeter, static m => m.CreateCounter<int>(name: "user_logins", unit: null, description: "User login attempts")).Add(1, tags);
+    }
 }
 ```
 
-Counters, gauges, and histograms pass the name, unit, and description as named arguments to the .NET instrument creation APIs. Existing two-argument counters and gauges keep compiling and have a `null` unit. Use a third argument for a UCUM unit. Names, units, descriptions, and tag keys preserve quotes, backslashes, and line breaks.
+Each instrument is created once per `Meter` instance, so calling the method with different keyed or versioned meters records to each of them. Counters, gauges, and histograms pass the name, unit, and description as named arguments to the .NET instrument creation APIs. Existing two-argument counters and gauges keep compiling and have a `null` unit. Use a third argument for a UCUM unit. Names, units, descriptions, and tag keys preserve quotes, backslashes, and line breaks.
 
 ### Explicit tags and histograms
 
