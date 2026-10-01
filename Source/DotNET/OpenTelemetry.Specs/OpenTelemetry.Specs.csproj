@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Cratis.OpenTelemetry.Specs</AssemblyName>
+        <RootNamespace>Cratis.OpenTelemetry</RootNamespace>
+        <IsTestProject>true</IsTestProject>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Remove="$(MSBuildThisFileDirectory)/../GlobalUsings.Specs.cs" />
+        <Using Include="Cratis.Specifications" />
+        <Using Include="Xunit" />
+    </ItemGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <ProjectReference Include="../OpenTelemetry/OpenTelemetry.csproj" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" />
+    </ItemGroup>
+</Project>
