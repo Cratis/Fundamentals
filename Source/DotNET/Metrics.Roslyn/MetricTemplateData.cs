@@ -46,6 +46,16 @@ public class MetricTemplateData
     public string DescriptionLiteral => SymbolDisplay.FormatLiteral(Description, quote: true);
 
     /// <summary>
+    /// Gets or sets the unit of the instrument.
+    /// </summary>
+    public string? Unit { get; set; }
+
+    /// <summary>
+    /// Gets the unit as an escaped C# string literal.
+    /// </summary>
+    public string UnitLiteral => Unit is null ? "null" : SymbolDisplay.FormatLiteral(Unit, quote: true);
+
+    /// <summary>
     /// Gets or sets whether or the metric is scoped.
     /// </summary>
     public bool IsScoped { get; set; }
@@ -63,7 +73,27 @@ public class MetricTemplateData
     /// <summary>
     /// Gets or sets whether or not the value parameter has a value.
     /// </summary>
-    public bool HasValueParameter { get; set; }
+    public bool HasValueParameter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the collision-free local name for the collected tags.
+    /// </summary>
+    public string TagsVariable { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the collision-free local name for a scope tag.
+    /// </summary>
+    public string ScopeTagVariable { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the collision-free local name for the actual meter.
+    /// </summary>
+    public string MeterVariable { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the collision-free factory parameter name for the histogram meter.
+    /// </summary>
+    public string HistogramMeterVariable { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the tags for the counter.

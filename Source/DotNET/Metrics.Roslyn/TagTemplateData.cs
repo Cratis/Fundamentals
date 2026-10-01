@@ -1,6 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.CSharp;
+
 namespace Cratis.Metrics.Roslyn;
 
 /// <summary>
@@ -17,6 +19,11 @@ public class TagTemplateData
     /// Gets or sets the name of the tag.
     /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the name as an escaped C# string literal.
+    /// </summary>
+    public string NameLiteral => SymbolDisplay.FormatLiteral(Name, quote: true);
 
     /// <summary>
     /// Gets or sets the value expression for the tag.

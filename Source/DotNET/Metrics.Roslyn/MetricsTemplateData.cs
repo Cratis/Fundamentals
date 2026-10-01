@@ -39,6 +39,11 @@ public class MetricsTemplateData
     public IList<MetricTemplateData> Gauges { get; set; } = [];
 
     /// <summary>
+    /// Gets or sets the histograms.
+    /// </summary>
+    public IList<MetricTemplateData> Histograms { get; set; } = [];
+
+    /// <summary>
     /// Gets or sets the spans.
     /// </summary>
     public IList<SpanTemplateData> Spans { get; set; } = [];

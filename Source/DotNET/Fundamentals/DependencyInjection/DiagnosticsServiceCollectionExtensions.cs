@@ -20,11 +20,20 @@ public static class DiagnosticsServiceCollectionExtensions
     /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
     /// <param name="name">Name of the meter.</param>
     /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
-    public static IServiceCollection AddNamedMeter(this IServiceCollection services, string name)
+    public static IServiceCollection AddNamedMeter(this IServiceCollection services, string name) => services.AddNamedMeter(name, null);
+
+    /// <summary>
+    /// Adds a versioned named meter and keyed typed registrations.
+    /// </summary>
+    /// <param name="services">Services to add to.</param>
+    /// <param name="name">Name of the meter.</param>
+    /// <param name="version">Instrumentation scope version.</param>
+    /// <returns>The services for continuation.</returns>
+    public static IServiceCollection AddNamedMeter(this IServiceCollection services, string name, string? version)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-        services.TryAddKeyedSingleton(typeof(Meter), name, static (_, key) => new Meter((string)key!));
+        services.TryAddKeyedSingleton(typeof(Meter), name, (_, key) => new Meter((string)key!, version));
         services.TryAddKeyedSingleton(typeof(IMeter<>), name, typeof(KeyedMeter<>));
 
         return services;
@@ -36,11 +45,20 @@ public static class DiagnosticsServiceCollectionExtensions
     /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
     /// <param name="name">Name of the activity source.</param>
     /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
-    public static IServiceCollection AddNamedActivitySource(this IServiceCollection services, string name)
+    public static IServiceCollection AddNamedActivitySource(this IServiceCollection services, string name) => services.AddNamedActivitySource(name, string.Empty);
+
+    /// <summary>
+    /// Adds a versioned named activity source and keyed typed registrations.
+    /// </summary>
+    /// <param name="services">Services to add to.</param>
+    /// <param name="name">Name of the activity source.</param>
+    /// <param name="version">Instrumentation scope version.</param>
+    /// <returns>The services for continuation.</returns>
+    public static IServiceCollection AddNamedActivitySource(this IServiceCollection services, string name, string? version)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-        services.TryAddKeyedSingleton(typeof(DiagnosticsActivitySource), name, static (_, key) => new DiagnosticsActivitySource((string)key!));
+        services.TryAddKeyedSingleton(typeof(DiagnosticsActivitySource), name, (_, key) => new DiagnosticsActivitySource((string)key!, version));
         services.TryAddKeyedSingleton(typeof(IActivitySource<>), name, typeof(KeyedActivitySource<>));
 
         return services;

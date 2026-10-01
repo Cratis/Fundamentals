@@ -55,7 +55,7 @@ public class MetricsSourceGenerator : IIncrementalGenerator
 
     static bool HasInstrumentationAttribute(MethodDeclarationSyntax method)
     {
-        var metricsAttributes = new[] { "Counter", "Gauge", "Span" };
+        var metricsAttributes = new[] { "Counter", "Gauge", "Histogram", "Span" };
         return method.AttributeLists
             .SelectMany(list => list.Attributes)
             .Any(attr => metricsAttributes.Any(m => attr.Name.ToString().StartsWith(m)));
@@ -72,6 +72,7 @@ public class MetricsSourceGenerator : IIncrementalGenerator
 
         var counterAttribute = compilation.GetTypeByMetadataName("Cratis.Metrics.CounterAttribute`1");
         var gaugeAttribute = compilation.GetTypeByMetadataName("Cratis.Metrics.GaugeAttribute`1");
+        var histogramAttribute = compilation.GetTypeByMetadataName("Cratis.Metrics.HistogramAttribute`1");
         var spanAttribute = compilation.GetTypeByMetadataName("Cratis.Traces.SpanAttribute");
 
         if (counterAttribute is null || gaugeAttribute is null || spanAttribute is null) return;
@@ -100,7 +101,8 @@ public class MetricsSourceGenerator : IIncrementalGenerator
                 if (methodSymbol is not null)
                 {
                     var attributes = methodSymbol.GetAttributes();
-                    var methodSignature = $"{method.Modifiers} {method.ReturnType} {method.Identifier.ValueText}({method.ParameterList.Parameters})";
+                    var parametersWithoutAttributes = SyntaxFactory.SeparatedList(method.ParameterList.Parameters.Select(parameter => parameter.WithAttributeLists(default)));
+                    var methodSignature = $"{method.Modifiers} {method.ReturnType} {method.Identifier.ValueText}({parametersWithoutAttributes})";
 
                     var scopeParameter = method.ParameterList.Parameters.Count > 0
                         ? method.ParameterList.Parameters[0].Identifier.ValueText
@@ -109,14 +111,19 @@ public class MetricsSourceGenerator : IIncrementalGenerator
                     var type = method.ParameterList.Parameters.FirstOrDefault()?.Type;
                     var isScoped = type?.ToString().StartsWith("IMeterScope") ?? false;
 
-                    AddMetricIfAny(context, templateData.Counters, counterAttribute, method, methodSignature, attributes, isScoped, scopeParameter);
-                    AddMetricIfAny(context, templateData.Gauges, gaugeAttribute, method, methodSignature, attributes, isScoped, scopeParameter, true);
-                    AddSpanIfAny(context, templateData.Spans, spanAttribute, method, methodSignature, attributes);
+                    AddMetricIfAny(context, templateData.Counters, counterAttribute, method, methodSignature, attributes, semanticModel, isScoped, scopeParameter);
+                    AddMetricIfAny(context, templateData.Gauges, gaugeAttribute, method, methodSignature, attributes, semanticModel, isScoped, scopeParameter, true);
+                    if (histogramAttribute is not null)
+                    {
+                        AddMetricIfAny(context, templateData.Histograms, histogramAttribute, method, methodSignature, attributes, semanticModel, isScoped, scopeParameter, true);
+                    }
+                    AddSpanIfAny(context, templateData.Spans, spanAttribute, method, methodSignature, attributes, semanticModel);
                 }
             }
 
             if (templateData.Counters.Count > 0 ||
                 templateData.Gauges.Count > 0 ||
+                templateData.Histograms.Count > 0 ||
                 templateData.Spans.Count > 0)
             {
                 var source = TemplateTypes.Metrics(templateData);
@@ -164,20 +171,18 @@ public class MetricsSourceGenerator : IIncrementalGenerator
     static IEnumerable<ParameterSyntax> GetActualParameters(MethodDeclarationSyntax method) =>
         method.ParameterList.Parameters.Skip(1);
 
-    static IEnumerable<TagTemplateData> GetParametersAsTags(IEnumerable<ParameterSyntax> parameters) =>
-        parameters.Select(parameter => new TagTemplateData
+    static IEnumerable<TagTemplateData> GetParametersAsTags(IEnumerable<ParameterSyntax> parameters, SemanticModel semanticModel, bool snakeCase = false) =>
+        parameters.Select(parameter =>
         {
-            Name = parameter.Identifier.ValueText,
-            ValueExpression = parameter.Identifier.ValueText,
-            Type = parameter.Type!.ToString()
-        });
+            var tag = semanticModel.GetDeclaredSymbol(parameter)?.GetAttributes()
+                .FirstOrDefault(attribute => attribute.AttributeClass?.ToDisplayString() == "Cratis.Diagnostics.TagAttribute");
 
-    static IEnumerable<TagTemplateData> GetParametersAsSnakeCaseTags(IEnumerable<ParameterSyntax> parameters) =>
-        parameters.Select(parameter => new TagTemplateData
-        {
-            Name = ToSnakeCase(parameter.Identifier.ValueText),
-            ValueExpression = parameter.Identifier.ValueText,
-            Type = parameter.Type!.ToString()
+            return new TagTemplateData
+            {
+                Name = tag?.ConstructorArguments[0].Value?.ToString() ?? (snakeCase ? ToSnakeCase(parameter.Identifier.ValueText) : parameter.Identifier.ValueText),
+                ValueExpression = parameter.Identifier.Text,
+                Type = parameter.Type!.ToString()
+            };
         });
 
     static void ValidateFirstParameter(SourceProductionContext context, MethodDeclarationSyntax method, string methodSignature)
@@ -288,6 +293,7 @@ public class MetricsSourceGenerator : IIncrementalGenerator
         MethodDeclarationSyntax method,
         string methodSignature,
         ImmutableArray<AttributeData> attributes,
+        SemanticModel semanticModel,
         bool isScoped,
         string scopeParameter,
         bool valueParameterRequired = false)
@@ -307,7 +313,7 @@ public class MetricsSourceGenerator : IIncrementalGenerator
             {
                 parameters = parameters.Where(p => p.Identifier.ValueText != valueParameter);
             }
-            var tags = GetParametersAsTags(parameters);
+            var tags = GetParametersAsTags(parameters, semanticModel);
             var name = attribute.ConstructorArguments[0].Value!.ToString();
             var description = attribute.ConstructorArguments[1].Value!.ToString();
             metrics.Add(
@@ -315,6 +321,7 @@ public class MetricsSourceGenerator : IIncrementalGenerator
                     {
                         Name = name,
                         Description = description,
+                        Unit = attribute.ConstructorArguments.Length > 2 ? attribute.ConstructorArguments[2].Value?.ToString() : null,
                         Type = type,
                         MethodName = method.Identifier.ValueText,
                         MethodSignature = methodSignature,
@@ -322,9 +329,24 @@ public class MetricsSourceGenerator : IIncrementalGenerator
                         ScopeParameter = scopeParameter,
                         ValueParameter = valueParameter,
                         HasValueParameter = hasValueParameter,
+                        TagsVariable = GetLocalName(method, "tags"),
+                        ScopeTagVariable = GetLocalName(method, "scopeTag"),
+                        MeterVariable = GetLocalName(method, "actualMeter"),
+                        HistogramMeterVariable = GetLocalName(method, "histogramMeter"),
                         Tags = tags
                     });
         }
+    }
+
+    static string GetLocalName(MethodDeclarationSyntax method, string name)
+    {
+        var parameterNames = method.ParameterList.Parameters.Select(parameter => parameter.Identifier.ValueText).ToArray();
+        while (parameterNames.Contains(name))
+        {
+            name += "_";
+        }
+
+        return name;
     }
 
     static void AddSpanIfAny(
@@ -333,7 +355,8 @@ public class MetricsSourceGenerator : IIncrementalGenerator
         INamedTypeSymbol attributeToLookFor,
         MethodDeclarationSyntax method,
         string methodSignature,
-        ImmutableArray<AttributeData> attributes)
+        ImmutableArray<AttributeData> attributes,
+        SemanticModel semanticModel)
     {
         var attribute = attributes.FirstOrDefault(_ => SymbolEqualityComparer.Default.Equals(_.AttributeClass, attributeToLookFor));
         if (attribute is null)
@@ -377,7 +400,7 @@ public class MetricsSourceGenerator : IIncrementalGenerator
                 Kind = kind,
                 SourceParameter = method.ParameterList.Parameters[0].Identifier.ValueText,
                 ServiceType = serviceType,
-                Tags = GetParametersAsSnakeCaseTags(GetActualParameters(method))
+                Tags = GetParametersAsTags(GetActualParameters(method), semanticModel, snakeCase: true)
             });
     }
 

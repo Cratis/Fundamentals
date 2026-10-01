@@ -9,48 +9,47 @@ namespace {{Namespace}};
 {{ClassDefinition}}
 {
     {{#Counters}}
-    static Counter<{{Type}}>? {{MethodName}}Metric;
+    static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<Meter, Counter<{{Type}}>> {{MethodName}}Metric = new();
     {{/Counters}}
 
     {{#Gauges}}
-    static Gauge<{{Type}}>? {{MethodName}}Metric;
+    static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<Meter, Gauge<{{Type}}>> {{MethodName}}Metric = new();
     {{/Gauges}}
+
+    {{#Histograms}}
+    static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<Meter, Histogram<{{Type}}>> {{MethodName}}Metric = new();
+    {{/Histograms}}
 
     {{#Counters}}
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
     {{{MethodSignature}}}
     {
-        {{#if IsScoped}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: null, description: {{{DescriptionLiteral}}});
-        }
-        {{else}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: null, description: {{{DescriptionLiteral}}});
-        }
-        {{/if}}
-
-        var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
+        var {{TagsVariable}} = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
-            new("{{Name}}", {{ValueExpression}}){{#unless @last}},{{/unless}}
+            new({{{NameLiteral}}}, {{ValueExpression}}){{#unless @last}},{{/unless}}
             {{/Tags}}
         }));
 
         {{#if IsScoped}}
-        foreach (var (key, value) in {{ScopeParameter}}.Tags)
+        foreach (var {{ScopeTagVariable}} in {{ScopeParameter}}.Tags)
         {
-            tags.Add(key, value);
+            {{TagsVariable}}.Add({{ScopeTagVariable}}.Key, {{ScopeTagVariable}}.Value);
         }
         {{/if}}
 
-        {{#if HasValueParameter }}
-        {{MethodName}}Metric?.Add({{ValueParameter}}, tags);
+        {{#if IsScoped}}
+        if ({{ScopeParameter}}.Meter is { } {{MeterVariable}})
         {{else}}
-        {{MethodName}}Metric?.Add(1, tags);
+        if ({{ScopeParameter}}.ActualMeter is { } {{MeterVariable}})
         {{/if}}
+        {
+            {{#if HasValueParameter }}
+            {{MethodName}}Metric.GetValue({{MeterVariable}}, static {{HistogramMeterVariable}} => {{HistogramMeterVariable}}.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}})).Add({{ValueParameter}}, {{TagsVariable}});
+            {{else}}
+            {{MethodName}}Metric.GetValue({{MeterVariable}}, static {{HistogramMeterVariable}} => {{HistogramMeterVariable}}.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}})).Add(1, {{TagsVariable}});
+            {{/if}}
+        }
     }
     {{/Counters}}
 
@@ -58,45 +57,69 @@ namespace {{Namespace}};
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
     {{{MethodSignature}}}
     {
-        {{#if IsScoped}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateGauge<{{Type}}>(name: {{{NameLiteral}}}, unit: null, description: {{{DescriptionLiteral}}});
-        }
-        {{else}}
-        if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
-        {
-            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateGauge<{{Type}}>(name: {{{NameLiteral}}}, unit: null, description: {{{DescriptionLiteral}}});
-        }
-        {{/if}}
-
-        var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
+        var {{TagsVariable}} = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
-            new("{{Name}}", {{ValueExpression}}){{#unless @last}},{{/unless}}
+            new({{{NameLiteral}}}, {{ValueExpression}}){{#unless @last}},{{/unless}}
             {{/Tags}}
         }));
 
         {{#if IsScoped}}
-        foreach (var (key, value) in {{ScopeParameter}}.Tags)
+        foreach (var {{ScopeTagVariable}} in {{ScopeParameter}}.Tags)
         {
-            tags.Add(key, value);
+            {{TagsVariable}}.Add({{ScopeTagVariable}}.Key, {{ScopeTagVariable}}.Value);
         }
         {{/if}}
 
-        {{MethodName}}Metric?.Record({{ValueParameter}}, tags);
+        {{#if IsScoped}}
+        if ({{ScopeParameter}}.Meter is { } {{MeterVariable}})
+        {{else}}
+        if ({{ScopeParameter}}.ActualMeter is { } {{MeterVariable}})
+        {{/if}}
+        {
+            {{MethodName}}Metric.GetValue({{MeterVariable}}, static {{HistogramMeterVariable}} => {{HistogramMeterVariable}}.CreateGauge<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}})).Record({{ValueParameter}}, {{TagsVariable}});
+        }
     }
     {{/Gauges}}
 
-        {{#Spans}}
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
-        {{{MethodSignature}}}
+    {{#Histograms}}
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
+    {{{MethodSignature}}}
+    {
+        var {{TagsVariable}} = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
-            var activity = {{SourceParameter}}.ActualSource.StartActivity({{{NameLiteral}}}, {{Kind}});
             {{#Tags}}
-            activity?.SetTag("{{Name}}", {{ValueExpression}});
+            new({{{NameLiteral}}}, {{ValueExpression}}){{#unless @last}},{{/unless}}
             {{/Tags}}
-            return new global::Cratis.Traces.ActivityScope<{{ServiceType}}>(activity);
+        }));
+
+        {{#if IsScoped}}
+        foreach (var {{ScopeTagVariable}} in {{ScopeParameter}}.Tags)
+        {
+            {{TagsVariable}}.Add({{ScopeTagVariable}}.Key, {{ScopeTagVariable}}.Value);
         }
-        {{/Spans}}
+        {{/if}}
+
+        {{#if IsScoped}}
+        if ({{ScopeParameter}}.Meter is { } {{MeterVariable}})
+        {{else}}
+        if ({{ScopeParameter}}.ActualMeter is { } {{MeterVariable}})
+        {{/if}}
+        {
+            {{MethodName}}Metric.GetValue({{MeterVariable}}, static {{HistogramMeterVariable}} => {{HistogramMeterVariable}}.CreateHistogram<{{Type}}>(name: {{{NameLiteral}}}, unit: {{{UnitLiteral}}}, description: {{{DescriptionLiteral}}})).Record({{ValueParameter}}, {{TagsVariable}});
+        }
+    }
+    {{/Histograms}}
+
+    {{#Spans}}
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
+    {{{MethodSignature}}}
+    {
+        var activity = {{SourceParameter}}.ActualSource.StartActivity({{{NameLiteral}}}, {{Kind}});
+        {{#Tags}}
+        activity?.SetTag({{{NameLiteral}}}, {{ValueExpression}});
+        {{/Tags}}
+        return new global::Cratis.Traces.ActivityScope<{{ServiceType}}>(activity);
+    }
+    {{/Spans}}
 }
