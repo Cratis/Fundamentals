@@ -32,12 +32,12 @@ dotnet add package Cratis.Metrics.Roslyn
 The source generator analyzes your code at compile time and looks for:
 
 1. **Partial classes** containing partial methods
-2. **Methods decorated** with `[Counter<T>]` or `[Gauge<T>]` attributes
+2. **Methods decorated** with `[Counter<T>]`, `[Gauge<T>]`, or `[Histogram<T>]` attributes
 3. **Proper method signatures** that follow the required pattern
 
 For each qualifying method, it generates a complete implementation that:
 
-- Creates the appropriate metrics instrument (Counter or Gauge)
+- Creates the appropriate metrics instrument (Counter, Gauge, or Histogram)
 - Handles tag collection from method parameters and scopes
 - Calls the underlying .NET metrics APIs
 - Includes proper null checks and error handling
@@ -104,10 +104,10 @@ All metrics methods must follow specific signature requirements:
 ### Required Structure
 
 ```csharp
-[Counter<T>|Gauge<T>("name", "description")]
+[Counter<T>|Gauge<T>|Histogram<T>("name", "description", "unit")]
 static partial void MethodName(
     IMeter<TService> meter | IMeterScope<TService> scope,  // Required first parameter
-    [value parameter],                                      // Optional for counters, required for gauges
+    [value parameter],                                      // Optional for counters, required for gauges and histograms
     [tag parameters...]                                     // Optional additional parameters become tags
 );
 ```
@@ -119,16 +119,19 @@ The first parameter must be either:
 - `IMeter<T>` - For basic metrics without scoped context
 - `IMeterScope<T>` - For metrics within a scope (includes scope tags automatically)
 
+Unkeyed `IMeter<T>` uses `typeof(T).FullName` as its meter name and is not subscribed by default. Explicitly subscribe that name in your telemetry provider, or use a subscribed [named meter](named-registration.md).
+
 ### Value Parameter Rules
 
 - **Counters**: Value parameter is optional. If not provided, defaults to incrementing by 1
 - **Gauges**: Value parameter is required and must match the generic type `T` in the attribute
-- **Type matching**: The value parameter type must exactly match `T` in `[Counter<T>]` or `[Gauge<T>]`
+- **Histograms**: Value parameter is required and must match the generic type `T` in the attribute
+- **Type matching**: The value parameter type must exactly match `T` in `[Counter<T>]`, `[Gauge<T>]`, or `[Histogram<T>]`
 
 ### Tag Parameters
 
 - All parameters after the first (and value parameter if present) become metric tags
-- Parameter names become tag names
+- Parameter names become tag names unless overridden with `[Tag("…")]`
 - Parameter values become tag values
 - Keep tag cardinality reasonable for performance
 

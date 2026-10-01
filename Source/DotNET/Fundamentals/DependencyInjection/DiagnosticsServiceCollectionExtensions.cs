@@ -45,7 +45,7 @@ public static class DiagnosticsServiceCollectionExtensions
     /// <param name="services"><see cref="IServiceCollection"/> to add to.</param>
     /// <param name="name">Name of the activity source.</param>
     /// <returns><see cref="IServiceCollection"/> for continuation.</returns>
-    public static IServiceCollection AddNamedActivitySource(this IServiceCollection services, string name) => services.AddNamedActivitySource(name, null);
+    public static IServiceCollection AddNamedActivitySource(this IServiceCollection services, string name) => services.AddNamedActivitySource(name, string.Empty);
 
     /// <summary>
     /// Adds a versioned named activity source and keyed typed registrations.

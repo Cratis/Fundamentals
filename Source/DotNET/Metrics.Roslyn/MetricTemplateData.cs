@@ -73,7 +73,17 @@ public class MetricTemplateData
     /// <summary>
     /// Gets or sets whether or not the value parameter has a value.
     /// </summary>
-    public bool HasValueParameter { get; set; }
+    public bool HasValueParameter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the collision-free local name for the collected tags.
+    /// </summary>
+    public string TagsVariable { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the collision-free local name for a scope tag.
+    /// </summary>
+    public string ScopeTagVariable { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the tags for the counter.

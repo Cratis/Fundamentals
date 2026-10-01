@@ -19,7 +19,7 @@ The metrics system in Cratis Fundamentals offers:
 - **Source generation** for automatic metrics implementation
 - **Scoped metrics** for contextual measurements
 - **Tag support** for dimensional metrics
-- **Counter and Gauge instruments** with standardized APIs
+- **Counter, Gauge, and Histogram instruments** with standardized APIs
 
 ## Getting Started
 
@@ -49,6 +49,8 @@ public interface IMeter<T>
     Meter ActualMeter { get; }
 }
 ```
+
+Unkeyed `IMeter<T>` uses `typeof(T).FullName` as its meter name. These per-type meters are not subscribed by default: explicitly subscribe the name in your telemetry provider, or use a subscribed [named meter](named-registration.md).
 
 ### Meter Scopes
 
@@ -120,6 +122,17 @@ Gauges track values that can go up and down. Use for measuring current state lik
 static partial void RecordMemoryUsage(IMeter<MemoryService> meter, double value);
 ```
 
+### Histograms
+
+Histograms record distributions of measurements such as request durations or payload sizes. A measurement parameter matching the attribute's generic type is required; the optional third argument declares a UCUM unit.
+
+```csharp
+[Histogram<double>("request_duration", "Request duration", "s")]
+static partial void RecordRequestDuration(IMeter<WebService> meter, double seconds, string outcome);
+```
+
+Use `IMeterScope<T>` to include scope tags. Omitting the unit leaves the instrument's unit `null`.
+
 ## Using Source Generation
 
 The `Cratis.Metrics.Roslyn` source generator automatically implements your metrics methods. To use it:
@@ -133,7 +146,7 @@ The `Cratis.Metrics.Roslyn` source generator automatically implements your metri
 All metrics methods must follow these rules:
 
 1. **First parameter** must be either `IMeter<T>` or `IMeterScope<T>`
-2. **Value parameter** (for gauges) must match the generic type in the attribute
+2. **Value parameter** (required for gauges and histograms) must match the generic type in the attribute
 3. **Additional parameters** become tags automatically
 4. Methods must be `static partial`
 
@@ -316,11 +329,11 @@ public partial class SystemMetrics
 ## Best Practices
 
 1. **Use meaningful names** for your metrics that clearly describe what they measure
-2. **Include units** in metric descriptions (e.g., "bytes", "seconds", "count")
+2. **Declare UCUM units** with the optional third attribute argument (e.g., `"By"` for bytes or `"s"` for seconds), rather than putting units only in descriptions
 3. **Keep tag cardinality low** to avoid performance issues
 4. **Use scopes** for contextual metrics to reduce tag duplication
 5. **Group related metrics** in the same partial class for organization
-6. **Use appropriate metric types** - counters for cumulative values, gauges for current state
+6. **Use appropriate metric types** - counters for cumulative values, gauges for current state, histograms for distributions
 
 ## See Also
 

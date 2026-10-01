@@ -40,7 +40,7 @@ For each matching method, the generator:
 
 - calls `source.ActualSource.StartActivity()`
 - applies additional parameters as tags
-- converts tag names to `snake_case`
+- uses explicit `[Tag]` names when present, otherwise converts parameter names to `snake_case`
 - returns `ActivityScope<T>`
 
 ## Getting Started
@@ -97,11 +97,27 @@ Rules:
 
 ### Tag naming
 
-The generator converts parameter names to `snake_case` tag names:
+Without `[Tag]`, the generator converts parameter names to `snake_case` tag names:
 
 - `orderId` becomes `order_id`
 - `customerId` becomes `customer_id`
 - `orderID` becomes `order_id`
+
+### Explicit tag names
+
+Import `Cratis.Diagnostics` and annotate a parameter with `[Tag("…")]` to use an explicit tag key instead of its snake_case name. Explicit keys are preserved exactly, including quotes, backslashes, and line breaks. Prefer explicit keys for new instrumentation.
+
+This declaration belongs in a `static partial` class with `Cratis.Traces` imported:
+
+```csharp
+[Span("order.process", ActivityKind.Server)]
+internal static partial IActivityScope<OrderService> ProcessOrder(
+    this IActivitySource<OrderService> source,
+    [Tag("cratis.orders.order.id")] string orderId,
+    string customerId);
+```
+
+Here `orderId` uses `cratis.orders.order.id`, while the unannotated `customerId` still uses `customer_id`.
 
 ## Generated Code
 

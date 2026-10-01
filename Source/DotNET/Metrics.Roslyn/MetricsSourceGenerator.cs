@@ -329,9 +329,22 @@ public class MetricsSourceGenerator : IIncrementalGenerator
                         ScopeParameter = scopeParameter,
                         ValueParameter = valueParameter,
                         HasValueParameter = hasValueParameter,
+                        TagsVariable = GetLocalName(method, "tags"),
+                        ScopeTagVariable = GetLocalName(method, "scopeTag"),
                         Tags = tags
                     });
         }
+    }
+
+    static string GetLocalName(MethodDeclarationSyntax method, string name)
+    {
+        var parameterNames = method.ParameterList.Parameters.Select(parameter => parameter.Identifier.ValueText).ToArray();
+        while (parameterNames.Contains(name))
+        {
+            name += "_";
+        }
+
+        return name;
     }
 
     static void AddSpanIfAny(

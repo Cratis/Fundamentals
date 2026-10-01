@@ -36,7 +36,7 @@ namespace {{Namespace}};
         }
         {{/if}}
 
-        var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
+        var {{TagsVariable}} = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
             new({{{NameLiteral}}}, {{ValueExpression}}){{#unless @last}},{{/unless}}
@@ -44,16 +44,16 @@ namespace {{Namespace}};
         }));
 
         {{#if IsScoped}}
-        foreach (var (key, value) in {{ScopeParameter}}.Tags)
+        foreach (var {{ScopeTagVariable}} in {{ScopeParameter}}.Tags)
         {
-            tags.Add(key, value);
+            {{TagsVariable}}.Add({{ScopeTagVariable}}.Key, {{ScopeTagVariable}}.Value);
         }
         {{/if}}
 
         {{#if HasValueParameter }}
-        {{MethodName}}Metric?.Add({{ValueParameter}}, tags);
+        {{MethodName}}Metric?.Add({{ValueParameter}}, {{TagsVariable}});
         {{else}}
-        {{MethodName}}Metric?.Add(1, tags);
+        {{MethodName}}Metric?.Add(1, {{TagsVariable}});
         {{/if}}
     }
     {{/Counters}}
@@ -74,7 +74,7 @@ namespace {{Namespace}};
         }
         {{/if}}
 
-        var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
+        var {{TagsVariable}} = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
             new({{{NameLiteral}}}, {{ValueExpression}}){{#unless @last}},{{/unless}}
@@ -82,13 +82,13 @@ namespace {{Namespace}};
         }));
 
         {{#if IsScoped}}
-        foreach (var (key, value) in {{ScopeParameter}}.Tags)
+        foreach (var {{ScopeTagVariable}} in {{ScopeParameter}}.Tags)
         {
-            tags.Add(key, value);
+            {{TagsVariable}}.Add({{ScopeTagVariable}}.Key, {{ScopeTagVariable}}.Value);
         }
         {{/if}}
 
-        {{MethodName}}Metric?.Record({{ValueParameter}}, tags);
+        {{MethodName}}Metric?.Record({{ValueParameter}}, {{TagsVariable}});
     }
     {{/Gauges}}
 
@@ -108,7 +108,7 @@ namespace {{Namespace}};
         }
         {{/if}}
 
-        var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
+        var {{TagsVariable}} = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
         {
             {{#Tags}}
             new({{{NameLiteral}}}, {{ValueExpression}}){{#unless @last}},{{/unless}}
@@ -116,13 +116,13 @@ namespace {{Namespace}};
         }));
 
         {{#if IsScoped}}
-        foreach (var (key, value) in {{ScopeParameter}}.Tags)
+        foreach (var {{ScopeTagVariable}} in {{ScopeParameter}}.Tags)
         {
-            tags.Add(key, value);
+            {{TagsVariable}}.Add({{ScopeTagVariable}}.Key, {{ScopeTagVariable}}.Value);
         }
         {{/if}}
 
-        {{MethodName}}Metric?.Record({{ValueParameter}}, tags);
+        {{MethodName}}Metric?.Record({{ValueParameter}}, {{TagsVariable}});
     }
     {{/Histograms}}
 
