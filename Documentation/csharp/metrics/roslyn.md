@@ -173,7 +173,7 @@ static partial void CountUserLogin(IMeter<AuthService> meter, string result, str
 {
     if (CountUserLoginMetric is null && meter.ActualMeter is not null)
     {
-        CountUserLoginMetric = meter.ActualMeter.CreateCounter<int>("user_logins", "User login attempts");
+        CountUserLoginMetric = meter.ActualMeter.CreateCounter<int>(name: "user_logins", unit: null, description: "User login attempts");
     }
 
     var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
@@ -185,6 +185,14 @@ static partial void CountUserLogin(IMeter<AuthService> meter, string result, str
     CountUserLoginMetric?.Add(1, tags);
 }
 ```
+
+Counters and gauges pass the attribute's name and description as named arguments to the .NET instrument creation APIs. Instrument units are `null`; the attributes do not currently support declaring a unit. Names and descriptions are escaped as C# string literals, preserving quotes, backslashes, and line breaks.
+
+### Exported Metric Names
+
+Earlier generator versions passed the description as the instrument's unit, leaving its description empty. Exporters that append units to metric names consequently included the description in the exported name. After regenerating with the corrected generator, these names change for every consumer using such an exporter: for example, `chronicle_observer_partitions_failed_Number_of_failed_partitions_per_observer_in_a_given_event_store_and_namespace_total` becomes `chronicle_observer_partitions_failed_total`, and the description becomes the Prometheus HELP text.
+
+Update dashboards, alert rules, and queries that refer to the old names when upgrading. The attribute declarations do not need to change, but consumers must rebuild to regenerate their instrument creation code.
 
 ### Key Features of Generated Code
 
