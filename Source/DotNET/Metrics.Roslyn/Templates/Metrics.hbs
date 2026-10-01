@@ -23,12 +23,12 @@ namespace {{Namespace}};
         {{#if IsScoped}}
         if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
         {
-            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateCounter<{{Type}}>("{{Name}}", "{{Description}}");
+            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: null, description: {{{DescriptionLiteral}}});
         }
         {{else}}
         if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
         {
-            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateCounter<{{Type}}>("{{Name}}", "{{Description}}");
+            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateCounter<{{Type}}>(name: {{{NameLiteral}}}, unit: null, description: {{{DescriptionLiteral}}});
         }
         {{/if}}
 
@@ -61,12 +61,12 @@ namespace {{Namespace}};
         {{#if IsScoped}}
         if( {{MethodName}}Metric is null && {{ScopeParameter}}.Meter is not null )
         {
-            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateGauge<{{Type}}>("{{Name}}", "{{Description}}");
+            {{MethodName}}Metric = {{ScopeParameter}}.Meter.CreateGauge<{{Type}}>(name: {{{NameLiteral}}}, unit: null, description: {{{DescriptionLiteral}}});
         }
         {{else}}
         if( {{MethodName}}Metric is null && {{ScopeParameter}}.ActualMeter is not null )
         {
-            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateGauge<{{Type}}>("{{Name}}", "{{Description}}");
+            {{MethodName}}Metric = {{ScopeParameter}}.ActualMeter.CreateGauge<{{Type}}>(name: {{{NameLiteral}}}, unit: null, description: {{{DescriptionLiteral}}});
         }
         {{/if}}
 
@@ -92,7 +92,7 @@ namespace {{Namespace}};
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
         {{{MethodSignature}}}
         {
-            var activity = {{SourceParameter}}.ActualSource.StartActivity("{{Name}}", {{Kind}});
+            var activity = {{SourceParameter}}.ActualSource.StartActivity({{{NameLiteral}}}, {{Kind}});
             {{#Tags}}
             activity?.SetTag("{{Name}}", {{ValueExpression}});
             {{/Tags}}

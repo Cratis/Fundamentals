@@ -1,6 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.CSharp;
+
 namespace Cratis.Metrics.Roslyn;
 
 /// <summary>
@@ -32,6 +34,16 @@ public class MetricTemplateData
     /// Gets or sets the description of the counter.
     /// </summary>
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the name as an escaped C# string literal.
+    /// </summary>
+    public string NameLiteral => SymbolDisplay.FormatLiteral(Name, quote: true);
+
+    /// <summary>
+    /// Gets the description as an escaped C# string literal.
+    /// </summary>
+    public string DescriptionLiteral => SymbolDisplay.FormatLiteral(Description, quote: true);
 
     /// <summary>
     /// Gets or sets whether or the metric is scoped.
