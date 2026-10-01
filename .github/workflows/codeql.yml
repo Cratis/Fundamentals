@@ -24,6 +24,11 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+    # Documentation-only pull requests have nothing for CodeQL to analyze.
+    paths-ignore:
+      - "Documentation/**"
+      - "**.md"
+      - "**.mdx"
   schedule:
     - cron: '27 18 * * 5'
 
