@@ -92,7 +92,7 @@ namespace {{Namespace}};
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
         {{{MethodSignature}}}
         {
-            var activity = {{SourceParameter}}.ActualSource.StartActivity("{{Name}}", {{Kind}});
+            var activity = {{SourceParameter}}.ActualSource.StartActivity({{{NameLiteral}}}, {{Kind}});
             {{#Tags}}
             activity?.SetTag("{{Name}}", {{ValueExpression}});
             {{/Tags}}

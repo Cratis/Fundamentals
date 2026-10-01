@@ -192,6 +192,8 @@ Counters and gauges pass the attribute's name and description as named arguments
 
 Earlier generator versions passed the description as the instrument's unit, leaving its description empty. Exporters that append units to metric names consequently included the description in the exported name. After regenerating with the corrected generator, these names change for every consumer using such an exporter: for example, `chronicle_observer_partitions_failed_Number_of_failed_partitions_per_observer_in_a_given_event_store_and_namespace_total` becomes `chronicle_observer_partitions_failed_total`, and the description becomes the Prometheus HELP text.
 
+Names and descriptions containing HTML-special characters (`&`, `<`, `>`, or quotes) were previously exported HTML-encoded and are now exported exactly as written.
+
 Update dashboards, alert rules, and queries that refer to the old names when upgrading. The attribute declarations do not need to change, but consumers must rebuild to regenerate their instrument creation code.
 
 ### Key Features of Generated Code
