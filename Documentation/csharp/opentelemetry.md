@@ -65,7 +65,7 @@ For gRPC client or MongoDB instrumentation, reference the corresponding instrume
 
 ## Standard configuration
 
-Environment variables take precedence for resource identity and export selection. The same `OTEL_*` keys work in host `IConfiguration`, including appsettings.
+Nonempty environment variables take precedence for resource identity and export settings. Empty or whitespace-only values are treated as unset. The same `OTEL_*` keys work in host `IConfiguration`, including appsettings.
 
 | Key | Behavior |
 | --- | --- |
@@ -86,4 +86,4 @@ The package does not automatically install exporters other than OTLP. Invalid en
 
 Unkeyed `IActivitySource<T>` and `IMeter<T>` use the type's full name. They are not subscribed by `Cratis.*` unless that name matches the wildcard. Use [named activity sources](traces/named-registration.md) and a `Cratis.<Product>` scope, or add your application source and meter explicitly to your providers.
 
-For product names and attribute conventions, follow the [shared Cratis OpenTelemetry convention](https://github.com/Cratis/Architecture/blob/main/decisions/0001-opentelemetry-convention.md).
+For product names and attribute conventions, follow the [shared Cratis OpenTelemetry convention](https://github.com/Cratis/Architecture/issues/33).

@@ -3,7 +3,6 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -65,7 +64,17 @@ public static class OpenTelemetryExtensions
 
         var options = new CratisOpenTelemetryOptions();
         configure?.Invoke(options);
-        builder.Services.TryAddSingleton(configuration);
+
+        // AddOpenTelemetry has already registered an environment-only fallback. The
+        // supplied configuration must be the effective configuration for SDK options too.
+        var keys = configuration.AsEnumerable().Select(entry => entry.Key.ToUpperInvariant())
+            .Concat(Environment.GetEnvironmentVariables().Keys.Cast<string>())
+            .Where(key => key.StartsWith("OTEL_", StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal);
+        var sdkConfiguration = new ConfigurationBuilder().AddConfiguration(configuration)
+            .AddInMemoryCollection(keys.Select(key => new KeyValuePair<string, string?>(key, Read(configuration, key))))
+            .Build();
+        builder.Services.AddSingleton<IConfiguration>(sdkConfiguration);
         builder.ConfigureResource(resource => ConfigureResource(resource, configuration, options)).WithLogging(_ => { }, logging =>
         {
             logging.IncludeScopes = true;
@@ -84,7 +93,13 @@ public static class OpenTelemetryExtensions
         return builder;
     }
 
-    static string? Read(IConfiguration configuration, string key) => Environment.GetEnvironmentVariable(key) ?? configuration[key];
+    static string? Read(IConfiguration configuration, string key)
+    {
+        var environment = Environment.GetEnvironmentVariable(key);
+        var value = string.IsNullOrWhiteSpace(environment) ? configuration[key] : environment;
+
+        return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
 
     static void ConfigureResource(ResourceBuilder resource, IConfiguration configuration, CratisOpenTelemetryOptions options)
     {
@@ -118,13 +133,6 @@ public static class OpenTelemetryExtensions
         {
             var key = $"OTEL_EXPORTER_OTLP_{signal}_ENDPOINT";
             _ = Endpoint(Read(configuration, key) ?? commonEndpoint!, key);
-        }
-        if (traces && metrics && logs && !string.IsNullOrWhiteSpace(commonEndpoint))
-        {
-            // The SDK's shared exporter honors per-signal overrides and metric export intervals.
-            builder.UseOtlpExporter(Protocol(configuration, null), Endpoint(commonEndpoint, "OTEL_EXPORTER_OTLP_ENDPOINT"));
-
-            return;
         }
         if (traces)
         {
