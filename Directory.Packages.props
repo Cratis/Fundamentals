@@ -29,6 +29,13 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="10.0.12" />
     <PackageVersion Include="System.Text.Json" Version="10.0.12" />
     <PackageVersion Include="OpenTelemetry" Version="1.19.1" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.19.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.19.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.19.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.19.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.19.0" />
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)/Directory.Packages.NET8.props" Condition=" '$(TargetFramework)' == 'net8.0' " />
   <Import Project="$(MSBuildThisFileDirectory)/Directory.Packages.NET9.props" Condition=" '$(TargetFramework)' == 'net9.0' " />

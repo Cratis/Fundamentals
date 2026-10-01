@@ -13,6 +13,8 @@
   href: monads/toc.yml
 - name: Metrics
   href: metrics/toc.yml
+- name: OpenTelemetry
+  href: opentelemetry.md
 - name: Traces
   href: traces/toc.yml
 - name: Serialization
