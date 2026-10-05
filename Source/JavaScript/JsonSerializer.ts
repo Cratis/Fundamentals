@@ -7,7 +7,7 @@ import { registerModuleInstance } from './duplicateInstanceGuard';
 import { Field } from './Field';
 import { Fields } from './Fields';
 import { Guid } from './Guid';
-import { conceptAsTypeKey, declaredTypeKey, typeKeyOf, valueMapTypeKey } from './typeKey';
+import { conceptAsTypeKey, declaredTypeKey, guidTypeKey, typeKeyOf, valueMapTypeKey } from './typeKey';
 import { ValueMap } from './ValueMap';
 import { 
     JsonConverter, 
@@ -83,8 +83,6 @@ const converterFor = (type: Constructor | undefined): JsonConverter | undefined 
  * @param {Constructor} type The type to check.
  * @returns {boolean} True when the type is a ValueMap.
  */
-const guidTypeKey = 'Guid';
-
 const isValueMap = (type: Constructor | undefined): boolean => declaredTypeKey(type) === valueMapTypeKey;
 
 // Add primitive type converters that don't need a full JsonConverter class
@@ -356,6 +354,8 @@ export class JsonSerializer {
      * - A `ValueMap` is read back from the declaring field's generic arguments rather than through a
      *   converter. Note the asymmetry: writing a `ValueMap` *does* go through the registered converter,
      *   so replacing that one changes only the outbound half.
+     * - A `Guid` used as a `ValueMap` key always uses the plain canonical string form and bypasses any
+     *   registered `Guid` converter, so that keys stay compatible with C# dictionaries.
      */
     static registerConverter(converter: JsonConverter): void {
         registerConverterFor(converter);
