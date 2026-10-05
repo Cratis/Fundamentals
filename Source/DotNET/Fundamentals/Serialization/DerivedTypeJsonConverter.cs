@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Dynamic;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -28,6 +27,10 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     readonly IDerivedTypes _derivedTypes = derivedTypes;
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// A missing derived type identifier returns the default value so payloads written without nested
+    /// identifiers by earlier versions remain readable when replaying persisted events.
+    /// </remarks>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON deserialization uses types registered at startup that are preserved.")]
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON deserialization uses types registered at startup that are safe for AOT.")]
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -45,6 +48,10 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Nested children and collections declared with a derived type family use their declared types
+    /// to preserve type identifiers and the converter's naming rules. Other properties use runtime types.
+    /// </remarks>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON serialization uses types registered at startup that are preserved.")]
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Derived type JSON serialization accesses well-known type properties that are preserved.")]
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON serialization uses types registered at startup that are safe for AOT.")]
@@ -57,23 +64,58 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
                 break;
 
             default:
-                var actualValue = new ExpandoObject();
-                var actualValueAsDictionary = actualValue as IDictionary<string, object>;
                 var type = value.GetType();
+                var properties = new Dictionary<string, (object? Value, Type SerializationType)>();
 
                 foreach (var property in type.GetProperties())
                 {
-                    actualValueAsDictionary[property.Name.ToCamelCase()] = property.GetValue(value)!;
+                    var propertyValue = property.GetValue(value);
+                    var serializationType = HasDeclaredFamily(property.PropertyType)
+                        ? property.PropertyType
+                        : propertyValue?.GetType() ?? property.PropertyType;
+                    properties[property.Name.ToCamelCase()] = (propertyValue, serializationType);
                 }
 
                 var derivedTypeAttribute = type.GetCustomAttribute<DerivedTypeAttribute>();
                 if (derivedTypeAttribute is not null)
                 {
-                    actualValueAsDictionary[DerivedTypeIdProperty] = derivedTypeAttribute.Identifier.ToString();
+                    properties[DerivedTypeIdProperty] = (derivedTypeAttribute.Identifier.ToString(), typeof(string));
                 }
 
-                JsonSerializer.Serialize(writer, actualValueAsDictionary, actualValueAsDictionary.GetType(), options);
+                writer.WriteStartObject();
+                foreach (var property in properties)
+                {
+                    writer.WritePropertyName(options?.DictionaryKeyPolicy?.ConvertName(property.Key) ?? property.Key);
+                    JsonSerializer.Serialize(writer, property.Value.Value, property.Value.SerializationType, options);
+                }
+                writer.WriteEndObject();
                 break;
         }
+    }
+
+    bool HasDeclaredFamily(Type type) => HasDeclaredFamily(type, [], 0);
+
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Declared property collection interfaces are preserved with the registered derived types.")]
+    bool HasDeclaredFamily(Type type, HashSet<Type> visitedTypes, int depth)
+    {
+        if (type == typeof(string) || depth >= 32 || !visitedTypes.Add(type))
+        {
+            return false;
+        }
+
+        if (_derivedTypes.HasDerivatives(type))
+        {
+            return true;
+        }
+
+        if (type.IsArray)
+        {
+            return HasDeclaredFamily(type.GetElementType()!, visitedTypes, depth + 1);
+        }
+
+        return type.GetInterfaces().Prepend(type).Any(candidate =>
+            candidate.IsGenericType &&
+            ((candidate.GetGenericTypeDefinition() == typeof(IEnumerable<>) && HasDeclaredFamily(candidate.GetGenericArguments()[0], visitedTypes, depth + 1)) ||
+             ((candidate.GetGenericTypeDefinition() == typeof(IDictionary<,>) || candidate.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>)) && HasDeclaredFamily(candidate.GetGenericArguments()[1], visitedTypes, depth + 1))));
     }
 }
