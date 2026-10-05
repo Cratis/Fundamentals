@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Dynamic;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -28,6 +27,10 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     readonly IDerivedTypes _derivedTypes = derivedTypes;
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// A missing derived type identifier returns the default value so payloads written without nested
+    /// identifiers by earlier versions remain readable when replaying persisted events.
+    /// </remarks>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON deserialization uses types registered at startup that are preserved.")]
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON deserialization uses types registered at startup that are safe for AOT.")]
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -57,22 +60,26 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
                 break;
 
             default:
-                var actualValue = new ExpandoObject();
-                var actualValueAsDictionary = actualValue as IDictionary<string, object>;
                 var type = value.GetType();
+                writer.WriteStartObject();
 
                 foreach (var property in type.GetProperties())
                 {
-                    actualValueAsDictionary[property.Name.ToCamelCase()] = property.GetValue(value)!;
+                    writer.WritePropertyName(property.Name.ToCamelCase());
+                    var propertyValue = property.GetValue(value);
+                    var serializationType = _derivedTypes.HasDerivatives(property.PropertyType)
+                        ? property.PropertyType
+                        : propertyValue?.GetType() ?? property.PropertyType;
+                    JsonSerializer.Serialize(writer, propertyValue, serializationType, options);
                 }
 
                 var derivedTypeAttribute = type.GetCustomAttribute<DerivedTypeAttribute>();
                 if (derivedTypeAttribute is not null)
                 {
-                    actualValueAsDictionary[DerivedTypeIdProperty] = derivedTypeAttribute.Identifier.ToString();
+                    writer.WriteString(DerivedTypeIdProperty, derivedTypeAttribute.Identifier.ToString());
                 }
 
-                JsonSerializer.Serialize(writer, actualValueAsDictionary, actualValueAsDictionary.GetType(), options);
+                writer.WriteEndObject();
                 break;
         }
     }
