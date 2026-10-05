@@ -12,6 +12,9 @@ class NullableModel {
     @nullableFundamentals.field(NullableLabel)
     rich?: NullableLabel | null;
 
+    @nullableFundamentals.field(Object)
+    nested?: { label: string } | null;
+
     @nullableFundamentals.field(Array, { genericArguments: [String] })
     array?: string[] | null;
 

@@ -19,6 +19,9 @@ class ModelWithNullableFields {
     @field(Label)
     rich?: Label | null;
 
+    @field(Object)
+    nested?: { label: string } | null;
+
     @field(Array, { genericArguments: [String] })
     array?: string[] | null;
 
@@ -46,6 +49,6 @@ export function modelWithNullableFieldsFor(mode: typeof decoratorModes[number]):
         },
         fileName: 'standard_nullable_fields.ts'
     }).outputText;
-    standardModel = new Script(`${emitted}\nNullableModel`).runInNewContext({ Array, nullableFundamentals: fundamentals, String, Symbol }) as Constructor<ModelWithNullableFields>;
+    standardModel = new Script(`${emitted}\nNullableModel`).runInNewContext({ Array, nullableFundamentals: fundamentals, Object, String, Symbol }) as Constructor<ModelWithNullableFields>;
     return standardModel;
 }

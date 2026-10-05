@@ -160,6 +160,8 @@ const deserializeValueFromType = (type: Constructor, value: any) => {
 };
 
 const deserializeValueFromField = (field: Field, value: any) => {
+    if (value === null || value === undefined) return value;
+
     if (isValueMap(field.type)) {
         return deserializeValueMapFromField(field, value);
     }
@@ -271,6 +273,8 @@ const deserializeMapKey = (keyType: Constructor, key: string): any => {
 };
 
 const deserializeMapValue = (valueType: Constructor | undefined, value: any): any => {
+    if (value === null || value === undefined) return value;
+
     if (!valueType) {
         return value;
     }

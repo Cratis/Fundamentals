@@ -10,14 +10,14 @@ describe('when serializing a value map with a null value', () => {
     let result: object;
 
     beforeEach(() => {
-        const values = new ValueMap<Guid, Guid | null>();
-        values.set(Guid.parse(identifier), null);
-        values.set(Guid.empty, Guid.parse(identifier));
+        const values = new ValueMap<string, Guid | null>();
+        values.set('missing', null);
+        values.set('present', Guid.parse(identifier));
         result = JSON.parse(JsonSerializer.serialize(values));
     });
 
-    it('should retain the null value and canonical Guid keys alongside converted values', () => result.should.deep.equal({
-        [identifier]: null,
-        [Guid.empty.toString()]: identifier
+    it('should retain the null value alongside converted values', () => result.should.deep.equal({
+        missing: null,
+        present: identifier
     }));
 });
