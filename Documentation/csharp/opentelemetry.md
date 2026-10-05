@@ -28,7 +28,7 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
 ```
 
-For HTTP/protobuf use `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf` and the collector's HTTP port, usually 4318. The SDK adds the signal paths to a common endpoint; signal-specific endpoints contain their full paths.
+For HTTP/protobuf use `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf` and the collector's HTTP port, usually 4318. The SDK appends the signal path (`/v1/traces`, `/v1/metrics`, or `/v1/logs`) to the common base endpoint and keeps any query string. Signal-specific endpoints contain their full paths.
 
 ## Resource identity
 
@@ -76,7 +76,7 @@ Nonempty environment variables take precedence for resource identity and export 
 | `OTEL_EXPORTER_OTLP_PROTOCOL`, `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_PROTOCOL` | `grpc` or `http/protobuf` |
 | `OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_HEADERS` | OTLP request headers |
 | `OTEL_{TRACES,METRICS,LOGS}_EXPORTER` | `none` disables export for that signal; `otlp` selects OTLP |
-| `OTEL_SDK_DISABLED` | `true` skips the shared SDK setup |
+| `OTEL_SDK_DISABLED` | `true` turns off every OpenTelemetry provider in the service collection, including providers added after `WithCratis()`; they become no-op providers |
 | `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG` | SDK sampling; defaults to `parentbased_always_on` |
 | `OTEL_METRIC_EXPORT_INTERVAL` | SDK metric export interval in milliseconds |
 

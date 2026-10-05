@@ -14,7 +14,7 @@ using OpenTelemetry.Trace;
 
 namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
 
-public class when_sdk_is_disabled_and_tracing_is_added_afterwards : given.a_clean_environment
+public class when_sdk_is_disabled_and_providers_are_added_afterwards : given.a_clean_environment
 {
     HostApplicationBuilder _builder;
     IConfiguration _configuration;
