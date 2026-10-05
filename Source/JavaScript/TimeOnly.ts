@@ -120,7 +120,12 @@ export class TimeOnly {
         const subMillisecondTicks = this.subMillisecondTicks ?? 0;
         if (subMillisecondTicks > 0) {
             const fraction = `${this.millisecond.toString().padStart(3, '0')}${subMillisecondTicks.toString().padStart(4, '0')}`;
-            return `${time}.${fraction.replace(/0+$/, '')}`;
+            let end = fraction.length;
+            while (fraction[end - 1] === '0') {
+                end--;
+            }
+
+            return `${time}.${fraction.substring(0, end)}`;
         }
 
         return this.millisecond > 0 ? `${time}.${this.millisecond.toString().padStart(3, '0')}` : time;
