@@ -11,7 +11,7 @@ class Totals {
     byKey!: ValueMap<TimeOnly, number>;
 }
 
-describe('when round tripping a value map with time_only keys', () => {
+describe('when round tripping a value map with TimeOnly keys', () => {
     const key = TimeOnly.parse('10:11:12.123');
     const totals = new Totals();
     totals.byKey = new ValueMap<TimeOnly, number>().set(key, 42);

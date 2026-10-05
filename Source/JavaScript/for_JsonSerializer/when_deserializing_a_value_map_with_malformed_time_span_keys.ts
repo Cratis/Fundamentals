@@ -11,7 +11,7 @@ class Totals {
     byKey!: ValueMap<TimeSpan, number>;
 }
 
-describe('when deserializing a value map with malformed time_span keys', () => {
+describe('when deserializing a value map with malformed TimeSpan keys', () => {
     const plain = () => JsonSerializer.deserialize(Totals, '{"byKey":{"not-valid":1}}');
     const quoted = () => JsonSerializer.deserialize(Totals, JSON.stringify({ byKey: { '"not-valid"': 1 } }));
 

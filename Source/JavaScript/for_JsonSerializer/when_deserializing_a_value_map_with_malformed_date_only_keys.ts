@@ -11,7 +11,7 @@ class Totals {
     byKey!: ValueMap<DateOnly, number>;
 }
 
-describe('when deserializing a value map with malformed date_only keys', () => {
+describe('when deserializing a value map with malformed DateOnly keys', () => {
     const plain = () => JsonSerializer.deserialize(Totals, '{"byKey":{"not-valid":1}}');
     const quoted = () => JsonSerializer.deserialize(Totals, JSON.stringify({ byKey: { '"not-valid"': 1 } }));
 

@@ -207,13 +207,7 @@ const serializeMapKey = (key: any): string => {
         return key.toISOString();
     }
 
-    // A Guid key is its plain canonical string, which is what a C# dictionary writes. Serializing it
-    // like any other object would wrap it in JSON quotes and no other reader accepts that.
-    if (declaredTypeKey(key.constructor) === guidTypeKey) {
-        return key.toString();
-    }
-
-    // DateOnly, TimeOnly and TimeSpan keys are likewise their plain canonical strings, as a C# dictionary
+    // Guid, DateOnly, TimeOnly and TimeSpan keys are their plain canonical strings, as a C# dictionary
     // writes them, rather than the quoted JSON string the generic path would produce.
     if (plainStringMapKeyTypes.has(declaredTypeKey(key.constructor) ?? '')) {
         return key.toString();
@@ -222,27 +216,28 @@ const serializeMapKey = (key: any): string => {
     return JsonSerializer.serialize(key);
 };
 
-const readGuidMapKey = (key: string): Guid => {
-    // Keys written before the plain form was adopted carry the JSON quotes of an embedded string.
-    const text = key.length >= 2 && key.startsWith('"') && key.endsWith('"') ? key.slice(1, -1) : key;
-    if (!Guid.isGuid(text)) {
-        throw new Error(`The map key '${key}' is not a valid Guid.`);
-    }
-
-    return Guid.parse(text);
-};
-
 const plainStringMapKeyTypes = new Map<string, { name: string; parse: (text: string) => any }>([
+    [guidTypeKey, {
+        name: 'Guid',
+        parse: text => {
+            if (!Guid.isGuid(text)) {
+                throw new Error('Not a Guid.');
+            }
+            return Guid.parse(text);
+        }
+    }],
     [dateOnlyTypeKey, { name: 'DateOnly', parse: DateOnly.parse }],
     [timeOnlyTypeKey, { name: 'TimeOnly', parse: TimeOnly.parse }],
     [timeSpanTypeKey, { name: 'TimeSpan', parse: TimeSpan.parse }]
 ]);
 
-const readPlainStringMapKey = (name: string, parse: (text: string) => any, key: string): any => {
+const unquoteLegacyMapKey = (key: string): string =>
     // Keys written before the plain form was adopted carry the JSON quotes of an embedded string.
-    const text = key.length >= 2 && key.startsWith('"') && key.endsWith('"') ? key.slice(1, -1) : key;
+    key.length >= 2 && key.startsWith('"') && key.endsWith('"') ? key.slice(1, -1) : key;
+
+const readPlainStringMapKey = (name: string, parse: (text: string) => any, key: string): any => {
     try {
-        return parse(text);
+        return parse(unquoteLegacyMapKey(key));
     } catch {
         throw new Error(`The map key '${key}' is not a valid ${name}.`);
     }
@@ -259,10 +254,6 @@ const deserializeMapKey = (keyType: Constructor, key: string): any => {
 
     if (keyType === Boolean) {
         return key.toLowerCase() === 'true';
-    }
-
-    if (declaredTypeKey(keyType) === guidTypeKey) {
-        return readGuidMapKey(key);
     }
 
     const plainKeyType = plainStringMapKeyTypes.get(declaredTypeKey(keyType) ?? '');

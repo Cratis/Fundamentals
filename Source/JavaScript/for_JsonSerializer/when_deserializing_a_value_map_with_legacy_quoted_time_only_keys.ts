@@ -11,7 +11,7 @@ class Totals {
     byKey!: ValueMap<TimeOnly, number>;
 }
 
-describe('when deserializing a value map with legacy quoted time_only keys', () => {
+describe('when deserializing a value map with legacy quoted TimeOnly keys', () => {
     const result = JsonSerializer.deserialize(Totals, JSON.stringify({ byKey: { '"10:11:12.123"': 7 } }));
 
     it('should read the key as the original value', () => [...result.byKey.entries()][0][0].toString().should.equal('10:11:12.123'));

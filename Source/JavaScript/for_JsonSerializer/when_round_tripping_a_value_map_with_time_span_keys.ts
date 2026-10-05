@@ -11,7 +11,7 @@ class Totals {
     byKey!: ValueMap<TimeSpan, number>;
 }
 
-describe('when round tripping a value map with time_span keys', () => {
+describe('when round tripping a value map with TimeSpan keys', () => {
     const key = TimeSpan.parse('1.02:03:04.5');
     const totals = new Totals();
     totals.byKey = new ValueMap<TimeSpan, number>().set(key, 42);

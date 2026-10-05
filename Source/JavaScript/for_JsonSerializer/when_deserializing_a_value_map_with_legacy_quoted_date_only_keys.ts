@@ -11,7 +11,7 @@ class Totals {
     byKey!: ValueMap<DateOnly, number>;
 }
 
-describe('when deserializing a value map with legacy quoted date_only keys', () => {
+describe('when deserializing a value map with legacy quoted DateOnly keys', () => {
     const result = JsonSerializer.deserialize(Totals, JSON.stringify({ byKey: { '"2024-03-05"': 7 } }));
 
     it('should read the key as the original value', () => [...result.byKey.entries()][0][0].toString().should.equal('2024-03-05'));

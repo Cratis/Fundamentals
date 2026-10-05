@@ -11,7 +11,7 @@ class Totals {
     byKey!: ValueMap<TimeSpan, number>;
 }
 
-describe('when deserializing a value map with legacy quoted time_span keys', () => {
+describe('when deserializing a value map with legacy quoted TimeSpan keys', () => {
     const result = JsonSerializer.deserialize(Totals, JSON.stringify({ byKey: { '"1.02:03:04.5"': 7 } }));
 
     it('should read the key as the original value', () => [...result.byKey.entries()][0][0].toString().should.equal('1.02:03:04.5'));

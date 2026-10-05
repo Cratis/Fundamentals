@@ -11,7 +11,7 @@ class Totals {
     byKey!: ValueMap<DateOnly, number>;
 }
 
-describe('when round tripping a value map with date_only keys', () => {
+describe('when round tripping a value map with DateOnly keys', () => {
     const key = DateOnly.parse('2024-03-05');
     const totals = new Totals();
     totals.byKey = new ValueMap<DateOnly, number>().set(key, 42);
