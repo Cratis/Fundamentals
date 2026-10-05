@@ -6,7 +6,8 @@ import { DerivedType } from './DerivedType';
 import { registerModuleInstance } from './duplicateInstanceGuard';
 import { Field } from './Field';
 import { Fields } from './Fields';
-import { conceptAsTypeKey, declaredTypeKey, typeKeyOf, valueMapTypeKey } from './typeKey';
+import { Guid } from './Guid';
+import { conceptAsTypeKey, declaredTypeKey, guidTypeKey, typeKeyOf, valueMapTypeKey } from './typeKey';
 import { ValueMap } from './ValueMap';
 import { 
     JsonConverter, 
@@ -203,7 +204,23 @@ const serializeMapKey = (key: any): string => {
         return key.toISOString();
     }
 
+    // A Guid key is its plain canonical string, which is what a C# dictionary writes. Serializing it
+    // like any other object would wrap it in JSON quotes and no other reader accepts that.
+    if (declaredTypeKey(key.constructor) === guidTypeKey) {
+        return key.toString();
+    }
+
     return JsonSerializer.serialize(key);
+};
+
+const readGuidMapKey = (key: string): Guid => {
+    // Keys written before the plain form was adopted carry the JSON quotes of an embedded string.
+    const text = key.length >= 2 && key.startsWith('"') && key.endsWith('"') ? key.slice(1, -1) : key;
+    if (!Guid.isGuid(text)) {
+        throw new Error(`The map key '${key}' is not a valid Guid.`);
+    }
+
+    return Guid.parse(text);
 };
 
 const deserializeMapKey = (keyType: Constructor, key: string): any => {
@@ -217,6 +234,10 @@ const deserializeMapKey = (keyType: Constructor, key: string): any => {
 
     if (keyType === Boolean) {
         return key.toLowerCase() === 'true';
+    }
+
+    if (declaredTypeKey(keyType) === guidTypeKey) {
+        return readGuidMapKey(key);
     }
 
     // Check if there's a converter for this type
@@ -333,6 +354,8 @@ export class JsonSerializer {
      * - A `ValueMap` is read back from the declaring field's generic arguments rather than through a
      *   converter. Note the asymmetry: writing a `ValueMap` *does* go through the registered converter,
      *   so replacing that one changes only the outbound half.
+     * - A `Guid` used as a `ValueMap` key always uses the plain canonical string form and bypasses any
+     *   registered `Guid` converter, so that keys stay compatible with C# dictionaries.
      */
     static registerConverter(converter: JsonConverter): void {
         registerConverterFor(converter);

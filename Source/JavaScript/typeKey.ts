@@ -52,3 +52,6 @@ export const conceptAsTypeKey = 'ConceptAs';
 
 /** The key `ValueMap` declares. */
 export const valueMapTypeKey = 'ValueMap';
+
+/** The key `Guid` declares. */
+export const guidTypeKey = 'Guid';
