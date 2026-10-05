@@ -51,7 +51,7 @@
 
     <ItemGroup Condition="'$(IsTestProject)'=='true'">
         <PackageReference Include="Cratis.Specifications.XUnit" />
-        <PackageReference Include="moq" />
+        <PackageReference Include="Moq" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
