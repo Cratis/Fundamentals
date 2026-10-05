@@ -26,7 +26,7 @@ public class EnumConverter<T> : JsonConverter<T>
             var enumValue = (T)EnumJson.ReadEnum(ref reader, typeof(T));
             if (!IsAcceptable(enumValue))
             {
-                throw new JsonException($"Unable to convert \"{Convert.ToDecimal(enumValue)}\" to Enum \"{typeof(T).FullName}\". Value is not defined.");
+                throw new JsonException($"Unable to convert \"{enumValue.ToString("D")}\" to Enum \"{typeof(T).FullName}\". Value is not defined.");
             }
 
             return enumValue;
