@@ -6,6 +6,7 @@ import { DerivedType } from './DerivedType';
 import { registerModuleInstance } from './duplicateInstanceGuard';
 import { Field } from './Field';
 import { Fields } from './Fields';
+import { Guid } from './Guid';
 import { conceptAsTypeKey, declaredTypeKey, typeKeyOf, valueMapTypeKey } from './typeKey';
 import { ValueMap } from './ValueMap';
 import { 
@@ -82,6 +83,8 @@ const converterFor = (type: Constructor | undefined): JsonConverter | undefined 
  * @param {Constructor} type The type to check.
  * @returns {boolean} True when the type is a ValueMap.
  */
+const guidTypeKey = 'Guid';
+
 const isValueMap = (type: Constructor | undefined): boolean => declaredTypeKey(type) === valueMapTypeKey;
 
 // Add primitive type converters that don't need a full JsonConverter class
@@ -203,7 +206,23 @@ const serializeMapKey = (key: any): string => {
         return key.toISOString();
     }
 
+    // A Guid key is its plain canonical string, which is what a C# dictionary writes. Serializing it
+    // like any other object would wrap it in JSON quotes and no other reader accepts that.
+    if (declaredTypeKey(key.constructor) === guidTypeKey) {
+        return key.toString();
+    }
+
     return JsonSerializer.serialize(key);
+};
+
+const readGuidMapKey = (key: string): Guid => {
+    // Keys written before the plain form was adopted carry the JSON quotes of an embedded string.
+    const text = key.length >= 2 && key.startsWith('"') && key.endsWith('"') ? key.slice(1, -1) : key;
+    if (!Guid.isGuid(text)) {
+        throw new Error(`The map key '${key}' is not a valid Guid.`);
+    }
+
+    return Guid.parse(text);
 };
 
 const deserializeMapKey = (keyType: Constructor, key: string): any => {
@@ -217,6 +236,10 @@ const deserializeMapKey = (keyType: Constructor, key: string): any => {
 
     if (keyType === Boolean) {
         return key.toLowerCase() === 'true';
+    }
+
+    if (declaredTypeKey(keyType) === guidTypeKey) {
+        return readGuidMapKey(key);
     }
 
     // Check if there's a converter for this type
