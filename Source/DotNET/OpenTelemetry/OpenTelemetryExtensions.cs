@@ -56,6 +56,9 @@ public static class OpenTelemetryExtensions
     {
         if (IsDisabled(configuration))
         {
+            // Register every provider before wrapping its factory so later SDK calls
+            // retain the effective disablement setting rather than host configuration.
+            builder.WithTracing(_ => { }).WithMetrics(_ => { }).WithLogging(_ => { });
             ConfigureProviderFactory<TracerProvider>(builder.Services, _ => configuration);
             ConfigureProviderFactory<MeterProvider>(builder.Services, _ => configuration);
             ConfigureProviderFactory<LoggerProvider>(builder.Services, _ => configuration);
