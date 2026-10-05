@@ -7,7 +7,10 @@ import { registerModuleInstance } from './duplicateInstanceGuard';
 import { Field } from './Field';
 import { Fields } from './Fields';
 import { Guid } from './Guid';
-import { conceptAsTypeKey, declaredTypeKey, guidTypeKey, typeKeyOf, valueMapTypeKey } from './typeKey';
+import { DateOnly } from './DateOnly';
+import { TimeOnly } from './TimeOnly';
+import { TimeSpan } from './TimeSpan';
+import { conceptAsTypeKey, dateOnlyTypeKey, declaredTypeKey, guidTypeKey, timeOnlyTypeKey, timeSpanTypeKey, typeKeyOf, valueMapTypeKey } from './typeKey';
 import { ValueMap } from './ValueMap';
 import { 
     JsonConverter, 
@@ -204,23 +207,40 @@ const serializeMapKey = (key: any): string => {
         return key.toISOString();
     }
 
-    // A Guid key is its plain canonical string, which is what a C# dictionary writes. Serializing it
-    // like any other object would wrap it in JSON quotes and no other reader accepts that.
-    if (declaredTypeKey(key.constructor) === guidTypeKey) {
+    // Guid, DateOnly, TimeOnly and TimeSpan keys are their plain canonical strings, as a C# dictionary
+    // writes them, rather than the quoted JSON string the generic path would produce.
+    if (plainStringMapKeyTypes.has(declaredTypeKey(key.constructor) ?? '')) {
         return key.toString();
     }
 
     return JsonSerializer.serialize(key);
 };
 
-const readGuidMapKey = (key: string): Guid => {
-    // Keys written before the plain form was adopted carry the JSON quotes of an embedded string.
-    const text = key.length >= 2 && key.startsWith('"') && key.endsWith('"') ? key.slice(1, -1) : key;
-    if (!Guid.isGuid(text)) {
-        throw new Error(`The map key '${key}' is not a valid Guid.`);
-    }
+const plainStringMapKeyTypes = new Map<string, { name: string; parse: (text: string) => any }>([
+    [guidTypeKey, {
+        name: 'Guid',
+        parse: text => {
+            if (!Guid.isGuid(text)) {
+                throw new Error('Not a Guid.');
+            }
+            return Guid.parse(text);
+        }
+    }],
+    [dateOnlyTypeKey, { name: 'DateOnly', parse: DateOnly.parse }],
+    [timeOnlyTypeKey, { name: 'TimeOnly', parse: TimeOnly.parse }],
+    [timeSpanTypeKey, { name: 'TimeSpan', parse: TimeSpan.parse }]
+]);
 
-    return Guid.parse(text);
+const unquoteLegacyMapKey = (key: string): string =>
+    // Keys written before the plain form was adopted carry the JSON quotes of an embedded string.
+    key.length >= 2 && key.startsWith('"') && key.endsWith('"') ? key.slice(1, -1) : key;
+
+const readPlainStringMapKey = (name: string, parse: (text: string) => any, key: string): any => {
+    try {
+        return parse(unquoteLegacyMapKey(key));
+    } catch {
+        throw new Error(`The map key '${key}' is not a valid ${name}.`);
+    }
 };
 
 const deserializeMapKey = (keyType: Constructor, key: string): any => {
@@ -236,8 +256,9 @@ const deserializeMapKey = (keyType: Constructor, key: string): any => {
         return key.toLowerCase() === 'true';
     }
 
-    if (declaredTypeKey(keyType) === guidTypeKey) {
-        return readGuidMapKey(key);
+    const plainKeyType = plainStringMapKeyTypes.get(declaredTypeKey(keyType) ?? '');
+    if (plainKeyType) {
+        return readPlainStringMapKey(plainKeyType.name, plainKeyType.parse, key);
     }
 
     // Check if there's a converter for this type
@@ -354,8 +375,9 @@ export class JsonSerializer {
      * - A `ValueMap` is read back from the declaring field's generic arguments rather than through a
      *   converter. Note the asymmetry: writing a `ValueMap` *does* go through the registered converter,
      *   so replacing that one changes only the outbound half.
-     * - A `Guid` used as a `ValueMap` key always uses the plain canonical string form and bypasses any
-     *   registered `Guid` converter, so that keys stay compatible with C# dictionaries.
+     * - A `Guid`, `DateOnly`, `TimeOnly` or `TimeSpan` used as a `ValueMap` key always uses the plain
+     *   canonical string form and bypasses any registered converter for that type, so that keys stay
+     *   compatible with C# dictionaries.
      */
     static registerConverter(converter: JsonConverter): void {
         registerConverterFor(converter);

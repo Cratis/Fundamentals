@@ -55,3 +55,12 @@ export const valueMapTypeKey = 'ValueMap';
 
 /** The key `Guid` declares. */
 export const guidTypeKey = 'Guid';
+
+/** The key `DateOnly` declares. */
+export const dateOnlyTypeKey = 'DateOnly';
+
+/** The key `TimeOnly` declares. */
+export const timeOnlyTypeKey = 'TimeOnly';
+
+/** The key `TimeSpan` declares. */
+export const timeSpanTypeKey = 'TimeSpan';
