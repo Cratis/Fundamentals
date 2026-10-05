@@ -271,7 +271,7 @@ public static class OpenTelemetryExtensions
         exporter.Protocol = Protocol(configuration, signal);
         var uri = Endpoint(endpoint, signalEndpoint is null ? "OTEL_EXPORTER_OTLP_ENDPOINT" : $"OTEL_EXPORTER_OTLP_{signal}_ENDPOINT");
         exporter.Endpoint = exporter.Protocol is OtlpExportProtocol.HttpProtobuf && signalEndpoint is null
-            ? new Uri($"{uri.AbsoluteUri.TrimEnd('/')}/v1/{path}")
+            ? new UriBuilder(uri) { Path = $"{uri.AbsolutePath.TrimEnd('/')}/v1/{path}" }.Uri
             : uri;
         exporter.Headers = Read(configuration, $"OTEL_EXPORTER_OTLP_{signal}_HEADERS") ?? Read(configuration, "OTEL_EXPORTER_OTLP_HEADERS");
     }
