@@ -64,7 +64,7 @@ export class TimeSpan {
      * The string format should match: [-][d.]hh:mm:ss[.fffffff]
      * @param {string} value String representation of TimeSpan.
      * @returns {TimeSpan} A TimeSpan instance with all properties populated.
-     * @throws {Error} If the string format is invalid.
+     * @throws {Error} If the string format is invalid or hours, minutes or seconds are out of range, as C# rejects it.
      */
     static parse(value: string): TimeSpan {
         const match = timeSpanRegex.exec(value);
@@ -77,12 +77,37 @@ export class TimeSpan {
         const hours = parseInt(match[3], 10);
         const minutes = parseInt(match[4], 10);
         const seconds = parseInt(match[5], 10);
+
+        if (hours > 23) {
+            throw new Error(`Invalid TimeSpan: hours ${hours} is out of range 0-23 in '${value}'`);
+        }
+
+        if (minutes > 59) {
+            throw new Error(`Invalid TimeSpan: minutes ${minutes} is out of range 0-59 in '${value}'`);
+        }
+
+        if (seconds > 59) {
+            throw new Error(`Invalid TimeSpan: seconds ${seconds} is out of range 0-59 in '${value}'`);
+        }
+
+        const maxDays = 10675199;
+        if (days > maxDays) {
+            throw new Error(`Invalid TimeSpan: days ${days} is out of range 0-${maxDays} in '${value}'`);
+        }
+
         const fractionalSeconds = match[6] ? match[6].padEnd(7, '0') : '0000000';
 
         const ticksPerDay = 864000000000;
         const ticksPerHour = 36000000000;
         const ticksPerMinute = 600000000;
         const ticksPerSecond = 10000000;
+
+        // TimeSpan.MaxValue is 10675199.02:48:05.4775807 and MinValue one tick further on the negative side.
+        const remainderTicks =
+            hours * ticksPerHour + minutes * ticksPerMinute + seconds * ticksPerSecond + parseInt(fractionalSeconds, 10);
+        if (days === maxDays && remainderTicks > (isNegative ? 100854775808 : 100854775807)) {
+            throw new Error(`Invalid TimeSpan: '${value}' is outside the range a TimeSpan can hold`);
+        }
 
         const ticks =
             days * ticksPerDay +
