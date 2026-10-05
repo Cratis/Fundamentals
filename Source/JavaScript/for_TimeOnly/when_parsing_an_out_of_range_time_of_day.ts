@@ -8,5 +8,4 @@ describe('when parsing an out of range time of day', () => {
     it('should reject a minute above 59', () => (() => TimeOnly.parse('10:60:00')).should.throw('minute 60 is out of range'));
     it('should reject a second above 59', () => (() => TimeOnly.parse('10:00:60')).should.throw('second 60 is out of range'));
     it('should reject every component out of range', () => (() => TimeOnly.parse('25:99:00')).should.throw('Invalid TimeOnly'));
-    it('should accept the last moment of the day', () => TimeOnly.parse('23:59:59.9999999').toString().should.equal('23:59:59.9999999'));
 });

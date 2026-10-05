@@ -90,12 +90,24 @@ export class TimeSpan {
             throw new Error(`Invalid TimeSpan: seconds ${seconds} is out of range 0-59 in '${value}'`);
         }
 
+        const maxDays = 10675199;
+        if (days > maxDays) {
+            throw new Error(`Invalid TimeSpan: days ${days} is out of range 0-${maxDays} in '${value}'`);
+        }
+
         const fractionalSeconds = match[6] ? match[6].padEnd(7, '0') : '0000000';
 
         const ticksPerDay = 864000000000;
         const ticksPerHour = 36000000000;
         const ticksPerMinute = 600000000;
         const ticksPerSecond = 10000000;
+
+        // TimeSpan.MaxValue is 10675199.02:48:05.4775807 and MinValue one tick further on the negative side.
+        const remainderTicks =
+            hours * ticksPerHour + minutes * ticksPerMinute + seconds * ticksPerSecond + parseInt(fractionalSeconds, 10);
+        if (days === maxDays && remainderTicks > (isNegative ? 100854775808 : 100854775807)) {
+            throw new Error(`Invalid TimeSpan: '${value}' is outside the range a TimeSpan can hold`);
+        }
 
         const ticks =
             days * ticksPerDay +

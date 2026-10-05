@@ -4,8 +4,9 @@
 import { TimeOnly } from '../TimeOnly';
 
 /**
- * The server omits the seconds and the fraction when they are zero, and writes up to seven fractional digits. Every one of those shapes has to parse, and a value has to survive a parse followed by a
- * render without moving.
+ * The server omits the seconds and the fraction when they are zero, and writes up to seven fractional digits.
+ * Every one of those shapes has to parse, and a value has to survive a parse followed by a render without
+ * moving.
  */
 describe('when parsing the shapes the server sends', () => {
     const withoutSeconds = TimeOnly.parse('14:30');

@@ -55,8 +55,13 @@ export class TimeOnly {
      * @param millisecond The millisecond.
      * @param subMillisecondTicks The 100 nanosecond ticks below the millisecond, 0 through 9999.
      * @returns The {@link TimeOnly}.
+     * @throws {Error} If `subMillisecondTicks` is not a whole number from 0 through 9999.
      */
     static from(hour: number, minute: number, second: number = 0, millisecond: number = 0, subMillisecondTicks: number = 0): TimeOnly {
+        if (!Number.isInteger(subMillisecondTicks) || subMillisecondTicks < 0 || subMillisecondTicks > 9999) {
+            throw new Error(`Invalid TimeOnly: subMillisecondTicks ${subMillisecondTicks} is out of range 0-9999`);
+        }
+
         const timeOnly = new TimeOnly();
         timeOnly.hour = hour;
         timeOnly.minute = minute;
@@ -109,7 +114,9 @@ export class TimeOnly {
     }
 
     /**
-     * Gets the ISO-8601 representation, `HH:mm:ss` - or `HH:mm:ss.fff`, up to `HH:mm:ss.fffffff`, when there is a fractional part.
+     * Gets the ISO-8601 representation: `HH:mm:ss`, or `HH:mm:ss.fff` when there is a millisecond part, or the
+     * full seven-digit `HH:mm:ss.fffffff` when there is a non-zero part below the millisecond. The seven-digit form
+     * is padded, never trimmed, so the two fractional forms are the only ones produced; the parser accepts 1-7 digits.
      * @returns The string.
      */
     toString(): string {
@@ -119,13 +126,7 @@ export class TimeOnly {
         const time = `${hour}:${minute}:${second}`;
         const subMillisecondTicks = this.subMillisecondTicks ?? 0;
         if (subMillisecondTicks > 0) {
-            const fraction = `${this.millisecond.toString().padStart(3, '0')}${subMillisecondTicks.toString().padStart(4, '0')}`;
-            let end = fraction.length;
-            while (fraction[end - 1] === '0') {
-                end--;
-            }
-
-            return `${time}.${fraction.substring(0, end)}`;
+            return `${time}.${this.millisecond.toString().padStart(3, '0')}${subMillisecondTicks.toString().padStart(4, '0')}`;
         }
 
         return this.millisecond > 0 ? `${time}.${this.millisecond.toString().padStart(3, '0')}` : time;

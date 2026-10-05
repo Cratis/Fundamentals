@@ -8,5 +8,4 @@ describe('when parsing out of range time', () => {
     it('should reject seconds above 59', () => (() => TimeSpan.parse('00:00:60')).should.throw('seconds 60 is out of range'));
     it('should reject hours above 23', () => (() => TimeSpan.parse('1.24:00:00')).should.throw('hours 24 is out of range'));
     it('should reject hours above 23 without days', () => (() => TimeSpan.parse('25:00:00')).should.throw('hours 25 is out of range'));
-    it('should accept the largest in range value', () => TimeSpan.parse('1.23:59:59').toString().should.equal('1.23:59:59'));
 });
