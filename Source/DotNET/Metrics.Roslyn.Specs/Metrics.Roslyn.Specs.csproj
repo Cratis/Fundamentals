@@ -17,7 +17,7 @@
     <ItemGroup>
         <ProjectReference Include="../Metrics.Roslyn/Metrics.Roslyn.csproj" />
         <ProjectReference Include="../Fundamentals/Fundamentals.csproj" />
-        <PackageReference Include="handlebars.net" />
+        <PackageReference Include="Handlebars.Net" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     </ItemGroup>

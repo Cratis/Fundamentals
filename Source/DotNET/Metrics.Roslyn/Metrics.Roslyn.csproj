@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="handlebars.net" GeneratePathProperty="true" />
+        <PackageReference Include="Handlebars.Net" GeneratePathProperty="true" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
     </ItemGroup>
 
