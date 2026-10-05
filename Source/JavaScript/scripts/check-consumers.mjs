@@ -17,10 +17,11 @@ function run(command, args, cwd) {
     if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed (${result.status ?? result.signal})`);
 }
 
-// npm 10 runs the package's `prepare` script during `npm pack` even with --ignore-scripts, and the
-// build output lands on stdout ahead of the JSON report. Locate the report deterministically: the
-// JSON document is the last top-level array or object that starts a line and parses to the end of stdout.
-function parsePackReport(stdout) {
+// npm 10 runs the package's `prepare` script during `npm pack` even with --ignore-scripts. Passing
+// --foreground-scripts=false keeps that build output off stdout; as a backstop, locate the report
+// deterministically: the JSON document is the last top-level array or object that starts a line and
+// parses to the end of stdout.
+function parsePackReport(stdout, stderr) {
     const starts = [...stdout.matchAll(/^[[{]/gm)].map(match => match.index).reverse();
     for (const start of starts) {
         try {
@@ -29,7 +30,7 @@ function parsePackReport(stdout) {
             if (typeof report[0]?.filename === 'string') return report;
         } catch { /* not the report; try an earlier candidate */ }
     }
-    throw new Error(`npm pack did not produce a JSON report:\n${stdout}`);
+    throw new Error(`npm pack did not produce a JSON report.\nstderr:\n${stderr}\nstdout (last 2 KB):\n${stdout.slice(-2048)}`);
 }
 
 const relativeImport = /\b(?:from\s*|import\s*\(|import\s*|require\s*\()(['"])(\.{1,2}\/[^'"\n]+)\1/g;
@@ -56,12 +57,12 @@ try {
         if (!detected) throw new Error(`Checker missed planted violation: ${invalid}`);
     }
     if (process.argv.includes('--self-test')) console.log('Detected 2 planted declaration violations');
-    const packed = spawnSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', temporaryRoot], {
+    const packed = spawnSync('npm', ['pack', '--ignore-scripts', '--foreground-scripts=false', '--json', '--pack-destination', temporaryRoot], {
         cwd: packageRoot, encoding: 'utf8'
     });
     if (packed.error) throw packed.error;
     if (packed.status !== 0) throw new Error(`npm pack failed (${packed.status ?? packed.signal}): ${packed.stderr}`);
-    const archive = join(temporaryRoot, parsePackReport(packed.stdout)[0].filename);
+    const archive = join(temporaryRoot, parsePackReport(packed.stdout, packed.stderr)[0].filename);
     run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--no-package-lock', archive], temporaryRoot);
 
     const installed = join(temporaryRoot, 'node_modules', '@cratis', 'fundamentals');
