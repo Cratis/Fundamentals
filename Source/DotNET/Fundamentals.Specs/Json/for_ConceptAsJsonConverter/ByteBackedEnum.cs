@@ -1,0 +1,11 @@
+// Copyright (c) Cratis. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Cratis.Json.for_ConceptAsJsonConverter;
+
+#pragma warning disable CA1028 // The non-int underlying type is the point of these specs.
+public enum ByteBackedEnum : byte
+{
+    Zero = 0,
+    Max = byte.MaxValue,
+}

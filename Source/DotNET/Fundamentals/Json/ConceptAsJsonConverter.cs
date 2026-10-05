@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Cratis.Concepts;
@@ -82,7 +83,7 @@ public class ConceptAsJsonConverter<T> : JsonConverter<T>
                 }
                 else if (conceptValueType.IsEnum)
                 {
-                    value = Enum.Parse(conceptValueType, reader.GetInt32().ToString());
+                    value = ReadEnum(ref reader, conceptValueType);
                 }
                 else
                 {
@@ -181,7 +182,7 @@ public class ConceptAsJsonConverter<T> : JsonConverter<T>
         }
         else if (conceptValueType.IsEnum)
         {
-            writer.WriteNumberValue((int)actualValue);
+            WriteEnum(writer, actualValue, conceptValueType);
         }
         else
         {
@@ -189,4 +190,49 @@ public class ConceptAsJsonConverter<T> : JsonConverter<T>
             writer.WriteRawValue(rawValue);
         }
     }
+
+    static object ReadEnum(ref Utf8JsonReader reader, Type enumType)
+    {
+        var underlyingType = Enum.GetUnderlyingType(enumType);
+        var unsigned = IsUnsigned(underlyingType);
+        object number;
+        if (unsigned && reader.TryGetUInt64(out var unsignedNumber))
+        {
+            number = unsignedNumber;
+        }
+        else if (!unsigned && reader.TryGetInt64(out var signedNumber))
+        {
+            number = signedNumber;
+        }
+        else
+        {
+            var rawNumber = reader.HasValueSequence ? Encoding.UTF8.GetString(reader.ValueSequence) : Encoding.UTF8.GetString(reader.ValueSpan);
+            throw new JsonException($"The JSON number '{rawNumber}' is not a valid value for enum '{enumType}' backed by '{underlyingType}'.");
+        }
+
+        try
+        {
+            return Enum.ToObject(enumType, Convert.ChangeType(number, underlyingType));
+        }
+        catch (OverflowException ex)
+        {
+            // The number does not fit the enum's underlying type; surface it as a JSON error naming the enum and value.
+            throw new JsonException($"The JSON number '{number}' is out of range for enum '{enumType}' backed by '{underlyingType}'.", ex);
+        }
+    }
+
+    static void WriteEnum(Utf8JsonWriter writer, object value, Type enumType)
+    {
+        if (IsUnsigned(Enum.GetUnderlyingType(enumType)))
+        {
+            writer.WriteNumberValue(Convert.ToUInt64(value));
+        }
+        else
+        {
+            writer.WriteNumberValue(Convert.ToInt64(value));
+        }
+    }
+
+    static bool IsUnsigned(Type type) =>
+        type == typeof(byte) || type == typeof(ushort) || type == typeof(uint) || type == typeof(ulong);
 }
