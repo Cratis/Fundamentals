@@ -17,6 +17,21 @@ function run(command, args, cwd) {
     if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed (${result.status ?? result.signal})`);
 }
 
+// npm 10 runs the package's `prepare` script during `npm pack` even with --ignore-scripts, and the
+// build output lands on stdout ahead of the JSON report. Locate the report deterministically: the
+// JSON document is the last top-level array or object that starts a line and parses to the end of stdout.
+function parsePackReport(stdout) {
+    const starts = [...stdout.matchAll(/^[[{]/gm)].map(match => match.index).reverse();
+    for (const start of starts) {
+        try {
+            // npm 10/11 report an array, npm 12 an object keyed by package name.
+            const report = Object.values(JSON.parse(stdout.slice(start)));
+            if (typeof report[0]?.filename === 'string') return report;
+        } catch { /* not the report; try an earlier candidate */ }
+    }
+    throw new Error(`npm pack did not produce a JSON report:\n${stdout}`);
+}
+
 const relativeImport = /\b(?:from\s*|import\s*\(|import\s*|require\s*\()(['"])(\.{1,2}\/[^'"\n]+)\1/g;
 function checkImports(file, content) {
     let checked = 0;
@@ -46,7 +61,7 @@ try {
     });
     if (packed.error) throw packed.error;
     if (packed.status !== 0) throw new Error(`npm pack failed (${packed.status ?? packed.signal}): ${packed.stderr}`);
-    const archive = join(temporaryRoot, Object.values(JSON.parse(packed.stdout))[0].filename);
+    const archive = join(temporaryRoot, parsePackReport(packed.stdout)[0].filename);
     run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--no-package-lock', archive], temporaryRoot);
 
     const installed = join(temporaryRoot, 'node_modules', '@cratis', 'fundamentals');
