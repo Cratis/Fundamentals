@@ -58,6 +58,7 @@ export class DateOnly {
      * Parses the ISO-8601 calendar date the server sends, `yyyy-MM-dd`.
      * @param value The value to parse.
      * @returns The {@link DateOnly}.
+     * @throws {Error} If the format is invalid or a component is out of range, as C# rejects it.
      */
     static parse(value: string): DateOnly {
         const match = dateOnlyRegex.exec(value);
@@ -65,7 +66,33 @@ export class DateOnly {
             throw new Error(`Invalid DateOnly format: ${value}`);
         }
 
-        return DateOnly.from(parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10));
+        const year = parseInt(match[1], 10);
+        const month = parseInt(match[2], 10);
+        const day = parseInt(match[3], 10);
+
+        if (year < 1) {
+            throw new Error(`Invalid DateOnly: year ${year} is out of range 1-9999 in '${value}'`);
+        }
+
+        if (month < 1 || month > 12) {
+            throw new Error(`Invalid DateOnly: month ${month} is out of range 1-12 in '${value}'`);
+        }
+
+        const daysInMonth = DateOnly.daysInMonth(year, month);
+        if (day < 1 || day > daysInMonth) {
+            throw new Error(`Invalid DateOnly: day ${day} is out of range 1-${daysInMonth} for ${match[1]}-${match[2]} in '${value}'`);
+        }
+
+        return DateOnly.from(year, month, day);
+    }
+
+    private static daysInMonth(year: number, month: number): number {
+        if (month === 2) {
+            const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+            return isLeapYear ? 29 : 28;
+        }
+
+        return [4, 6, 9, 11].includes(month) ? 30 : 31;
     }
 
     /**
