@@ -301,6 +301,8 @@ const deserializeValueMapFromField = (field: Field, value: any): ValueMap<any, a
 };
 
 const convertTypesOnInstance = (instance: any) => {
+    if (instance === null || instance === undefined) return instance;
+
     // A concept unwraps to its underlying value wherever it is reached, not only when it is reached
     // through a declared field. An array element and a map value arrive here rather than at
     // serializeValueForType, and without this they were written as the object a concept happens to be -
@@ -335,7 +337,7 @@ const convertTypesOnInstance = (instance: any) => {
         // The discriminator is handled above as a meta-property; never treat it as a data field.
         if (property === JsonSerializer.DerivedTypeIdProperty) return;
         let value = instance[property];
-        if (value !== undefined) {
+        if (value !== undefined && value !== null) {
             if (Array.isArray(value)) {
                 value = value.map(_ => convertTypesOnInstance(_));
             } else {
