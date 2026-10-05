@@ -10,12 +10,12 @@ public class when_serializing_properties_with_the_same_camel_case_name : given.a
     IParent input;
     string result;
 
-    void Establish() => input = new ParentWithDuplicateNames("first", "last");
+    void Establish() => input = new ParentWithDuplicateNames("first", "second", "last", "final");
 
     void Because() => result = JsonSerializer.Serialize(input, options);
 
-    [Fact] void should_write_the_key_once_with_the_last_value() => result.ShouldEqual("{\"foo\":\"last\",\"_derivedTypeId\":\"parent\"}");
+    [Fact] void should_keep_each_keys_first_position_with_its_last_value() => result.ShouldEqual("{\"foo\":\"last\",\"bar\":\"final\",\"_derivedTypeId\":\"parent\"}");
 
     [DerivedType("parent")]
-    record ParentWithDuplicateNames(string Foo, string foo) : IParent;
+    record ParentWithDuplicateNames(string Foo, string Bar, string foo, string bar) : IParent;
 }

@@ -85,7 +85,7 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
                 writer.WriteStartObject();
                 foreach (var property in properties)
                 {
-                    writer.WritePropertyName(property.Key);
+                    writer.WritePropertyName(options?.DictionaryKeyPolicy?.ConvertName(property.Key) ?? property.Key);
                     JsonSerializer.Serialize(writer, property.Value.Value, property.Value.SerializationType, options);
                 }
                 writer.WriteEndObject();
@@ -93,11 +93,29 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
         }
     }
 
+    bool HasDeclaredFamily(Type type) => HasDeclaredFamily(type, [], 0);
+
     [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Declared property collection interfaces are preserved with the registered derived types.")]
-    bool HasDeclaredFamily(Type type) =>
-        _derivedTypes.HasDerivatives(type) ||
-        (type.IsConstructedGenericType && type.GetInterfaces().Prepend(type).Any(candidate =>
+    bool HasDeclaredFamily(Type type, HashSet<Type> visitedTypes, int depth)
+    {
+        if (type == typeof(string) || depth >= 32 || !visitedTypes.Add(type))
+        {
+            return false;
+        }
+
+        if (_derivedTypes.HasDerivatives(type))
+        {
+            return true;
+        }
+
+        if (type.IsArray)
+        {
+            return HasDeclaredFamily(type.GetElementType()!, visitedTypes, depth + 1);
+        }
+
+        return type.GetInterfaces().Prepend(type).Any(candidate =>
             candidate.IsGenericType &&
-            ((candidate.GetGenericTypeDefinition() == typeof(IEnumerable<>) && _derivedTypes.HasDerivatives(candidate.GetGenericArguments()[0])) ||
-             ((candidate.GetGenericTypeDefinition() == typeof(IDictionary<,>) || candidate.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>)) && _derivedTypes.HasDerivatives(candidate.GetGenericArguments()[1])))));
+            ((candidate.GetGenericTypeDefinition() == typeof(IEnumerable<>) && HasDeclaredFamily(candidate.GetGenericArguments()[0], visitedTypes, depth + 1)) ||
+             ((candidate.GetGenericTypeDefinition() == typeof(IDictionary<,>) || candidate.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>)) && HasDeclaredFamily(candidate.GetGenericArguments()[1], visitedTypes, depth + 1))));
+    }
 }
