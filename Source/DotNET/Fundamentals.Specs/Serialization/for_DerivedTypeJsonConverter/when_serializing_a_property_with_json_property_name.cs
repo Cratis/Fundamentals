@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Cratis.Serialization.for_DerivedTypeJsonConverter;
 
-public class when_serializing_a_property_with_json_property_name : given.derived_type_families
+public class when_serializing_a_property_with_json_property_name : given.a_set_of_derived_type_families
 {
     IParent input;
     string result;

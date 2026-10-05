@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace Cratis.Serialization.for_DerivedTypeJsonConverter;
 
-public class when_serializing_an_array_of_nested_family_values : given.derived_type_families
+public class when_serializing_an_array_of_nested_family_values : given.a_set_of_derived_type_families
 {
     IParent input;
     string result;

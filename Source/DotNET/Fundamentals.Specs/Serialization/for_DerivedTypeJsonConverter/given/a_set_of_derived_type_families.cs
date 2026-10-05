@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Cratis.Serialization.for_DerivedTypeJsonConverter.given;
 
-public class derived_type_families : Specification
+public class a_set_of_derived_type_families : Specification
 {
     protected JsonSerializerOptions options;
 

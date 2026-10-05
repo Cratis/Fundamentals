@@ -48,6 +48,10 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Nested children and collections declared with a derived type family use their declared types
+    /// to preserve type identifiers and the converter's naming rules. Other properties use runtime types.
+    /// </remarks>
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON serialization uses types registered at startup that are preserved.")]
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Derived type JSON serialization accesses well-known type properties that are preserved.")]
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON serialization uses types registered at startup that are safe for AOT.")]
@@ -61,26 +65,39 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
 
             default:
                 var type = value.GetType();
-                writer.WriteStartObject();
+                var properties = new Dictionary<string, (object? Value, Type SerializationType)>();
 
                 foreach (var property in type.GetProperties())
                 {
-                    writer.WritePropertyName(property.Name.ToCamelCase());
                     var propertyValue = property.GetValue(value);
-                    var serializationType = _derivedTypes.HasDerivatives(property.PropertyType)
+                    var serializationType = HasDeclaredFamily(property.PropertyType)
                         ? property.PropertyType
                         : propertyValue?.GetType() ?? property.PropertyType;
-                    JsonSerializer.Serialize(writer, propertyValue, serializationType, options);
+                    properties[property.Name.ToCamelCase()] = (propertyValue, serializationType);
                 }
 
                 var derivedTypeAttribute = type.GetCustomAttribute<DerivedTypeAttribute>();
                 if (derivedTypeAttribute is not null)
                 {
-                    writer.WriteString(DerivedTypeIdProperty, derivedTypeAttribute.Identifier.ToString());
+                    properties[DerivedTypeIdProperty] = (derivedTypeAttribute.Identifier.ToString(), typeof(string));
                 }
 
+                writer.WriteStartObject();
+                foreach (var property in properties)
+                {
+                    writer.WritePropertyName(property.Key);
+                    JsonSerializer.Serialize(writer, property.Value.Value, property.Value.SerializationType, options);
+                }
                 writer.WriteEndObject();
                 break;
         }
     }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Declared property collection interfaces are preserved with the registered derived types.")]
+    bool HasDeclaredFamily(Type type) =>
+        _derivedTypes.HasDerivatives(type) ||
+        (type.IsConstructedGenericType && type.GetInterfaces().Prepend(type).Any(candidate =>
+            candidate.IsGenericType &&
+            ((candidate.GetGenericTypeDefinition() == typeof(IEnumerable<>) && _derivedTypes.HasDerivatives(candidate.GetGenericArguments()[0])) ||
+             ((candidate.GetGenericTypeDefinition() == typeof(IDictionary<,>) || candidate.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>)) && _derivedTypes.HasDerivatives(candidate.GetGenericArguments()[1])))));
 }
