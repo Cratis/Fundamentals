@@ -67,6 +67,12 @@ public interface IPersons
 > All serialization converters assume this and will fail if one puts more properties on it.
 > If one needs to represent complex types, you can do so without inheriting from `ConceptAs<>` and then have all its values be concepts instead.
 
+## Generating new values
+
+A concept can implement `IGeneratable<TSelf>` to declare a static `New()` method that constrained generic code can call without reflection.
+Use `GenerateValue.Uuid()` for random UUIDs or `GenerateValue.UuidV7()` for time-ordered UUIDs.
+See [Generating values](generating-values.md) for the concept pattern, security trade-offs, and testing with known values.
+
 ## Implicit Operators
 
 The `ConceptAs<>` base record has an implicit operator overload for converting from the formalized type to the underlying primitive type.
