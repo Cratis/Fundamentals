@@ -9,7 +9,7 @@ namespace Cratis.Execution;
 /// Represents an identifier for correlation.
 /// </summary>
 /// <param name="Value">Actual value.</param>
-public record CorrelationId(Guid Value) : ConceptAs<Guid>(Value)
+public record CorrelationId(Guid Value) : ConceptAs<Guid>(Value), IGeneratable<CorrelationId>
 {
     /// <summary>
     /// Gets the value for not set.
@@ -27,5 +27,5 @@ public record CorrelationId(Guid Value) : ConceptAs<Guid>(Value)
     /// Create a new <see cref="CorrelationId"/> based on a new <see cref="Guid"/>.
     /// </summary>
     /// <returns>A new <see cref="CorrelationId"/>.</returns>
-    public static CorrelationId New() => new(Guid.NewGuid());
+    public static CorrelationId New() => new(GenerateValue.Uuid());
 }
