@@ -7,6 +7,9 @@ namespace Cratis.Concepts;
 /// Defines a value that can create a new instance of itself.
 /// </summary>
 /// <typeparam name="TSelf">The type that generates its own instances.</typeparam>
+/// <remarks>
+/// If a type also implements <see cref="IGeneratableInContext{TSelf}"/>, callers use the context form.
+/// </remarks>
 public interface IGeneratable<TSelf>
     where TSelf : IGeneratable<TSelf>
 {
