@@ -70,8 +70,11 @@ public interface IPersons
 ## Generating new values
 
 A concept can implement `IGeneratable<TSelf>` to declare a static `New()` method that constrained generic code can call without reflection.
-Use `GenerateValue.Uuid()` for random UUIDs or `GenerateValue.UuidV7()` for time-ordered UUIDs.
-See [Generating values](generating-values.md) for the concept pattern, security trade-offs, and testing with known values.
+When generation depends on the operation's clock or tenant, implement `IGeneratableInContext<TSelf>` with `New(GenerationContext context)` instead.
+If a type implements both interfaces, callers use the context form.
+Use `GenerateValue.Uuid()` for default random identifiers, `UuidV7()`, `Ulid()`, or `TypeId(prefix)` for time-ordered identifiers,
+and `NanoId()` or `Bytes(count)` for random strings. The time-ordered strategies also accept a `GenerationContext` to use its captured time.
+See [Generating values](generating-values.md) for the concept patterns, security trade-offs, and testing with known values or a pinned clock.
 
 ## Implicit Operators
 
