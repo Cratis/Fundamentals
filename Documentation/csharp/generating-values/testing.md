@@ -30,7 +30,7 @@ namespace Shop.Specs;
 
 public class when_creating_an_invite_code_through_the_contract : Specification
 {
-    InviteCode _result;
+    InviteCode _result = null!;
 
     void Because() => _result = Create<InviteCode>();
 
@@ -46,17 +46,22 @@ public class when_creating_an_invite_code_through_the_contract : Specification
 For a concept that implements `IGeneratableInContext<TSelf>`, build the context yourself. The time part is then fixed and the random part is not:
 
 ```csharp
+using Cratis.Concepts;
+using Cratis.Specifications;
+
 var received = new DateTimeOffset(2024, 6, 15, 12, 34, 56, 789, TimeSpan.Zero);
 var context = new GenerationContext(received, GenerationContext.DefaultTenant);
-var orderId = OrderId.New(context);
+var first = OrderId.New(context);
+var second = OrderId.New(context);
+
+first.Value[6..16].ShouldEqual("01j0dy9j4n");
+second.Value[6..16].ShouldEqual(first.Value[6..16]);
+(first == second).ShouldBeFalse();
 ```
 
-For that `received` value, the characters at positions 6 to 15 of an `order_` TypeID are always `01j0dy9j4n`. Assert that part, and assert
-that two ids from one context are different:
-
-```csharp
-orderId.Value[6..16].ShouldEqual("01j0dy9j4n");
-```
+For that `received` value, the characters at positions 6 to 15 of an `order_` TypeID are always `01j0dy9j4n`. The first assertion pins that part,
+the second shows two ids from one context share it, and the third shows the random remainder still makes them different.
+This excerpt assumes the `OrderId` from the [tutorial](tutorial.md#step-5-an-order-id-that-follows-the-operation) and `Because`-style spec setup.
 
 Do not build `new GenerationContext()` in a spec: its `Now` is `default` and the generation throws `MissingGenerationTime`.
 
@@ -79,6 +84,9 @@ Do not assert an exact random value, and do not generate ten thousand ids to pro
 Invalid arguments throw typed exceptions; `Catch.Exception` from `Cratis.Specifications` captures them:
 
 ```csharp
+using Cratis.Concepts;
+using Cratis.Specifications;
+
 Exception error = Catch.Exception(() => GenerateValue.NanoId(0));
 error.ShouldBeOfExactType<InvalidNanoIdSize>();
 ```

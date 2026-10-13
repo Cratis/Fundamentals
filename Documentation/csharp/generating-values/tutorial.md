@@ -7,13 +7,18 @@ You are building a small shop. Customers need ids, orders need ids that carry a 
 and integrations need API keys. Today the code is full of `Guid.NewGuid()`. In this tutorial you replace each one with a concept that
 generates its own value, and you see a result after every step.
 
-You need the .NET 8 SDK or later. Create a console project and add the package:
+You need the .NET 8 SDK or later. Create a folder for the solution with a console project inside it, and add the package.
+Every command in this tutorial runs from that `shop` folder:
 
 ```bash
+mkdir shop
+cd shop
 dotnet new console -n Shop
-cd Shop
-dotnet add package Cratis.Fundamentals
+dotnet add Shop package Cratis.Fundamentals
 ```
+
+You will add the `.cs` files to the `Shop` folder and run the program with `dotnet run --project Shop`. The console template turns on implicit
+usings, so `Program.cs` needs no `using` for `System`, `System.Linq`, `System.Collections.Generic` or `System.Threading.Tasks`.
 
 The printed values below are samples. Yours differ because the values are random, which is the point.
 
@@ -30,7 +35,7 @@ public record CustomerId(Guid Value) : ConceptAs<Guid>(Value), IGeneratable<Cust
 }
 ```
 
-Replace `Program.cs` with `Console.WriteLine(CustomerId.New());` and run `dotnet run`:
+Replace `Shop/Program.cs` with `Console.WriteLine(CustomerId.New());` and run `dotnet run --project Shop`:
 
 ```text
 054092b2-48e9-4a54-9bc2-d2e8ccfa04e1
@@ -150,11 +155,13 @@ Console.WriteLine(ApiKey.New());
 gziGp2TEJPHWl6ztCXqiKMj7NVcyO3JhGD7t59Qe204
 ```
 
-Printing a key is fine in a tutorial and a leak in production: the concept prints its value. In an application that records command
-properties, mark the concept so the key never reaches the event log. The attribute comes from Arc's Chronicle integration, not from Fundamentals:
+Printing a key is fine in a tutorial and a leak in production: the concept prints its value. The attribute that keeps a value out of
+the command causation chain comes from the `Cratis.Arc.Chronicle` package, not from Fundamentals, and the tutorial project does not use it.
+In an Arc application with Chronicle, you mark the concept like this:
 
 ```csharp
 using Cratis.Arc.Chronicle.Commands;
+using Cratis.Concepts;
 
 [NotAudited]
 public record ApiKey(string Value) : ConceptAs<string>(Value), IGeneratable<ApiKey>
@@ -163,7 +170,8 @@ public record ApiKey(string Value) : ConceptAs<string>(Value), IGeneratable<ApiK
 }
 ```
 
-[Secrets and tokens](secrets-and-tokens.md) covers storage, display and logging.
+`[NotAudited]` covers the command causation chain only. It does not protect an event that carries the key, or a log line.
+[Secrets and tokens](secrets-and-tokens.md) explains what it covers and how to handle the key.
 
 ## Step 5: an order id that follows the operation
 
@@ -180,9 +188,11 @@ public record OrderId(string Value) : ConceptAs<string>(Value), IGeneratableInCo
 ```
 
 This concept implements `IGeneratableInContext<OrderId>`, so `New` takes a `GenerationContext` holding the captured time and the tenant.
-Create two ids from one context and one from a context an hour later:
+Replace `Shop/Program.cs` to create two ids from one context and one from a context an hour later:
 
 ```csharp
+using Cratis.Concepts;
+
 var received = new DateTimeOffset(2024, 6, 15, 12, 34, 56, 789, TimeSpan.Zero);
 var context = new GenerationContext(received, GenerationContext.DefaultTenant);
 
@@ -206,31 +216,37 @@ use the tenant itself, as [Context-dependent values](context.md) shows.
 Frameworks create your values without knowing their types. You can write the same shape in a few lines:
 
 ```csharp
-static T Create<T>() where T : IGeneratable<T> => T.New();
+using Cratis.Concepts;
+
+static T Create<T>()
+    where T : IGeneratable<T> => T.New();
+
+static T CreateInContext<T>(GenerationContext context)
+    where T : IGeneratableInContext<T> => T.New(context);
+
+var context = new GenerationContext(DateTimeOffset.UtcNow, GenerationContext.DefaultTenant);
 
 Console.WriteLine(Create<CustomerId>());
 Console.WriteLine(Create<InviteCode>());
+Console.WriteLine(CreateInContext<OrderId>(context));
 ```
 
-`T.New()` is a static abstract interface member, so the call is resolved at compile time with no reflection. You get back a `CustomerId`
-and an `InviteCode`, not untyped strings. `OrderId` is not accepted by this method, because it implements the context interface:
-
-```csharp
-static T Create<T>(GenerationContext context) where T : IGeneratableInContext<T> => T.New(context);
-```
+`T.New()` is a static abstract interface member, so the call is resolved at compile time with no reflection. You get back a `CustomerId`,
+an `InviteCode` and an `OrderId`, not untyped strings. `Create<OrderId>()` does not compile, because `OrderId` implements only the context interface.
 
 ## Step 7: pin the clock in a spec
 
-Random values make poor expectations, but the time part of `OrderId` is yours to fix. Create a spec project next to `Shop`:
+Random values make poor expectations, but the time part of `OrderId` is yours to fix. From the `shop` folder, create a spec project
+next to `Shop` and reference it:
 
 ```bash
 dotnet new xunit -n Shop.Specs
-cd Shop.Specs
-dotnet add package Cratis.Specifications.XUnit
-dotnet add reference ../Shop/Shop.csproj
+dotnet add Shop.Specs package Cratis.Specifications.XUnit
+dotnet add Shop.Specs reference Shop/Shop.csproj
+rm Shop.Specs/UnitTest1.cs
 ```
 
-Add `when_creating_two_orders_at_a_known_time.cs`:
+The `rm` deletes the template's sample test, which the spec project does not need. Add `Shop.Specs/when_creating_two_orders_at_a_known_time.cs`:
 
 ```csharp
 using Cratis.Concepts;
@@ -241,8 +257,8 @@ namespace Shop.Specs;
 
 public class when_creating_two_orders_at_a_known_time : Specification
 {
-    OrderId _first;
-    OrderId _second;
+    OrderId _first = null!;
+    OrderId _second = null!;
 
     void Because()
     {
@@ -259,7 +275,7 @@ public class when_creating_two_orders_at_a_known_time : Specification
 }
 ```
 
-Run `dotnet test`. All four pass on every run: the spec asserts the parts you control and does not assert the random part.
+Run `dotnet test Shop.Specs`. All four pass on every run: the spec asserts the parts you control and does not assert the random part.
 
 ## What you built
 

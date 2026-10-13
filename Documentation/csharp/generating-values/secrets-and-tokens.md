@@ -32,9 +32,10 @@ public record ApiKey(string Value) : ConceptAs<string>(Value), IGeneratable<ApiK
 
 ## Mark the concept so it is not recorded
 
-Generation is not secret storage. In an application that writes command properties to the event causation chain, a plain `ApiKey` concept reaches
-the event log in the clear and stays there. Mark the concept once and every command and event that uses it is covered. The attribute comes
-from Arc's Chronicle integration:
+Generation is not secret storage. In an Arc application with Chronicle, the values of a command's properties are written to the causation chain
+of every event the command appends. Without a marking, an `ApiKey` property is recorded there in the clear and stays as long as the events do.
+`[NotAudited]` comes from the `Cratis.Arc.Chronicle` package. Put it on the concept and the value is left out of the causation chain of every command
+that has a property of that type. It also works on a command type, a single property, or a constructor parameter.
 
 ```csharp
 using Cratis.Arc.Chronicle.Commands;
@@ -47,17 +48,26 @@ public record ApiKey(string Value) : ConceptAs<string>(Value), IGeneratable<ApiK
 }
 ```
 
-| Marking | Use it for | What it does |
-| --- | --- | --- |
-| `[NotAudited]` | A secret that is not personal data: password, token, API key | Keeps the value out of the causation chain. Does not encrypt it. |
-| `[PII]` | Personal data: a name, an email address | Chronicle manages and can erase the value. Wrong for a secret. |
+`[NotAudited]` has a narrow scope:
 
-The two are not interchangeable. `[PII]` encrypts and enrolls the value in erasure; `[NotAudited]` only withholds it.
+| Covered | Not covered |
+| --- | --- |
+| The command causation chain | The payload of an event: an event that carries the token stores it in the clear |
+| | Log lines, exception messages, responses and anything else that prints the value |
+| | Encryption: the value is withheld from the chain, not protected |
+
+:::danger[Do not put a raw token in an event]
+Events are permanent and replayed by every observer. Store a hash of the token, or a reference to where it lives, not the token itself.
+Return the plaintext to the caller once, in the command response, and never write it anywhere else.
+:::
+
+`[PII]` is for personal data such as a name or an email address: Chronicle can then manage and erase the value. Do not use it on a secret that is not
+personal data. The two markings are not interchangeable.
 
 ## Handle it after generation
 
-1. **Show it once.** Return the plaintext to the user at creation time and never again.
-2. **Store a hash where you can.** Keep a hash of the key and compare hashes on use, so a database leak does not leak working keys.
+1. **Show it once.** Return the plaintext to the caller at creation time and never again.
+2. **Store a hash.** Keep a hash of the key, in events and in storage, and compare hashes on use, so a leak does not leak working keys.
    `GenerateValue` does not hash for you.
 3. **Never log it.** A concept prints its raw value from `ToString()`, so `Console.WriteLine(apiKey)` and `$"{apiKey}"` write the secret.
 4. **Expire and rotate.** A token with no lifetime is a permanent credential.

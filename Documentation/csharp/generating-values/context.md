@@ -59,7 +59,10 @@ This is a domain-specific string, not a TypeID. It is rarely needed because each
 ## Call it from generic code
 
 ```csharp
-static T Create<T>(GenerationContext context) where T : IGeneratableInContext<T> => T.New(context);
+using Cratis.Concepts;
+
+static T Create<T>(GenerationContext context)
+    where T : IGeneratableInContext<T> => T.New(context);
 ```
 
 ## Rules that bite
