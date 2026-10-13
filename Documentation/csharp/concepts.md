@@ -74,7 +74,7 @@ When generation depends on the operation's clock or tenant, implement `IGenerata
 If a type implements both interfaces, callers use the context form.
 Use `GenerateValue.Uuid()` for default random identifiers, `UuidV7()`, `Ulid()`, or `TypeId(prefix)` for time-ordered identifiers,
 and `NanoId()` or `Bytes(count)` for random strings. The time-ordered strategies also accept a `GenerationContext` to use its captured time.
-See [Generating values](generating-values.md) for the concept patterns, security trade-offs, and testing with known values or a pinned clock.
+The [Generating values](generating-values/index.md) section walks through the concept patterns, strategy choice, security trade-offs, and testing with known values or a pinned clock.
 
 ## Implicit Operators
 
