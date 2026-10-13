@@ -57,7 +57,7 @@ public record ApiKey(string Value) : ConceptAs<string>(Value), IGeneratable<ApiK
 | | Encryption: the value is withheld from the chain, not protected |
 
 :::danger[Do not put a raw token in an event]
-Events are permanent and replayed by every observer. Store a hash of the token, or a reference to where it lives, not the token itself.
+Events are permanent and replayed by every observer. Store a hash of a bearer token, or a reference to where a secret lives, not the secret itself.
 Return the plaintext to the caller once, in the command response, and never write it anywhere else.
 :::
 
@@ -67,8 +67,10 @@ personal data. The two markings are not interchangeable.
 ## Handle it after generation
 
 1. **Show it once.** Return the plaintext to the caller at creation time and never again.
-2. **Store a hash.** Keep a hash of the key, in events and in storage, and compare hashes on use, so a leak does not leak working keys.
-   `GenerateValue` does not hash for you.
+2. **Store a hash of bearer tokens.** For tokens and API keys that the caller presents back to you, keep only a hash, in events and in
+   storage, and compare hashes on use, so a leak does not leak working keys. `GenerateValue` does not hash for you.
+   A TOTP secret or other key material is different: you need the original value later to compute codes or sign, so a hash is useless.
+   Keep it in protected, recoverable storage, such as a secret store or encryption at rest, never in an event payload.
 3. **Never log it.** A concept prints its raw value from `ToString()`, so `Console.WriteLine(apiKey)` and `$"{apiKey}"` write the secret.
 4. **Expire and rotate.** A token with no lifetime is a permanent credential.
 
