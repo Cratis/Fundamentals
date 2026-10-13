@@ -1,0 +1,86 @@
+---
+title: Choosing a strategy
+description: Pick the right GenerateValue strategy for an id, code or token, and know when not to generate at all.
+---
+
+Use this page when you know what the value is for and need the strategy that fits. Start at the flowchart, check the table
+for the trade-off, and read the entropy section before shortening anything.
+
+## Decide in four questions
+
+```mermaid
+flowchart TD
+    Start([What is the value for?]) --> Secret{Does it grant access<br/>or protect data?}
+    Secret -- yes --> Bytes["Bytes(32)<br/>see Secrets and tokens"]
+    Secret -- no --> Human{Do people read<br/>or type it?}
+    Human -- yes --> Short["NanoId(size, alphabet)<br/>with a uniqueness check"]
+    Human -- no --> Order{Should it sort<br/>by creation time?}
+    Order -- yes --> Shape{Guid column<br/>or string?}
+    Shape -- Guid --> V7["UuidV7()"]
+    Shape -- string --> Named{Should it name<br/>its type?}
+    Named -- yes --> Typed["TypeId(prefix)<br/>or cus_ + lowercase Ulid()"]
+    Named -- no --> Ulid["Ulid()"]
+    Order -- no --> Url{Compact string<br/>needed?}
+    Url -- yes --> Nano["NanoId()"]
+    Url -- no --> Uuid["Uuid()"]
+```
+
+When the value depends on the operation's time, use the context overloads. See [Context-dependent values](context.md).
+
+## Situations and strategies
+
+Random bits are the unpredictable part of each value. Collision figures are in the next section.
+
+| Situation | Code | Example output | Random bits | Trade-off |
+| --- | --- | --- | --- | --- |
+| Ordinary entity id | `GenerateValue.Uuid()` | `212f34b8-1ff0-4da8-8c22-a43dece95de8` | 122 | The default; reveals nothing, does not sort |
+| Index-friendly Guid column | `GenerateValue.UuidV7()` | `01a13571-f1e8-7c3c-8d30-16b90f487b02` | 74 | Appends to B-tree indexes; reveals creation time |
+| Sortable string id | `GenerateValue.Ulid()` | `01M4TQ3WF8QS2APSEB06E8VGDK` | 80 | Sorts by age; reveals creation time; not monotonic within a millisecond |
+| Self-describing id in logs | `GenerateValue.TypeId("user")` | `user_01m4tq3wf8fs7s4ahqpprc3gt4` | 74 | The prefix names the type; time-ordered |
+| Stripe-style public id | `$"cus_{GenerateValue.Ulid().ToLowerInvariant()}"` | `cus_01m4tq3wcw1fn5912rd8rsmgcd` | 80 | Familiar format; prefix and case are plain string work |
+| Short typed code | `GenerateValue.NanoId(10, "23456789ABCDEFGHJKLMNPQRSTUVWXYZ")` | `SA65PT7D2G` | 50 | No look-alike characters; needs a uniqueness check |
+| Compact URL-safe id | `GenerateValue.NanoId()` | `qlBnph5vVBJeX4gbqCwm5` | 126 | 21 characters |
+| Token, reset link, API key | `GenerateValue.Bytes(32)` | `gziGp2TEJPHWl6ztCXqiKMj7NVcyO3JhGD7t59Qe204` | 256 | Secret; see [Secrets and tokens](secrets-and-tokens.md) |
+| Hex token | `GenerateValue.Bytes(32, ValueEncoding.Hex)` | `45421c194ffabca6…ad8d1d` | 256 | Lowercase hex, 64 characters |
+| TOTP secret, key material | `GenerateValue.Bytes(20, ValueEncoding.Base32)` | `PQ5URI2LDHCF6LRMMPYRUPMPRRS5UPGH` | 160 | Case-insensitive, easy to type |
+| Time follows the operation | `GenerateValue.TypeId("order", context)` | `order_01j0dy9j4nej4saxp79mmcqts7` | 74 | One captured instant per operation |
+| Tenant in the value | `$"{context.Tenant}-{GenerateValue.Ulid(context)}"` | `00000000-…-000000000000-01J0DY9J4N…` | 80 | Rarely needed; namespaces already isolate tenants |
+
+A TypeID's 74 random bits are the UUID v7 bits. The ULID and `cus_` rows differ in encoding from TypeID: a TypeID suffix encodes a UUID v7,
+a ULID does not.
+
+## How many random bits you need
+
+Time-ordered ids are unique in practice only because the random part is large enough. The number of values at which the chance of any
+collision reaches 1% is about the square root of `2 × 2^bits × ln(1/0.99)`:
+
+| Random bits | Values at 1% collision risk |
+| --- | --- |
+| 32 | about 9 thousand |
+| 40 | about 150 thousand |
+| 50 | about 4.8 million |
+| 64 | about 600 million |
+| 74 | about 20 billion |
+| 80 | about 160 billion |
+| 122 | about 3 × 10¹⁷ |
+
+- Below 64 bits, generate only with a uniqueness check, such as a unique index and a retry.
+- Size for the total population over the life of the system, not for one request.
+- No strategy guarantees uniqueness.
+
+## When not to generate
+
+- **The client supplied the id.** A client-supplied identifier is an input. Keep it; do not replace it with a generated one.
+- **The same input must give the same id.** Random generation does not deliver idempotency: a retry creates a different id.
+  Fundamentals has no deterministic, name-based id strategy today. Persist and reuse the first id, or derive the id yourself.
+- **The number must be gapless or legal.** Invoice and tax numbering needs an allocator that records every number. Random ids have gaps by design.
+- **The value would authorize something.** A generated id identifies; it never proves who is calling. Never use an id as a credential.
+- **A secret would come from a time-ordered id.** UUID v7, ULID and TypeID expose creation time and have fewer random bits. Use `Bytes`.
+
+Not available today: date-segment patterns such as `INV-2026-…`, random integers and check digits. Compose those from your own code
+around `GenerateValue`.
+
+## Next steps
+
+- [Context-dependent values](context.md) for ids whose time follows the operation.
+- [Reference](reference.md) for exact limits and encodings.
