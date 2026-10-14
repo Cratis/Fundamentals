@@ -7,6 +7,9 @@ export class ModelWithSetters {
     private _label: string = 'default';
     private _quantity: number = 1;
 
+    labelAssignments = 0;
+    quantityAssignments = 0;
+
     @field(String)
     sibling: string | null = null;
 
@@ -16,6 +19,7 @@ export class ModelWithSetters {
     }
 
     set label(value: string) {
+        this.labelAssignments++;
         this._label = `prefix:${value}`;
     }
 
@@ -25,6 +29,7 @@ export class ModelWithSetters {
     }
 
     set quantity(value: number) {
+        this.quantityAssignments++;
         this._quantity = value * 2;
     }
 }

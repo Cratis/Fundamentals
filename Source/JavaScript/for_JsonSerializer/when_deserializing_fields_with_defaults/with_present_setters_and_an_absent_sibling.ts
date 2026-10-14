@@ -11,7 +11,9 @@ describe('when deserializing fields with defaults with present setters and an ab
         result = JsonSerializer.deserialize(ModelWithSetters, '{"label":"present","quantity":3}');
     });
 
-    it('should invoke the string setter once', () => result.label.should.equal('prefix:present'));
-    it('should invoke the number setter once', () => result.quantity.should.equal(6));
+    it('should invoke the string setter once', () => result.labelAssignments.should.equal(1));
+    it('should convert the string value once', () => result.label.should.equal('prefix:present'));
+    it('should invoke the number setter once', () => result.quantityAssignments.should.equal(1));
+    it('should convert the number value once', () => result.quantity.should.equal(6));
     it('should keep the absent sibling default', () => [result.sibling].should.deep.equal([null]));
 });
