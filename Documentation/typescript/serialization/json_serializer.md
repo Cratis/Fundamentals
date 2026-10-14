@@ -150,7 +150,9 @@ const users = JsonSerializer.deserializeArray(User, json);
 
 The `JsonSerializer` relies on the `@field` decorator to understand your class structure. It reads collections declared either as `@field(ItemType, true)` or as `@field(Array, { genericArguments: [ItemType] })`. Both forms deserialize each element using its declared type, including concepts and nested models. An absent collection becomes `[]`; an explicit `null` stays `null`.
 
-For a concept whose underlying value needs conversion, declare its runtime type on the concept. For example, `class Identifier extends ConceptAs<Guid> { static readonly valueType = Guid; }` converts a JSON string into a `Guid` before wrapping it in `Identifier`. Concepts wrapping `""`, `0`, or `false` are also reconstructed; a field omitted from the JSON remains absent.
+For non-collection fields, an omitted field or an `undefined` input value leaves the constructor's default untouched. This preserves initializers, including `null`, object references, and references to the instance itself. A field without an initializer stays `undefined`. A present value overrides the default after conversion; an explicit `null` overrides it without conversion. These rules also apply to fields inside nested decorated types.
+
+For a concept whose underlying value needs conversion, declare its runtime type on the concept. For example, `class Identifier extends ConceptAs<Guid> { static readonly valueType = Guid; }` converts a JSON string into a `Guid` before wrapping it in `Identifier`. Concepts wrapping `""`, `0`, or `false` are also reconstructed; an omitted concept field keeps its constructor default.
 
 For comprehensive details about decorators, field configuration, and advanced patterns, see:
 

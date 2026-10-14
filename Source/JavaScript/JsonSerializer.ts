@@ -423,6 +423,8 @@ export class JsonSerializer {
 
     /**
      * Deserialize an any instance to a specific instance type.
+     * Fields with an undefined input value keep their constructor defaults, except collections,
+     * which become empty arrays. Explicit null values override defaults.
      * @param {Constructor} targetType Type to deserialize to.
      * @param {*} instance Actual instance to deserialize.
      * @returns An instance of the target type.
@@ -458,6 +460,8 @@ export class JsonSerializer {
                 // collection. An explicit null is left alone: that is the producer saying "no collection"
                 // rather than "an empty one".
                 value = [];
+            } else if (value === undefined) {
+                continue;
             }
 
             deserialized[field.name] = value;
