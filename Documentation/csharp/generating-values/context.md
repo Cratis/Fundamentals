@@ -71,7 +71,7 @@ static T Create<T>(GenerationContext context)
   The interfaces do not dispatch or fall back to each other.
 - **A `default` context is a bug.** A context with `Now` equal to `default` throws `MissingGenerationTime`; it does not fall back to the current time.
   This usually means a framework forgot to supply the context, or a spec built `new GenerationContext()`.
-- **Time before the Unix epoch throws.** `GenerationTimeBeforeUnixEpoch` is thrown when `Now` is earlier than 1970-01-01T00:00:00Z.
+- **Time-ordered ids reject time before the Unix epoch.** UUID v7, ULID and TypeID throw `GenerationTimeBeforeUnixEpoch` when `Now` is earlier than 1970-01-01T00:00:00Z. Date-bearing [patterns](patterns.md) support earlier dates and use the same captured UTC date for every segment.
 - **Do not add the context to every concept.** If a value does not depend on time or tenant, keep `IGeneratable<TSelf>`.
 
 ```text

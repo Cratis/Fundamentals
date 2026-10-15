@@ -39,6 +39,13 @@ If a type implements both, callers use the context form. Neither interface dispa
 | `string TypeId(string prefix, GenerationContext context)` | Same, using `context.Now` | 74 | Yes | `InvalidTypeIdPrefix`, `MissingGenerationTime`, `GenerationTimeBeforeUnixEpoch` |
 | `string NanoId(int size = 21, string? alphabet = null)` | `size` characters drawn uniformly from the alphabet | `size × log₂(alphabet length)` | No | `InvalidNanoIdSize`, `InvalidNanoIdAlphabet` |
 | `string Bytes(int count, ValueEncoding encoding = ValueEncoding.Base64Url)` | Encoded random bytes, no padding | `8 × count` | No | `InvalidByteCount`, `UnknownValueEncoding` |
+| `string Pattern(string pattern, Checksum checksum = Checksum.None)` | Finite printable-ASCII pattern with optional appended check digits | log₂(distinct admissible strings) | No | `InvalidValuePattern`, `PatternRequiresGenerationContext`, `EmptyPatternSupport`, `UnknownChecksum` |
+| `string Pattern(string pattern, GenerationContext context, Checksum checksum = Checksum.None)` | Same, with date segments from `context.Now.UtcDateTime` | Same; dates add none | No | `MissingGenerationTime`, `InvalidValuePattern`, `EmptyPatternSupport`, `UnknownChecksum` |
+| `long Integer(long minimum, long maximum)` | Inclusive Int64 range | log₂(maximum − minimum + 1) | No | `InvalidIntegerRange` |
+
+`bool HasValidChecksum(string value, Checksum checksum)` validates exact trailing check digits against the preceding ASCII digits.
+It returns false for non-printable/non-ASCII text, truncated or nondigit suffixes, incorrect arithmetic and Mod11 output 10.
+Null throws `ArgumentNullException`; None or an undefined algorithm throws `UnknownChecksum`.
 
 Argument limits:
 
@@ -47,7 +54,9 @@ Argument limits:
 - **NanoID alphabet:** 2 to 256 distinct printable ASCII characters (`0x20` to `0x7E`). Null selects the default alphabet
   `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-`, 64 characters, so the default 21 characters carry 126 bits.
 - **Bytes count:** 1 to 512.
-- **Context time:** `Now` equal to `default` throws `MissingGenerationTime`; a `Now` before 1970-01-01T00:00:00Z throws `GenerationTimeBeforeUnixEpoch`.
+- **Context time:** `Now` equal to `default` throws `MissingGenerationTime`, including date-free patterns. Only UUID v7, ULID and TypeID reject times before 1970-01-01T00:00:00Z with `GenerationTimeBeforeUnixEpoch`; patterns support earlier dates.
+- **Patterns:** require a random token; 256 final characters including check digits, repeats 1 to 64, printable ASCII only. Construction limits: 2,048 character positions, 10,000 distinct DFA/product states, 100,000,000 operations. See [Patterns and checksums](patterns.md) for the grammar and uniformity contract.
+- **Integers:** inclusive `long` bounds, including the full Int64 range. Equal bounds return that value; minimum greater than maximum throws `InvalidIntegerRange`.
 
 ## ValueEncoding
 
@@ -59,17 +68,35 @@ Argument limits:
 
 An undefined enum value throws `UnknownValueEncoding`.
 
+## Checksum
+
+| Member | Value | Suffix |
+| --- | --- | --- |
+| `None` | 0 | No check digits; permitted for Pattern only |
+| `Luhn` | 1 | One digit, doubling the rightmost payload digit |
+| `Mod11` | 2 | One digit, weights 2–7 from the right; payloads needing 10 are excluded |
+| `Mod97` | 3 | Two zero-padded ISO 7064 MOD 97-10 digits |
+
+All preceding ASCII digits contribute, including literal and UTC date digits; nondigits are ignored for arithmetic.
+An empty digit payload counts as zero. Check digits add no entropy. Pattern rejects undefined enum values with `UnknownChecksum`.
+
 ## Exceptions
 
 | Exception | Thrown when |
 | --- | --- |
 | `MissingGenerationTime` | A context overload receives a `default` `Now` |
-| `GenerationTimeBeforeUnixEpoch` | A context overload receives a `Now` before the Unix epoch |
+| `GenerationTimeBeforeUnixEpoch` | A UUID v7, ULID or TypeID context overload receives a `Now` before the Unix epoch |
 | `InvalidTypeIdPrefix` | The TypeID prefix is null or breaks the prefix rule |
 | `InvalidNanoIdSize` | The size is outside 1 to 256 |
 | `InvalidNanoIdAlphabet` | The alphabet is outside 2 to 256 characters, not distinct, or not printable ASCII |
 | `InvalidByteCount` | The count is outside 1 to 512 |
 | `UnknownValueEncoding` | The encoding is not a defined `ValueEncoding` |
+| `InvalidValuePattern` | The pattern is null, malformed or exceeds a length/construction limit; the message includes the pattern and reason |
+| `PatternRequiresGenerationContext` | A date-bearing pattern is generated without a context |
+| `EmptyPatternSupport` | No pattern payload has an emittable check digit for the substituted date |
+| `InvalidIntegerRange` | The minimum exceeds the maximum |
+| `UnknownChecksum` | The algorithm is undefined, or None is used for validation |
+| `ArgumentNullException` | `HasValidChecksum` receives null |
 
 ## Encodings of ULID and TypeID
 

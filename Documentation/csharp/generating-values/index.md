@@ -18,7 +18,7 @@ flowchart LR
     subgraph Concept["The concept declares how"]
         A["IGeneratable&lt;T&gt;<br/>static T New()"]
         B["IGeneratableInContext&lt;T&gt;<br/>static T New(GenerationContext)"]
-        C["GenerateValue<br/>Uuid, UuidV7, Ulid, TypeId, NanoId, Bytes"]
+        C["GenerateValue<br/>Uuid, UuidV7, Ulid, TypeId, NanoId, Bytes, Pattern, Integer"]
         A --> C
         B --> C
     end
@@ -43,7 +43,7 @@ flowchart LR
 By the end of this section you will:
 
 - make a concept generate its own values and call it from generic code;
-- pick between UUID v4, UUID v7, ULID, TypeID, NanoID and random bytes for a stated reason;
+- pick between UUID v4, UUID v7, ULID, TypeID, NanoID, random bytes, readable patterns and integers for a stated reason;
 - build identifiers whose time part follows the operation, not the clock at each call;
 - generate tokens and API keys without leaking them;
 - write specs that pin generated values instead of fighting them.
@@ -55,8 +55,9 @@ By the end of this section you will:
 | You want to see it working, start to finish | [Tutorial: generate your first values](tutorial.md) |
 | You know what you need and want the right strategy | [Choosing a strategy](choosing-a-strategy.md) |
 | A value must follow the operation's time or tenant | [Context-dependent values](context.md) |
+| A readable reference needs a format, UTC date or check digits | [Patterns and checksums](patterns.md) |
 | You are creating tokens, links, API keys or key material | [Secrets and tokens](secrets-and-tokens.md) |
 | Your specs break because ids are random | [Testing generated values](testing.md) |
 | You need exact signatures, limits and encodings | [Reference](reference.md) |
 
-The section needs `Cratis.Fundamentals` 7.24.0 or later. Concepts themselves are introduced on the [Concepts](../concepts.md) page.
+These APIs are in `Cratis.Fundamentals` and target .NET 8, 9 and 10. Concepts themselves are introduced on the [Concepts](../concepts.md) page.

@@ -6,6 +6,8 @@
   href: choosing-a-strategy.md
 - name: Context-dependent values
   href: context.md
+- name: Patterns and checksums
+  href: patterns.md
 - name: Secrets and tokens
   href: secrets-and-tokens.md
 - name: Testing generated values
