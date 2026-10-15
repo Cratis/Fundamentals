@@ -74,10 +74,15 @@ When a value is generated deep inside the code under test, assert what is guaran
 | Length | `Ulid()` is 26 characters; `NanoId()` is 21; a TypeID suffix is 26 |
 | Alphabet | Every character is in the alphabet you passed, or in the encoding's alphabet |
 | Prefix | A TypeID starts with `prefix_` |
+| Pattern | Literals, alphabets and repeat bounds match the declared format; pinned UTC dates match the context |
+| Check digits | `GenerateValue.HasValidChecksum(value, Checksum.Luhn)` is true for a Luhn-generated value |
+| Integer | The returned `long` is between both inclusive bounds |
 | Time | The embedded time falls between a `before` and an `after` you capture around the call |
 | Distinctness | Two calls return different values (not a statistical test) |
 
 Do not assert an exact random value, and do not generate ten thousand ids to prove uniqueness.
+For [patterns with dates](patterns.md), pin the `GenerationContext` and assert only the date and shape, not the random payload.
+A date-bearing pattern without context throws rather than consulting the wall clock.
 
 ## Test the failures
 

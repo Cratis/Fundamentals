@@ -13,7 +13,7 @@ flowchart TD
     Start([What is the value for?]) --> Secret{Does it grant access<br/>or protect data?}
     Secret -- yes --> Bytes["Bytes(32)<br/>see Secrets and tokens"]
     Secret -- no --> Human{Do people read<br/>or type it?}
-    Human -- yes --> Short["NanoId(size, alphabet)<br/>with a uniqueness check"]
+    Human -- yes --> Short["Pattern or NanoId<br/>with a uniqueness check"]
     Human -- no --> Order{Should it sort<br/>by creation time?}
     Order -- yes --> Shape{Guid column<br/>or string?}
     Shape -- Guid --> V7["UuidV7()"]
@@ -38,6 +38,8 @@ Random bits are the unpredictable part of each value. Collision figures are in t
 | Sortable string id | `GenerateValue.Ulid()` | `01M4TQ3WF8QS2APSEB06E8VGDK` | 80 | Sorts by age; reveals creation time; not monotonic within a millisecond |
 | Self-describing id in logs | `GenerateValue.TypeId("user")` | `user_01m4tq3wf8fs7s4ahqpprc3gt4` | 74 | The prefix names the type; time-ordered |
 | Stripe-style public id | `$"cus_{GenerateValue.Ulid().ToLowerInvariant()}"` | `cus_01m4tq3wcw1fn5912rd8rsmgcd` | 80 | Familiar format; prefix and case are plain string work |
+| Readable formatted reference | `GenerateValue.Pattern("ORD-[A-HJ-NP-Z2-9]{4}-#{4,6}")` | `ORD-A3K8-12345` | log₂(distinct strings) | Needs a unique constraint or freshness protection; see [Patterns and checksums](patterns.md) |
+| Numeric ticket | `GenerateValue.Integer(100000, 999999)` | `483921` | about 19.8 | Inclusive bounds; not a sequence or a high-entropy id |
 | Short typed code | `GenerateValue.NanoId(10, "23456789ABCDEFGHJKLMNPQRSTUVWXYZ")` | `SA65PT7D2G` | 50 | No look-alike characters; needs a uniqueness check |
 | Compact URL-safe id | `GenerateValue.NanoId()` | `qlBnph5vVBJeX4gbqCwm5` | 126 | 21 characters |
 | Token, reset link, API key | `GenerateValue.Bytes(32)` | `gziGp2TEJPHWl6ztCXqiKMj7NVcyO3JhGD7t59Qe204` | 256 | Secret; see [Secrets and tokens](secrets-and-tokens.md) |
@@ -64,7 +66,8 @@ collision reaches 1% is about the square root of `2 × 2^bits × ln(1/0.99)`:
 | 80 | about 160 billion |
 | 122 | about 3 × 10¹⁷ |
 
-- Below 64 bits, generate only with a uniqueness check, such as a unique index and a retry.
+- Below 64 bits, generate only with a unique constraint or freshness protection. Reject a collision explicitly; the pattern generator never redraws values to satisfy checksums or domain rules.
+- Pattern dates and check digits add no entropy. Mod11 exclusions reduce the admissible population before uniform sampling.
 - Size for the total population over the life of the system, not for one request.
 - No strategy guarantees uniqueness.
 
@@ -77,8 +80,8 @@ collision reaches 1% is about the square root of `2 × 2^bits × ln(1/0.99)`:
 - **The value would authorize something.** A generated id identifies; it never proves who is calling. Never use an id as a credential.
 - **A secret would come from a time-ordered id.** UUID v7, ULID and TypeID expose creation time and have fewer random bits. Use `Bytes`.
 
-Not available today: date-segment patterns such as `INV-2026-…`, random integers and check digits. Compose those from your own code
-around `GenerateValue`.
+For a dated reference with check digits, use the [context-bearing Pattern overload](patterns.md#fix-dates-to-the-operation).
+Use random integers for tickets, not counters: repeated calls may return the same value, and neither strategy allocates a legal invoice sequence.
 
 ## Next steps
 

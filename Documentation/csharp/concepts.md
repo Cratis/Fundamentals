@@ -73,7 +73,10 @@ A concept can implement `IGeneratable<TSelf>` to declare a static `New()` method
 When generation depends on the operation's clock or tenant, implement `IGeneratableInContext<TSelf>` with `New(GenerationContext context)` instead.
 If a type implements both interfaces, callers use the context form.
 Use `GenerateValue.Uuid()` for default random identifiers, `UuidV7()`, `Ulid()`, or `TypeId(prefix)` for time-ordered identifiers,
-and `NanoId()` or `Bytes(count)` for random strings. The time-ordered strategies also accept a `GenerationContext` to use its captured time.
+and `NanoId()` or `Bytes(count)` for random strings. Use `Pattern(pattern, checksum)` for readable formats with optional check digits,
+or `Integer(minimum, maximum)` for an unbiased inclusive Int64 range. Date-bearing patterns require `Pattern(pattern, context, checksum)`
+and use the captured UTC date; check supplied values explicitly with `HasValidChecksum(value, checksum)`.
+The time-ordered strategies also accept a `GenerationContext` to use its captured time.
 The [Generating values](generating-values/index.md) section walks through the concept patterns, strategy choice, security trade-offs, and testing with known values or a pinned clock.
 
 ## Implicit Operators
