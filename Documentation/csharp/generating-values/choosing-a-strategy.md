@@ -66,7 +66,7 @@ collision reaches 1% is about the square root of `2 × 2^bits × ln(1/0.99)`:
 | 80 | about 160 billion |
 | 122 | about 3 × 10¹⁷ |
 
-- Below 64 bits, generate only with a unique constraint or freshness protection. Reject a collision explicitly; the pattern generator never redraws values to satisfy checksums or domain rules.
+- Below 64 bits, generate only with a unique constraint or [freshness protection](/arc/backend/csharp/chronicle/commands/fresh-identifiers/). Reject a collision explicitly; the pattern generator never redraws values to satisfy checksums or domain rules.
 - Pattern dates and check digits add no entropy. Mod11 exclusions reduce the admissible population before uniform sampling.
 - Size for the total population over the life of the system, not for one request.
 - No strategy guarantees uniqueness.
