@@ -105,7 +105,7 @@ Limits are 256 final characters **including check digits**, 64 repetitions per t
 10,000 distinct DFA/product states and 100,000,000 construction/counting operations. Exceeding a budget throws
 `InvalidValuePattern` rather than silently changing the format or falling back to another strategy.
 
-Below 64 bits of entropy, use a unique constraint or freshness protection. Short readable references and random ticket numbers
+Below 64 bits of entropy, use a unique constraint or [freshness protection](/arc/backend/csharp/chronicle/commands/fresh-identifiers/). Short readable references and random ticket numbers
 are poor substitutes for high-entropy entity identities, credentials or gapless legal invoice numbers.
 
 ## Random integer references
