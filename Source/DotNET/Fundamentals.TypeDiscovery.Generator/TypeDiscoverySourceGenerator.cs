@@ -117,6 +117,7 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
                 !s.IsAnonymousType &&
                 !s.IsFileLocal &&
                 s.CanBeReferencedByName &&
+                !s.IsNestedInGenericType() &&
                 !ambiguousFqdns.Contains(s.GetTypeOfExpression()))
             .ToImmutableArray();
 
