@@ -1,3 +1,6 @@
+---
+description: Represent a time of day without date or time zone in TypeScript with TimeOnly, the counterpart of .NET System.TimeOnly.
+---
 # TimeOnly
 
 `TimeOnly` represents a time of day with no date and no time zone. It is the TypeScript counterpart of .NET's `System.TimeOnly`.

@@ -1,3 +1,6 @@
+---
+description: Create strongly-typed TypeScript identifiers and value objects that wrap string, number or boolean with the ConceptAs class.
+---
 # ConceptAs
 
 The `ConceptAs<T>` abstract class provides a TypeScript equivalent to the C# `ConceptAs<T>`, allowing you to create strongly-typed domain identifiers and value objects that wrap primitive types such as `string`, `number`, or `boolean`.

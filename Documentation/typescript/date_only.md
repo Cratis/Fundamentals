@@ -1,3 +1,6 @@
+---
+description: Represent a calendar date without time or time zone in TypeScript with DateOnly, the counterpart of .NET System.DateOnly.
+---
 # DateOnly
 
 `DateOnly` represents a date with no time and no time zone — a day on a calendar. It is the TypeScript counterpart of .NET's `System.DateOnly`.

@@ -1,3 +1,6 @@
+---
+description: Understand the Point, LineString and Polygon geospatial types in TypeScript and which one fits a location, a path or an area.
+---
 # Understanding Geospatial Types
 
 Geospatial types represent locations and areas on Earth's surface. Cratis provides three core types, each suited for different scenarios.

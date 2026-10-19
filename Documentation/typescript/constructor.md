@@ -1,3 +1,6 @@
+---
+description: Use the Constructor type to accept a class constructor in TypeScript APIs that create or deserialize typed instances.
+---
 # Constructor
 
 The `Constructor<T>` type represents a class constructor signature.

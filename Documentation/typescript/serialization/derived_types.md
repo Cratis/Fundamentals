@@ -1,3 +1,6 @@
+---
+description: Deserialize polymorphic JSON into the correct TypeScript classes with derived type identifiers that match the .NET backend.
+---
 # DerivedTypes Serialization (Frontend)
 
 The DerivedTypes serialization system in the TypeScript frontend provides seamless polymorphic serialization that works hand-in-hand with the backend .NET implementation. This system allows you to deserialize JSON objects into their correct TypeScript class instances based on type identifiers.

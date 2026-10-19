@@ -1,3 +1,6 @@
+---
+description: Parse, format and serialize time intervals in TypeScript using TimeSpan, compatible with .NET System.TimeSpan strings.
+---
 # TimeSpan
 
 `TimeSpan` represents a time interval compatible with .NET `System.TimeSpan` string formatting.
