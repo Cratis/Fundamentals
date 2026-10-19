@@ -1,3 +1,6 @@
+---
+description: Generate trace span implementations from partial methods marked with Span using the Cratis.Metrics.Roslyn source generator.
+---
 # Trace Source Generation
 
 The `Cratis.Metrics.Roslyn` package can generate trace span implementations from partial methods decorated with `[Span]`. This keeps raw `ActivitySource` usage out of your business code and applies a consistent convention for span creation and tagging.

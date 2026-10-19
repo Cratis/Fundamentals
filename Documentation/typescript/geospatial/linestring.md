@@ -1,3 +1,6 @@
+---
+description: Create and use a TypeScript LineString, a path of two or more geographic points, for routes, boundaries and trajectories.
+---
 # LineString
 
 ## What is a LineString?

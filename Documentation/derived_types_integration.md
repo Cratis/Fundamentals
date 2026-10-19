@@ -1,3 +1,6 @@
+---
+description: See how DerivedTypes in .NET and TypeScript share type identifiers so polymorphic objects serialize across the client-server boundary.
+---
 # DerivedTypes Integration: Backend and Frontend
 
 This document explains how the DerivedTypes serialization systems in the .NET backend and TypeScript frontend work together to provide seamless polymorphic serialization across your full-stack application.

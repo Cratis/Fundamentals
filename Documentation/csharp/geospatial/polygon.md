@@ -1,3 +1,6 @@
+---
+description: Create and use a .NET Polygon, a bounded area made of closed rings with optional holes, for regions, parcels and geofences.
+---
 # Polygon
 
 ## What is a Polygon?

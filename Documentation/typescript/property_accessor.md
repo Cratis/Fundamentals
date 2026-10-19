@@ -1,3 +1,6 @@
+---
+description: Use the PropertyAccessor type to pass strongly-typed property-selection callbacks in TypeScript.
+---
 # PropertyAccessor
 
 The `PropertyAccessor<T>` type represents a function that accesses a property from an instance.

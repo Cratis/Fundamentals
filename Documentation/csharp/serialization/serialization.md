@@ -1,3 +1,6 @@
+---
+description: Configure the default JsonSerializerOptions in .NET with support for concepts, DateOnly, TimeOnly, polymorphism and type discriminators.
+---
 # JSON Serialization
 
 ## JsonSerializerOptions

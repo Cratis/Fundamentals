@@ -1,5 +1,6 @@
 ---
 uid: Fundamentals.Concepts
+description: Wrap primitive values in ConceptAs types so ids and values get compile-time safety, serialization and validation from the type itself.
 ---
 # Concepts
 

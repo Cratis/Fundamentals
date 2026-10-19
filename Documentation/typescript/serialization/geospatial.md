@@ -1,3 +1,6 @@
+---
+description: Serialize TypeScript Point, LineString and Polygon objects to and from GeoJSON with JsonSerializer and no extra configuration.
+---
 # Geospatial Serialization
 
 Geospatial types (Point, LineString, Polygon) serialize to [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/) format — the standard representation for geographic data in JSON.

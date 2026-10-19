@@ -1,3 +1,6 @@
+---
+description: Use ValueMap in TypeScript as a Map whose complex keys are compared by value instead of object reference.
+---
 # ValueMap
 
 `ValueMap<TKey, TValue>` is a map implementation for complex keys where key equality is based on value content instead of object reference identity.

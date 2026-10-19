@@ -1,3 +1,6 @@
+---
+description: Serialize and deserialize ValueMap with JsonSerializer so complex dictionary keys from the backend come back as typed keys.
+---
 # ValueMap Serialization
 
 This page describes how `ValueMap<TKey, TValue>` is serialized and deserialized with `JsonSerializer`.

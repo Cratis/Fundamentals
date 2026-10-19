@@ -1,3 +1,6 @@
+---
+description: Create, parse, convert and compare GUIDs in TypeScript with the Guid class from @cratis/fundamentals.
+---
 # GUID
 
 The `Guid` class provides robust GUID (Globally Unique Identifier) creation and manipulation utilities for JavaScript/TypeScript applications.

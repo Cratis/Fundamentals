@@ -1,3 +1,6 @@
+---
+description: Serialize TypeScript objects to JSON and back as real class instances using the field decorator, DerivedTypes and JsonSerializer.
+---
 # Serialization
 
 The Fundamentals frontend package provides a comprehensive serialization system that enables type-safe JSON serialization and deserialization in TypeScript. This system maintains object identity, method access, and polymorphic type handling throughout the serialization process.

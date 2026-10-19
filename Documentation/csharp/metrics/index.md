@@ -1,3 +1,6 @@
+---
+description: Track application metrics in .NET with a typed API over System.Diagnostics.Metrics, with optional source generation for metric methods.
+---
 # Metrics
 
 The Cratis Fundamentals library provides a comprehensive metrics system for tracking and monitoring your application's performance and behavior. This system is built on top of .NET's System.Diagnostics.Metrics and provides a developer-friendly API with source generation capabilities.

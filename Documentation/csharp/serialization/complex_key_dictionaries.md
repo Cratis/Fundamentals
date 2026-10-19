@@ -1,3 +1,6 @@
+---
+description: Serialize .NET dictionaries with complex object keys to JSON and back with the ComplexKeyDictionaryJsonConverterFactory.
+---
 # Complex Key Dictionaries
 
 The default JSON object model uses string property names. This means dictionaries with complex object keys need a custom conversion strategy to preserve typed keys across serialization boundaries.

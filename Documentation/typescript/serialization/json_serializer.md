@@ -1,3 +1,6 @@
+---
+description: Serialize and deserialize TypeScript objects to JSON with JsonSerializer, keeping class instances, methods and runtime types intact.
+---
 # JsonSerializer
 
 The `JsonSerializer` is the core utility for serializing and deserializing TypeScript objects to and from JSON. It works seamlessly with the `@field` decorator system and `@derivedType` decorators to provide type-safe, round-trip serialization that preserves runtime types and method access.

@@ -1,6 +1,9 @@
+---
+description: "@cratis/fundamentals is the npm package of TypeScript utilities for typed concepts, serialization, geospatial types and dates, matching the .NET package."
+---
 # TypeScript (JavaScript/TypeScript)
 
-TypeScript documentation for Fundamentals JavaScript/TypeScript package - an [npm package](https://www.npmjs.com/package/@cratis/fundamentals) that offers common utilities, formalizations and abstractions.
+`@cratis/fundamentals` is the [npm package](https://www.npmjs.com/package/@cratis/fundamentals) of common utilities, formalizations and abstractions for JavaScript and TypeScript applications, mirroring the .NET `Cratis.Fundamentals` package.
 
 ## Overview
 

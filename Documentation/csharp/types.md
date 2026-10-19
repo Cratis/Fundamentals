@@ -1,3 +1,6 @@
+---
+description: Discover types across project-referenced and prefixed package assemblies at runtime with Cratis.Types instead of configuring them by hand.
+---
 # Types
 
 The fundamentals package includes `Cratis.Types`, which provides mechanisms for discovering types in the project referenced assemblies.

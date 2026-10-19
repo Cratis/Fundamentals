@@ -1,3 +1,6 @@
+---
+description: Generate metric method implementations from partial methods with the Cratis.Metrics.Roslyn source generator and avoid boilerplate.
+---
 # Metrics Roslyn Source Generator
 
 The `Cratis.Metrics.Roslyn` package provides a powerful source generator that automatically implements metrics methods for you. This eliminates boilerplate code and ensures consistent, efficient metrics collection across your application.
