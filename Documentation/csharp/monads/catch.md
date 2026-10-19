@@ -1,3 +1,6 @@
+---
+description: Turn exception-throwing .NET code into values with the Catch monad so failures compose without try-catch blocks.
+---
 # Catch
 
 The `Catch` monad represents operations that may throw exceptions, converting exception-based error handling into value-based handling. It captures exceptions as values, enabling functional composition without try-catch blocks.

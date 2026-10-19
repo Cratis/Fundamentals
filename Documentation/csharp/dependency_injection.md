@@ -1,3 +1,6 @@
+---
+description: Register .NET services by naming convention, bind self-types and control lifetimes with attributes using Cratis.DependencyInjection.
+---
 # Dependency Injection
 
 The `Cratis.DependencyInjection` namespace provides convention-based dependency injection features that simplify service registration in .NET applications. These utilities help reduce boilerplate code when working with Microsoft's dependency injection container.

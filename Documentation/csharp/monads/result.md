@@ -1,3 +1,6 @@
+---
+description: Return success or a typed error from .NET operations with the Result monad instead of using exceptions for control flow.
+---
 # Result
 
 The `Result` monad represents the outcome of an operation that can either succeed or fail. It provides type-safe handling of both success and error states without relying on exceptions for control flow.

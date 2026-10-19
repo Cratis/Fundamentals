@@ -1,3 +1,6 @@
+---
+description: Serialize and deserialize polymorphic .NET objects by runtime type with DerivedTypeAttribute and the DerivedTypes registry.
+---
 # DerivedTypes Serialization (Backend)
 
 The DerivedTypes serialization system in the .NET backend provides a powerful mechanism for polymorphic serialization, allowing you to serialize and deserialize objects where the exact type is determined at runtime. This is particularly useful when working with interfaces or base classes that can have multiple implementations.

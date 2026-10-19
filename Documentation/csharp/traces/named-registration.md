@@ -1,3 +1,6 @@
+---
+description: Register several named activity sources in one .NET application and resolve each explicitly through keyed services.
+---
 # Named activity source registration
 
 Use named registration when you want multiple logical activity sources in the same application and resolve them explicitly with keyed services.

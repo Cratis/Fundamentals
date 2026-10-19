@@ -1,3 +1,6 @@
+---
+description: Cratis.Fundamentals is the .NET package for strongly-typed concepts, serialization, dependency injection and type discovery used across Cratis.
+---
 # C# (.NET)
 
 `Cratis.Fundamentals` is the [NuGet package](https://www.nuget.org/packages/Cratis.Fundamentals/) the

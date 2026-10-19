@@ -1,3 +1,6 @@
+---
+description: Create and use a .NET Point, a single longitude and latitude location, for addresses, landmarks and device positions.
+---
 # Point
 
 ## What is a Point?

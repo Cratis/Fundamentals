@@ -1,3 +1,6 @@
+---
+description: Find the .NET serialization topics in Cratis.Fundamentals, from JSON options and polymorphism to dictionaries and date and time types.
+---
 # Serialization
 
 This section covers various aspects of serialization in the Fundamentals package, including JSON serialization, type handling, and specific converters for .NET types.

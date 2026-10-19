@@ -1,3 +1,6 @@
+---
+description: Serialize and bind DateOnly and TimeOnly in .NET with the System.Text.Json converters and type converters in Cratis.Fundamentals.
+---
 # Date & Time Only
 
 In .NET 6, two new types were introduced: `DateOnly` and `TimeOnly`.

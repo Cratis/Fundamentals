@@ -1,3 +1,6 @@
+---
+description: Represent a value that may be absent with the .NET Option monad instead of null, so callers must handle both cases.
+---
 # Option
 
 The `Option<TValue>` monad represents an optional value that may or may not be present. It provides a type-safe alternative to null references, making the optionality explicit in the type system.

@@ -1,3 +1,6 @@
+---
+description: Register several named meters in one .NET application and resolve each explicitly through keyed services.
+---
 # Named meter registration
 
 Use named registration when you want multiple logical meter sources in the same application and resolve them explicitly with keyed services.

@@ -1,3 +1,6 @@
+---
+description: Work with GeoJSON-compatible Point, LineString and Polygon types in .NET that serialize automatically and round-trip with TypeScript.
+---
 # Geospatial Types
 
 Cratis provides strongly-typed geospatial types for working with geographic coordinates following the [GeoJSON specification](https://www.mongodb.com/docs/manual/reference/geojson/).

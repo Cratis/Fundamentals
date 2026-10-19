@@ -1,3 +1,6 @@
+---
+description: Handle optional values, operation results and exceptions explicitly in .NET with the Option, Result and Catch monads.
+---
 # Monads
 
 Monads provide a functional programming approach to handling common patterns like optional values, operation results, and exception handling. They enable explicit and type-safe handling of success and failure paths without relying on exceptions or null values.

@@ -1,3 +1,6 @@
+---
+description: Serialize .NET Point, LineString and Polygon types to and from GeoJSON, with converters registered automatically.
+---
 # Geospatial Serialization
 
 Geospatial types (Point, LineString, Polygon) serialize to [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/) format — the standard representation for geographic data in JSON.
