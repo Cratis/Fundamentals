@@ -9,7 +9,9 @@
         "serialization",
         "guid",
         "concepts",
-        "reflection"
+        "reflection",
+        "dotnet",
+        "domain-driven-design"
     ],
     "homepage": "https://www.cratis.io/fundamentals/",
     "author": "Cratis",
