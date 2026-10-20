@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <IsTestProject>true</IsTestProject>
+        <IsPackable>false</IsPackable>
         <AssemblyName>Cratis.Fundamentals.Specs</AssemblyName>
         <RootNamespace>Cratis</RootNamespace>
     </PropertyGroup>
