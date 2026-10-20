@@ -3,13 +3,15 @@ description: Use the Constructor type to accept a class constructor in TypeScrip
 ---
 # Constructor
 
-The `Constructor<T>` type represents a class constructor signature.
+`Constructor<T>` describes a class constructor that produces an instance of `T`. Use it when a function needs the class itself at runtime, rather than an already-created instance or a TypeScript-only interface.
 
 ```typescript
 export type Constructor<T = any> = new (...args: any[]) => T;
 ```
 
-Use this type when APIs need a runtime constructor function for creating or deserializing typed instances.
+The generic parameter describes the instance returned by `new`, not the class's static members. The alias accepts any constructor arguments and defaults its result type to `any`, so specify `T` when callers should retain a known instance type.
+
+A class value such as `Customer` can be passed as the constructor. An interface cannot: TypeScript erases interfaces, so they supply no runtime value to instantiate.
 
 ## Example
 
@@ -21,7 +23,7 @@ function createInstance<T>(ctor: Constructor<T>): T {
 }
 
 class Customer {
-    name = 'Ada';
+    name = 'Sample customer';
 }
 
 const customer = createInstance(Customer);
@@ -29,4 +31,12 @@ const customer = createInstance(Customer);
 
 ## Common Usage
 
-In Fundamentals, `Constructor<T>` is commonly used by decorators and serialization helpers to keep runtime type information.
+The factory above calls `new ctor()` without arguments. Although the alias allows classes with required parameters, this factory does not supply them. Use classes that can be constructed without arguments for this example, or design your factory to pass the arguments its classes need. The broad alias alone does not enforce that restriction.
+
+Fundamentals uses `Constructor` in field metadata and `JsonSerializer` entry points. For example, deserialization receives a target class and creates an instance with `new targetType()`. Passing a constructor tells the serializer which class to create; field metadata describes how to populate its properties. The alias itself performs neither serialization nor runtime validation.
+
+## See also
+
+- [PropertyAccessor](property_accessor.md) — accept a callback over an existing instance
+- [JsonSerializer](serialization/json_serializer.md) — deserialize into a target class
+- [Field decorator](serialization/field_decorator.md) — declare runtime field metadata
