@@ -45,9 +45,7 @@ internal static class GeneratedSourceBuilder
                 // Discovery lists every type it finds, and a package is free to mark one of its types [Obsolete] -
                 // a typeof of it here is then an obsolete-member warning, an error in any project that treats
                 // warnings as errors, in code nobody can edit or suppress by path. Listing a type is not using it.
-                // TEMPORARY (Specifications 5.0 trial): Cratis.Specifications 5.0 exposes public [Experimental] types
-                // (CRSPECEXP01) that discovery lists from the referenced assembly. See .ai-work/spec5/findings.md.
-                "#pragma warning disable CS0612, CS0618, CRSPECEXP01",
+                "#pragma warning disable CS0612, CS0618",
                 string.Empty,
                 "namespace Cratis.Types.Generated;",
                 string.Empty,
