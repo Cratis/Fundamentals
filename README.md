@@ -48,6 +48,37 @@ The following are prerequisites to work with this repository.
 * [Node 16+](https://nodejs.org/en)
 * [Yarn](https://yarnpkg.com)
 
+### Running .NET specifications
+
+The specifications use Cratis.Specifications 5.0 on the native xUnit v3 runner and require .NET 10.
+Specification projects target net10.0 only; libraries still build and pack for net8.0, net9.0, and net10.0.
+
+From the repository root, build once and run the five specification executables in parallel:
+
+```bash
+dotnet build -c Release
+bash .github/scripts/run-specifications.sh Release
+```
+
+Logs and TRX results go under `TestResults/`. The script fails if a project is missing, fails, or runs zero tests.
+Use `bash .github/scripts/run-specifications.sh --self-test` to check the runner's failure guards.
+
+For a single project, run its executable directly (append `.exe` on Windows):
+
+```bash
+Source/DotNET/Fundamentals.Specs/bin/Release/net10.0/Cratis.Fundamentals.Specs
+```
+
+Use `-method`, `-class`, or `-namespace` with a fully qualified name to filter the executable's tests;
+run it with `-?` to see all options. For example:
+
+```bash
+Source/DotNET/Fundamentals.Specs/bin/Release/net10.0/Cratis.Fundamentals.Specs -namespace 'Cratis.Concepts*'
+```
+
+`dotnet test -c Release --no-build` and IDE test explorers continue to use the VSTest adapter.
+They do not require Microsoft.Testing.Platform configuration. For Debug, build with `dotnet build` and run `dotnet test --no-build`.
+
 ### Central Package Management
 
 This repository leverages [Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management), which
