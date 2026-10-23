@@ -17,13 +17,17 @@ internal static class GeneratedSourceBuilder
     /// <param name="contractsAndImplementors">The contract-to-implementors map entries.</param>
     /// <param name="conventionServiceBindings">The I&lt;X&gt;/&lt;X&gt; convention bindings.</param>
     /// <param name="conventionSelfBindings">The self-binding type entries.</param>
+    /// <param name="experimentalDiagnosticIds">Diagnostic ids of [Experimental] types referenced by the generated code, to suppress.</param>
     /// <returns>The complete C# source text.</returns>
     public static string Build(
         ImmutableArray<string> namedTypes,
         ImmutableArray<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> contractsAndImplementors,
         ImmutableArray<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> conventionServiceBindings,
-        ImmutableArray<(string ImplementationExpression, string LifetimeExpression)> conventionSelfBindings)
+        ImmutableArray<(string ImplementationExpression, string LifetimeExpression)> conventionSelfBindings,
+        ImmutableArray<string> experimentalDiagnosticIds = default)
     {
+        var experimentalIds = experimentalDiagnosticIds.IsDefault ? [] : experimentalDiagnosticIds;
+        var suppressedDiagnostics = string.Join(", ", ["CS0612", "CS0618", .. experimentalIds]);
         var definedTypes = string.Join(",\n", namedTypes.Select(static name => $"        typeof({name})"));
 
         var generatedServiceBindings = string.Join(
@@ -45,7 +49,8 @@ internal static class GeneratedSourceBuilder
                 // Discovery lists every type it finds, and a package is free to mark one of its types [Obsolete] -
                 // a typeof of it here is then an obsolete-member warning, an error in any project that treats
                 // warnings as errors, in code nobody can edit or suppress by path. Listing a type is not using it.
-                "#pragma warning disable CS0612, CS0618",
+                // Types marked [Experimental("ID")] likewise raise ID wherever they are referenced.
+                $"#pragma warning disable {suppressedDiagnostics}",
                 string.Empty,
                 "namespace Cratis.Types.Generated;",
                 string.Empty,
