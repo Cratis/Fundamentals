@@ -11,8 +11,17 @@ import { test } from 'node:test';
 const scripts = dirname(fileURLToPath(import.meta.url));
 const root = resolve(scripts, '../..');
 
+function pathWithoutPython(directory) {
+    const tools = join(directory, 'tools');
+    mkdirSync(tools);
+    for (const [name, executable] of [['bash', '/bin/bash'], ['dirname', '/usr/bin/dirname']]) {
+        writeFileSync(join(tools, name), `#!/bin/sh\nexec ${executable} "$@"\n`, { mode: 0o755 });
+    }
+    return tools;
+}
+
 function fixture(t, options = {}) {
-    const { count = 5, missing = -1, exits = {}, totals = {}, documents = {}, noTrx = -1, windows = false } = options;
+    const { count = 5, missing = -1, exits = {}, totals = {}, documents = {}, noTrx = -1, windows = false, missingPython = false } = options;
     mkdirSync(join(root, '.ai-work'), { recursive: true });
     const directory = mkdtempSync(join(root, '.ai-work/run-specifications-test-'));
     t.after(() => rmSync(directory, { recursive: true }));
@@ -37,7 +46,12 @@ exit ${exits[index] ?? 0}
     const result = spawnSync('bash', [join(target, 'run-specifications.sh'), 'Release'], {
         encoding: 'utf8',
         timeout: 10000,
-        env: { ...process.env, EXPECTED_SPECIFICATION_PROJECTS: '5', OS: windows ? 'Windows_NT' : 'Linux' }
+        env: {
+            ...process.env,
+            EXPECTED_SPECIFICATION_PROJECTS: '5',
+            OS: windows ? 'Windows_NT' : 'Linux',
+            PATH: missingPython ? pathWithoutPython(directory) : process.env.PATH
+        }
     });
     assert.ifError(result.error);
     return { ...result, directory };
@@ -52,6 +66,13 @@ test('runs all five executables and reports their logs and totals', t => {
     const files = readdirSync(join(runs, readdirSync(runs)[0]));
     assert.equal(files.filter(name => name.endsWith('.trx')).length, 5);
     assert.equal(files.filter(name => name.endsWith('.log')).length, 5);
+});
+
+test('requires Python before starting any project', t => {
+    const result = fixture(t, { missingPython: true });
+    assert.equal(result.status, 2);
+    assert.match(result.stdout, /::error::python3 is required to validate specification TRX results/);
+    assert.doesNotMatch(result.stdout, /executed/);
 });
 
 test('rejects an empty or incomplete project population', async t => {
