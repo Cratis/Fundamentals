@@ -11,7 +11,7 @@ env:
 
 on:
   pull_request_target:
-    types: [opened, edited, synchronize, reopened]
+    types: [opened, synchronize, reopened]
     branches:
       - "**"
     paths:
