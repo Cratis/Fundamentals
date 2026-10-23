@@ -135,7 +135,16 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
             .OrderBy(static e => e.ImplementationExpression, StringComparer.Ordinal)
             .ToImmutableArray();
 
-        var source = GeneratedSourceBuilder.Build(namedTypes, contractsAndImplementors, conventionServiceBindings, conventionSelfBindings);
+        // Everything above is emitted as typeof(...), including contracts (base types and interfaces) of the
+        // discovered types, so gather the [Experimental] ids from all of those.
+        var experimentalDiagnosticIds = symbols
+            .Concat(packageSymbols)
+            .SelectMany(static s => s.GetExperimentalDiagnosticIds())
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(static id => id, StringComparer.Ordinal)
+            .ToImmutableArray();
+
+        var source = GeneratedSourceBuilder.Build(namedTypes, contractsAndImplementors, conventionServiceBindings, conventionSelfBindings, experimentalDiagnosticIds);
         context.AddSource("GeneratedTypeDiscoveryProvider.g.cs", source);
     }
 
