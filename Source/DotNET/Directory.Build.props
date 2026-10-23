@@ -53,15 +53,16 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(IsTestProject)'=='true'">
-        <PackageReference Include="Cratis.Specifications.XUnit" />
+        <PackageReference Include="Cratis.Specifications.XUnit.v3" />
         <PackageReference Include="Moq" />
-        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.v3.mtp-off" />
         <PackageReference Include="xunit.runner.visualstudio" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <Compile Include="$(MSBuildThisFileDirectory)/GlobalUsings.Specs.cs" />
     </ItemGroup>
 
     <!--
+        An xUnit v3 test project is also an executable, but still needs the VSTest adapter for IDEs.
         A test project without the VSTest adapter beside it is not a failing test project - it is an
         invisible one. `dotnet test` reports "No test is available", skips it, and exits 0, so its specs
         simply stop counting and nothing says so. Three projects in this repo were in that state.
