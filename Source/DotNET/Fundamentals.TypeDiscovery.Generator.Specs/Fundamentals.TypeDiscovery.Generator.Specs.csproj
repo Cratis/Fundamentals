@@ -2,6 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <IsTestProject>true</IsTestProject>
+        <!-- xUnit v3 test projects are executables -->
+        <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
         <AssemblyName>Cratis.Fundamentals.TypeDiscovery.Generator.Specs</AssemblyName>
         <RootNamespace>Cratis.Fundamentals.TypeDiscovery.Generator.Specs</RootNamespace>

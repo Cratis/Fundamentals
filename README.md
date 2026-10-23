@@ -48,6 +48,37 @@ The following are prerequisites to work with this repository.
 * [Node 16+](https://nodejs.org/en)
 * [Yarn](https://yarnpkg.com)
 
+### Running .NET specifications
+
+The specifications use Cratis.Specifications 5.0 on the native xUnit v3 runner and require .NET 10.
+Specification projects target net10.0 only; libraries still build and pack for net8.0, net9.0, and net10.0.
+
+From the repository root, build once and run the five specification executables in parallel:
+
+```bash
+dotnet build -c Release
+bash .github/scripts/run-specifications.sh Release
+```
+
+Logs and TRX results go under `TestResults/`. The script fails if a project is missing, fails, or runs zero tests.
+Use `bash .github/scripts/run-specifications.sh --self-test` to check the runner's failure guards.
+
+For a single project, run its executable directly (append `.exe` on Windows):
+
+```bash
+Source/DotNET/Fundamentals.Specs/bin/Release/net10.0/Cratis.Fundamentals.Specs
+```
+
+Use `-method`, `-class`, or `-namespace` with a fully qualified name to filter the executable's tests;
+run it with `-?` to see all options. For example:
+
+```bash
+Source/DotNET/Fundamentals.Specs/bin/Release/net10.0/Cratis.Fundamentals.Specs -namespace 'Cratis.Concepts*'
+```
+
+`dotnet test -c Release --no-build` and IDE test explorers continue to use the VSTest adapter.
+They do not require Microsoft.Testing.Platform configuration. For Debug, build with `dotnet build` and run `dotnet test --no-build`.
+
 ### Central Package Management
 
 This repository leverages [Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management), which
@@ -86,14 +117,14 @@ In a package, all you need to do is to define the scripts to use the global scri
 
 This project is part of [Cratis](https://www.cratis.io) — free, MIT-licensed tools for building event-sourced and CQRS applications.
 
-- **[Chronicle](https://github.com/Cratis/Chronicle)** — event-sourcing database and runtime. Orleans-based kernel, pluggable storage (MongoDB default; PostgreSQL, SQL Server, SQLite, in-memory), language-agnostic gRPC contracts. [Docs](https://www.cratis.io/chronicle/)
-- **Chronicle clients** — first-class [.NET SDK](https://github.com/Cratis/Chronicle), plus [TypeScript](https://github.com/Cratis/Chronicle.TypeScript), [Kotlin/Java](https://github.com/Cratis/Chronicle.Kotlin), and [Elixir](https://github.com/Cratis/Chronicle.Elixir); [Python](https://github.com/Cratis/Chronicle.Python) coming soon (pre-alpha). AI agents connect through the [Chronicle MCP server](https://github.com/Cratis/Chronicle.Mcp).
-- **[Arc](https://github.com/Cratis/Arc)** — opinionated CQRS framework for ASP.NET Core with commands, queries, validation, authorization, and TypeScript proxy generation. Works without event sourcing. [Docs](https://www.cratis.io/arc/)
-- **[Components](https://github.com/Cratis/Components)** — React components aligned with Arc patterns. [Docs](https://www.cratis.io/components/)
-- **[CLI](https://github.com/Cratis/cli) + Workbench** — inspect and diagnose Chronicle from the terminal or the browser. [Docs](https://www.cratis.io/cli/)
-- **Model-first layer (experimental)** — Studio, [Screenplay](https://github.com/Cratis/Screenplay), [Stage](https://github.com/Cratis/Stage), [Scene](https://github.com/Cratis/Scene), [Prologue](https://github.com/Cratis/Prologue)
-- **Supporting** — [Fundamentals](https://github.com/Cratis/Fundamentals), [Specifications](https://github.com/Cratis/Specifications), [Synopsis](https://github.com/Cratis/Synopsis), [Lens](https://github.com/Cratis/Lens), [Narrator](https://github.com/Cratis/Narrator), and free [AI tooling](https://github.com/Cratis/AI) (preview); Ensemble coming soon (pre-release)
-- **[Samples](https://github.com/Cratis/Samples)** — runnable event sourcing and CQRS samples for the whole stack
+* **[Chronicle](https://github.com/Cratis/Chronicle)** — event-sourcing database and runtime. Orleans-based kernel, pluggable storage (MongoDB default; PostgreSQL, SQL Server, SQLite, in-memory), language-agnostic gRPC contracts. [Docs](https://www.cratis.io/chronicle/)
+* **Chronicle clients** — first-class [.NET SDK](https://github.com/Cratis/Chronicle), plus [TypeScript](https://github.com/Cratis/Chronicle.TypeScript), [Kotlin/Java](https://github.com/Cratis/Chronicle.Kotlin), and [Elixir](https://github.com/Cratis/Chronicle.Elixir); [Python](https://github.com/Cratis/Chronicle.Python) coming soon (pre-alpha). AI agents connect through the [Chronicle MCP server](https://github.com/Cratis/Chronicle.Mcp).
+* **[Arc](https://github.com/Cratis/Arc)** — opinionated CQRS framework for ASP.NET Core with commands, queries, validation, authorization, and TypeScript proxy generation. Works without event sourcing. [Docs](https://www.cratis.io/arc/)
+* **[Components](https://github.com/Cratis/Components)** — React components aligned with Arc patterns. [Docs](https://www.cratis.io/components/)
+* **[CLI](https://github.com/Cratis/cli) + Workbench** — inspect and diagnose Chronicle from the terminal or the browser. [Docs](https://www.cratis.io/cli/)
+* **Model-first layer (experimental)** — Studio, [Screenplay](https://github.com/Cratis/Screenplay), [Stage](https://github.com/Cratis/Stage), [Scene](https://github.com/Cratis/Scene), [Prologue](https://github.com/Cratis/Prologue)
+* **Supporting** — [Fundamentals](https://github.com/Cratis/Fundamentals), [Specifications](https://github.com/Cratis/Specifications), [Synopsis](https://github.com/Cratis/Synopsis), [Lens](https://github.com/Cratis/Lens), [Narrator](https://github.com/Cratis/Narrator), and free [AI tooling](https://github.com/Cratis/AI) (preview); Ensemble coming soon (pre-release)
+* **[Samples](https://github.com/Cratis/Samples)** — runnable event sourcing and CQRS samples for the whole stack
 
 Everything Cratis publishes today is MIT licensed and free to use.
 
