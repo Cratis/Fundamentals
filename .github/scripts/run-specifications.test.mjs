@@ -12,7 +12,7 @@ const scripts = dirname(fileURLToPath(import.meta.url));
 const root = resolve(scripts, '../..');
 
 function fixture(t, options = {}) {
-    const { count = 5, missing = -1, exits = {}, totals = {}, noTrx = -1, windows = false } = options;
+    const { count = 5, missing = -1, exits = {}, totals = {}, documents = {}, noTrx = -1, windows = false } = options;
     mkdirSync(join(root, '.ai-work'), { recursive: true });
     const directory = mkdtempSync(join(root, '.ai-work/run-specifications-test-'));
     t.after(() => rmSync(directory, { recursive: true }));
@@ -25,11 +25,12 @@ function fixture(t, options = {}) {
         mkdirSync(output, { recursive: true });
         writeFileSync(join(project, `Project${index}.Specs.csproj`), `<Project><AssemblyName>Assembly${index}</AssemblyName></Project>`);
         if (index === missing) continue;
+        const document = documents[index] ?? `<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"><ResultSummary><Counters total="${totals[index] ?? 1}" /></ResultSummary></TestRun>`;
         writeFileSync(join(output, `Assembly${index}${windows ? '.exe' : ''}`), `#!/usr/bin/env bash
 set -eu
 [[ "$1" == -noLogo && "$2" == -noColor && "$3" == -result-trx ]]
 echo 'Project${index} executed'
-${index === noTrx ? ':' : `printf '<Counters total="${totals[index] ?? 1}" />' > "$4"`}
+${index === noTrx ? ':' : `printf '%s' '${document.replaceAll("'", "'\\''")}' > "$4"`}
 exit ${exits[index] ?? 0}
 `, { mode: 0o755 });
     }
@@ -88,6 +89,37 @@ test('rejects a missing TRX instead of accepting stale output', t => {
     const result = fixture(t, { noTrx: 3 });
     assert.equal(result.status, 1);
     assert.match(result.stdout, /::error::Project3.Specs produced no nonzero TRX test total/);
+});
+
+test('accepts valid multiline TRX counters', t => {
+    const result = fixture(t, { documents: { 2: `<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <ResultSummary>
+    <Counters
+      total="1"
+      passed="1" />
+  </ResultSummary>
+</TestRun>` } });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('rejects invalid TRX even when the executable succeeds', async t => {
+    const documents = {
+        truncated: '<TestRun><ResultSummary><Counters total="1" />',
+        malformed: '<TestRun><ResultSummary><Counters total="1" /></WrongSummary></TestRun>',
+        empty: '',
+        'empty counters': '<TestRun><ResultSummary><Counters /></ResultSummary></TestRun>',
+        'missing counters': '<TestRun><ResultSummary /></TestRun>',
+        'multiple counters': '<TestRun><ResultSummary><Counters total="1" /><Counters total="1" /></ResultSummary></TestRun>',
+        'invalid total': '<TestRun><ResultSummary><Counters total="invalid" /></ResultSummary></TestRun>'
+    };
+    for (const [name, document] of Object.entries(documents)) {
+        await t.test(name, child => {
+            const result = fixture(child, { documents: { 2: document } });
+            assert.equal(result.status, 1);
+            assert.match(result.stdout, /::error::Project2.Specs produced no nonzero TRX test total/);
+            assert.match(result.stderr, /Invalid TRX:/);
+        });
+    }
 });
 
 test('uses Windows apphost suffixes', t => {

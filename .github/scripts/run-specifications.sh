@@ -8,6 +8,10 @@ root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd) || exit 2
 if [[ ${1:-} == --self-test ]]; then
     exec node --test "$root/.github/scripts/run-specifications.test.mjs"
 fi
+if ! command -v python3 >/dev/null; then
+    echo "::error::python3 is required to validate specification TRX results"
+    exit 2
+fi
 configuration=${1:-Release}
 expected=${EXPECTED_SPECIFICATION_PROJECTS:-5}
 shopt -s nullglob
@@ -58,7 +62,22 @@ for index in "${!pids[@]}"; do
     echo "::endgroup::"
     if [[ $status -ne 0 ]]; then
         echo "::error::$name exited with $status"
-    elif ! grep -Eq '<Counters[[:space:]][^>]*total="[1-9][0-9]*"' "$out/$name.trx"; then
+    elif ! python3 - "$out/$name.trx" <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+
+try:
+    root = ET.parse(sys.argv[1]).getroot()
+    counters = root.findall("./{*}ResultSummary/{*}Counters")
+    if root.tag.rsplit("}", 1)[-1] != "TestRun" or len(counters) != 1:
+        raise ValueError("Expected one TRX result summary counter")
+    if int(counters[0].get("total", "0")) <= 0:
+        raise ValueError("Expected a positive TRX test total")
+except (OSError, ET.ParseError, ValueError) as error:
+    print(f"Invalid TRX: {error}", file=sys.stderr)
+    sys.exit(1)
+PY
+    then
         echo "::error::$name produced no nonzero TRX test total"
         status=1
     fi
