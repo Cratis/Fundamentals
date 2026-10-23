@@ -1,7 +1,7 @@
 name: PR Prerelase
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -18,8 +18,17 @@ on:
       - "Source/**"
       - ".github/workflows/**"
 
+# pull_request_target runs in the base repository's context, so check out the pull request's own commit (the default
+# checkout is the base branch, which made the prerelease packages contain main instead of the change). Its code runs
+# only for pull requests from this repository's branches; a fork's code never builds or publishes under this token.
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+
 jobs:
   release:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
@@ -30,6 +39,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Release
         id: release
@@ -47,6 +59,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Setup .Net
         uses: actions/setup-dotnet@v4
@@ -87,6 +102,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Setup node v24
         uses: actions/setup-node@v4
