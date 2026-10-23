@@ -5,12 +5,12 @@
         <IsPackable>false</IsPackable>
         <AssemblyName>Cratis.Fundamentals.Specs</AssemblyName>
         <RootNamespace>Cratis</RootNamespace>
+        <TargetFrameworks>net10.0</TargetFrameworks>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.DependencyModel" />
         <ProjectReference Include="../Fundamentals/Fundamentals.csproj" />
-        <ProjectReference Include="../Fundamentals.Specs.ModuleInitializerProbe/Fundamentals.Specs.ModuleInitializerProbe.csproj"
-                          Condition="'$(TargetFramework)'=='net10.0'" />
+        <ProjectReference Include="../Fundamentals.Specs.ModuleInitializerProbe/Fundamentals.Specs.ModuleInitializerProbe.csproj" />
         <ProjectReference Include="../Fundamentals.TypeDiscovery.Generator/Fundamentals.TypeDiscovery.Generator.csproj"
                           OutputItemType="Analyzer"
                           ReferenceOutputAssembly="false"
@@ -18,10 +18,5 @@
     </ItemGroup>
     <ItemGroup>
         <None Update="Concepts/for_GenerateValue/Vectors/*.json" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)'!='net10.0'">
-        <Compile Remove="DependencyInjection/for_ServiceCollectionExtensions/when_adding_bindings_by_convention_for_assembly_loaded_before_module_initializer.cs" />
-        <Compile Remove="Types/for_GeneratedTypeDiscoveryRegistry/when_ensuring_providers_are_registered.cs" />
-        <Compile Remove="Types/for_TypesServiceCollectionExtensions/when_getting_the_current_type_universe_before_any_closure_walk.cs" />
     </ItemGroup>
 </Project>
