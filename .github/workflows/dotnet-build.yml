@@ -24,6 +24,15 @@ on:
       - "**"
     paths:
       - "Source/DotNET/**"
+      - ".github/scripts/run-specifications.sh"
+      - ".github/scripts/run-specifications.test.mjs"
+      - ".github/workflows/dotnet-build.yml"
+      - "Directory.Build.props"
+      - "Directory.Packages*.props"
+      - "Fundamentals.slnx"
+      - "global.json"
+      - ".globalconfig"
+      - ".editorconfig"
 
 jobs:
   build:
