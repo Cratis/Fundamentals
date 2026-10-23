@@ -88,10 +88,21 @@ profile includes neither Screenplay nor Stage.
 | Profile ID | Description | Automatically Includes |
 |---|---|---|
 | `cratis/engineering` | Engineering conventions and workflows | `cratis/engineering/core`, `cratis/engineering/csharp`, `cratis/engineering/elixir`, `cratis/engineering/go`, `cratis/engineering/kotlin`, `cratis/engineering/react`, `cratis/engineering/typescript` |
-| `cratis/engineering/csharp` | C# engineering conventions and framework Orleans jobs (`cratis-orleans-jobs`, alongside `orleans.md`) | `cratis/engineering/core` |
+| `cratis/engineering/csharp` | C# engineering conventions, .NET engineering skills, and framework Orleans jobs (`cratis-orleans-jobs`, alongside `orleans.md`) | `cratis/engineering/core`, `cratis/engineering/dotnet` |
+| `cratis/engineering/dotnet` | Upstream .NET engineering workflows | `cratis/engineering/dotnet/performance`, `cratis/engineering/dotnet/diagnostics`, `cratis/engineering/dotnet/msbuild`, `cratis/engineering/dotnet/orleans`, `cratis/engineering/dotnet/testing`, `cratis/engineering/dotnet/refactoring` |
+| `cratis/engineering/dotnet/performance` | Microbenchmarking, performance patterns, SIMD, and profiling | (no child profiles) |
+| `cratis/engineering/dotnet/diagnostics` | Trace and crash-dump collection | (no child profiles) |
+| `cratis/engineering/dotnet/msbuild` | MSBuild troubleshooting, build authoring, output paths, and binlogs | (no child profiles) |
+| `cratis/engineering/dotnet/orleans` | Orleans primitives, hosting, persistence, and runtime behavior | (no child profiles) |
+| `cratis/engineering/dotnet/testing` | Test-platform detection, runner commands, filters, and coverage | (no child profiles) |
+| `cratis/engineering/dotnet/refactoring` | Behavior-preserving C# refactoring and AOT compatibility | (no child profiles) |
 | `cratis/engineering/go` | Go framework parity and immutable module releases | `cratis/engineering/core`, `cratis/language/go` |
 | `cratis/engineering/typescript` | TypeScript engineering conventions | `cratis/engineering/core` |
 | `cratis/engineering/react` | React engineering conventions | `cratis/engineering/core` |
+
+The `cratis/engineering/dotnet` profiles carry upstream skills under MIT, with attribution and changes in each skill's NOTICE. Cratis rules and the `cratis-*` skills win where they differ.
+
+The `cratis/engineering` profile also carries [issue-assignment.md](../../../rules/issue-assignment.md): when an agent starts work on a numbered issue in a known repository and nobody is assigned, it assigns the current `gh` user.
 
 ### Language Profiles
 
@@ -152,6 +163,21 @@ Node.js server and a C# or React-frontend project has no use for them. Select
 Standalone Chronicle client usage (no Arc) in TypeScript is
 `cratis-chronicle-client-typescript`.
 
+### Several services with their own event stores
+
+`cratis/chronicle/core` carries both multi-service skills, so every profile that
+includes it loads them: `cratis/application`, `cratis/application/arc-chronicle`,
+`cratis/application/chronicle-dotnet`, and `cratis/application/csharp` and
+`cratis/chronicle` through `cratis/chronicle/compliance`.
+
+| Skill | Covers |
+| --- | --- |
+| `cratis-multi-service-architecture` | Store per service on one kernel, namespace alignment, public contract events and the outbox, consumer routes, delivery semantics, PII across stores, contract versioning, Arc between services |
+| `cratis-multi-service-local-orchestration` | Repository layout with contracts projects, .NET Aspire AppHost, Docker Compose with a MongoDB replica set, per-service settings, CLI contexts per store, frontends per service |
+
+Modeling such a system in Screenplay (one model folder per service) is
+`cratis-screenplay-streams-and-consistency`'s multi-service reference.
+
 ### Experimental Go modules
 
 Select `cratis/language/go` for a Go repository without importing any HTTP or
@@ -184,6 +210,7 @@ language policy always follows the consuming repository's `go.mod` minimum.
 | `cratis/content` | Release notes, social feed posts, voice review, content length, and developer marketing and distribution |
 | `cratis/review` | Code review, performance, security |
 | `cratis/codescene` | Opt-in CodeScene Code Health change gates, refactoring, debt prioritization and risk-based testing; requires an account and available MCP tools; each user registers the MCP server (see below) |
+| `cratis/playwright` | Opt-in Playwright browser automation MCP server declaration for exploratory checks; carries no skills or rules and each user registers the server (see below) |
 | `cratis/studio` | Studio MCP safety guidance |
 | `cratis/cli` | CLI operations |
 | `cratis/cli/terminal-workbench` | Human-operated terminal Workbench |
@@ -211,13 +238,30 @@ CodeScene needs an account and OAuth `login`; without an account or available
 CodeScene tools, skip its steps and say so rather than blocking contributors.
 The MCP catalog has no install-hints field and does not install the executable.
 
+### Browser automation with Playwright
+
+Select `cratis/playwright` explicitly to declare the `playwright` stdio server
+(`npx -y @playwright/mcp@0.0.83 --headless --isolated`) in `mcp-servers.json`.
+The flags keep the browser headless and isolated: no persistent profile, so no
+personal cookies or logins are reused. The profile carries no skills or rules, and
+no other profile composes it.
+
+Today `cratis ai install` registers only Screenplay and Pi's `cratis-mcp` extension
+loads only Screenplay, so Playwright, like CodeScene, is not registered for you.
+Each user registers it in their own user-level MCP configuration, never in committed
+project files. For Claude Code:
+
+```bash
+claude mcp add --scope user playwright -- npx -y @playwright/mcp@0.0.83 --headless --isolated
+```
+
+Pi users register it through a Pi MCP adapter or extension of their choice. Use it
+for exploratory browser checks; repeatable checks stay in the repository's own
+Playwright tests. Without the server registered, skip browser steps and say so.
+
 ### Event modeling with Screenplay
 
-**Model first.** A repository is opted in only when its model root (where the project's
-`.play` files live: normally under `Source/` or `src/`, else `Screenplay/`) holds a committed `.play` file (`git ls-tree -r --name-only HEAD` lists a `.play` file there, narrowed to `-- <root>` when a root is configured) or the project explicitly set
-`mcpServers.screenplay.root` in `.cratis/ai.json`; an empty directory, install output, an
-installed profile or skill, a `.play` file outside the root or an untracked or uncommitted draft is not
-opt-in. An accepted model under the root covering the scope is the contract and the source
+**Model first.** Decide opt-in per `general.md` "Model first"; where `cratis-screenplay-modeling-lifecycle` is installed, run its `scripts/model-first-status.mjs` for the decision, model root and drafts. An accepted model under the root covering the scope is the contract and the source
 of truth for behavior. Change the model, verify and independently review it, then render
 or gap-fill from its contract; never edit Stage-managed output or weaken protection.
 Otherwise stay code-first; only the entry-point session may propose a model, at most once
@@ -273,6 +317,8 @@ servers. Inspect install/status results for adapter support or configuration
 conflicts. The model is wherever the project keeps its `.play` files, else under `Source/` or
 `src/`, else in a `Screenplay/` folder at the repository root; never under `.cratis/`.
 Project-owned configuration can name a root explicitly.
+
+Like `allowDependencyManifestWrites`, `modelFirst` (`frozen`, `reason`) and `process` (`decisions`, `workItems`, `acceptance`, `agents`) are project-owned keys in `.cratis/ai.json` that install and update preserve. Only `modelFirst.frozen` is read by code; the lifecycle skill's `references/project-process.md` defines the keys, defaults and routing.
 
 **No-model startup requires Cratis CLI 3.46.1 or later.** With
 `cratis screenplay mcp --project-root <project>`, that version resolves the root
@@ -388,6 +434,10 @@ profile: application
 - **`profile: application`** - Rules for building applications on Cratis
 - **`profile: framework`** - Rules for contributing to Cratis framework repos
 - **No profile tag** - Universal rules that apply to both profiles
+
+[authoring-skills.md](./authoring-skills.instructions.md) is universal but path-scoped to corpus
+skills, rules, agents and prompts. Harnesses without path-rule loading discover it
+through `general.md`'s Where to Look table; its body is needed only for authoring work.
 
 ## Finding Profile Information
 
