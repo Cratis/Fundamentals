@@ -13,8 +13,8 @@ public class when_configuring_propagation : given.a_configured_environment
 {
     readonly TextMapPropagator _previous = Propagators.DefaultTextMapPropagator;
 
-    [Fact] void should_include_trace_context_by_default() => Fields(null).ShouldContain("traceparent");
-    [Fact] void should_include_baggage_by_default() => Fields(null).ShouldContain("baggage");
+    [Fact] void should_include_trace_context_if_configured() => Fields("tracecontext,baggage").ShouldContain("traceparent");
+    [Fact] void should_include_baggage_if_configured() => Fields("tracecontext,baggage").ShouldContain("baggage");
     [Fact] void should_allow_disabling_propagation() => Fields("none").ShouldBeEmpty();
     [Fact] void should_allow_baggage_without_trace_context() => Fields("baggage").ShouldNotContain("traceparent");
     [Fact] void should_allow_trace_context_without_baggage() => Fields("tracecontext").ShouldNotContain("baggage");

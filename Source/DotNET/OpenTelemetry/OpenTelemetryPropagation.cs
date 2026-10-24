@@ -14,10 +14,15 @@ static class OpenTelemetryPropagation
     /// <summary>
     /// Sets the default text map propagator from a comma-separated list of propagator names.
     /// </summary>
-    /// <param name="configured">The configured names; defaults to "tracecontext,baggage" when null. "none" disables propagation.</param>
+    /// <param name="configured">The configured names; preserves the current propagator when null. "none" disables propagation.</param>
     internal static void Configure(string? configured)
     {
-        var names = (configured ?? "tracecontext,baggage").Split(',').Select(name => name.Trim().ToLowerInvariant()).Distinct().ToArray();
+        if (configured is null)
+        {
+            return;
+        }
+
+        var names = configured.Split(',').Select(name => name.Trim().ToLowerInvariant()).Distinct().ToArray();
         var propagators = names.Contains("none") ? [] : names.Select(Create).OfType<TextMapPropagator>().ToArray();
         Sdk.SetDefaultTextMapPropagator(new CompositeTextMapPropagator(propagators));
     }
