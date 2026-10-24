@@ -128,6 +128,7 @@ public static class ServiceCollectionExtensions
     static IServiceCollection AddBindingsByConventionUsingReflectionFallback(IServiceCollection services)
     {
         var types = Types.Types.Instance;
+        var nonIgnoredTypes = types.All.Where(type => !ShouldIgnoreConvention(type)).ToArray();
 
         static bool convention(Type i, Type t) => i.Namespace == t.Namespace && i.Name == $"I{t.Name}";
 
@@ -145,7 +146,7 @@ public static class ServiceCollectionExtensions
                     var conventionInterface = interfaces.SingleOrDefault(i => convention(i, _));
                     if (conventionInterface != default)
                     {
-                        return types.All.Count(type => type.HasInterface(conventionInterface)) == 1;
+                        return nonIgnoredTypes.Count(type => type.HasInterface(conventionInterface)) == 1;
                     }
                 }
                 return false;
