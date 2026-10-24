@@ -63,6 +63,22 @@ builder.AddCratisOpenTelemetry(options =>
 
 For gRPC client or MongoDB instrumentation, reference the corresponding instrumentation package and call its provider-builder extension through these callbacks. They are not installed or enabled by default. Call the shared setup once; do not add another `UseOtlpExporter()` alongside it.
 
+ASP.NET Core tracing skips `/health`, `/healthz`, `/ready`, `/readyz`, and `/readiness`, including child paths, by default. A product can replace this filter through `ConfigureTracing`:
+
+```csharp
+builder.AddCratisOpenTelemetry(options =>
+    options.ConfigureTracing = tracing => tracing.AddAspNetCoreInstrumentation(instrumentation =>
+        instrumentation.Filter = context => !context.Request.Path.StartsWithSegments("/my-probes")));
+```
+
+This excerpt also requires the `OpenTelemetry.Trace` namespace. Standard `OTEL_TRACES_SAMPLER*` settings still take precedence over samplers selected in application callbacks.
+
+## Exception logs
+
+By default, exception logs export `exception.type`, but not the exception object, message, or stack trace. Formatted exception messages are omitted. Log templates, structured attributes, and scopes can still contain sensitive data; do not put secrets or personal identifiers in them.
+
+To deliberately include exception messages and stack traces, set `IncludeExceptionDetails = true` in the shared setup options. Review the privacy implications before enabling it.
+
 ## Standard configuration
 
 Nonempty environment variables take precedence for resource identity and export settings. Empty or whitespace-only values are treated as unset. The same `OTEL_*` keys work in host `IConfiguration`, including appsettings.
@@ -75,12 +91,19 @@ Nonempty environment variables take precedence for resource identity and export 
 | `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_ENDPOINT` | Enables export for the configured signal only, or overrides the common endpoint |
 | `OTEL_EXPORTER_OTLP_PROTOCOL`, `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_PROTOCOL` | `grpc` or `http/protobuf` |
 | `OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_HEADERS` | OTLP request headers |
+| `OTEL_EXPORTER_OTLP_TIMEOUT`, `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_TIMEOUT` | Export request timeout in milliseconds |
+| `OTEL_EXPORTER_OTLP_COMPRESSION`, `OTEL_EXPORTER_OTLP_{TRACES,METRICS,LOGS}_COMPRESSION` | `none` or `gzip`; signal-specific values override common settings |
+| `OTEL_BLRP_MAX_QUEUE_SIZE`, `OTEL_BLRP_MAX_EXPORT_BATCH_SIZE` | Log export queue and batch limits |
+| `OTEL_BLRP_SCHEDULE_DELAY`, `OTEL_BLRP_EXPORT_TIMEOUT` | Log batch schedule delay and export timeout in milliseconds |
 | `OTEL_{TRACES,METRICS,LOGS}_EXPORTER` | `none` disables export for that signal; `otlp` selects OTLP |
 | `OTEL_SDK_DISABLED` | `true` turns off every OpenTelemetry provider in the service collection, including providers added after `WithCratis()`; they become no-op providers |
-| `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG` | SDK sampling; defaults to `parentbased_always_on` |
+| `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG` | Sampling; defaults to `parentbased_always_on`; standard settings win over application callbacks |
+| `OTEL_PROPAGATORS` | Comma-separated `tracecontext` and `baggage` (the default), or `none`; other names are not installed |
 | `OTEL_METRIC_EXPORT_INTERVAL` | SDK metric export interval in milliseconds |
 
 The package does not automatically install exporters other than OTLP. Invalid enabled endpoints fail setup rather than exporting to an SDK fallback address.
+
+`traceidratio` and `parentbased_traceidratio` require `OTEL_TRACES_SAMPLER_ARG` to be a number in the inclusive range `[0, 1]`, using a decimal point. Missing, non-numeric, non-finite, and out-of-range values fail startup with `InvalidOpenTelemetrySamplerArgument`. Its message names `OTEL_TRACES_SAMPLER_ARG` and the invalid value (`<missing>` when absent). There is no fallback ratio. For example, set `OTEL_TRACES_SAMPLER=parentbased_traceidratio` and `OTEL_TRACES_SAMPLER_ARG=0.1` to sample 10% of root traces while preserving the parent's sampling decision.
 
 ## Missing spans or metrics
 
