@@ -3,6 +3,7 @@
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { assertSameHost } from './host.mjs';
 
 function invalidValue(value) {
     return !Number.isFinite(value) || value < 0;
@@ -41,6 +42,8 @@ function validateEnvironment(environment, variant, project, repetitions) {
 
 function projectRow(root, variant, project, repetitions) {
     const resultRoot = join(root, variant, 'results');
+    const environments = ['V0', 'V4', 'V6'].map(candidate => readJson(join(root, candidate, 'results', 'environment.json')));
+    assertSameHost(environments);
     validateEnvironment(readJson(join(resultRoot, 'environment.json')), variant, project, repetitions);
     const baseline = join(root, 'V0', 'results', project, 'run-1', 'results.trx');
     compareRun(baseline, join(resultRoot, project, 'warmup'), variant);
@@ -59,7 +62,7 @@ function projectRow(root, variant, project, repetitions) {
 
 function runnerLine(root, variant) {
     const environment = readJson(join(root, variant, 'results', 'environment.json'));
-    return `- ${variant}: ${environment.runner_image} ${environment.runner_image_version}; ${environment.cpu_count} CPUs, ${environment.cpu_model}; baseline ${environment.baseline}`;
+    return `- ${variant}: ${environment.runner_image} ${environment.runner_image_version}; ${environment.cpu_count} CPUs, ${environment.cpu_model}; host ${environment.host_name}; session ${environment.session_id}; baseline ${environment.baseline}`;
 }
 
 function safeProjectRow(root, variant, project) {
@@ -82,7 +85,8 @@ function safeRunnerLine(root, variant) {
 export function summarize(root) {
     const lines = [
         '# Specifications #77 runner trial', '',
-        'One untimed warmup, then five measured runs per project. CPU = user + system; RSS is peak per run.',
+        'One host, isolated baseline archives. One untimed warmup per variant/project, then five interleaved repetitions with rotating variant order.',
+        'CPU = user + system; RSS is peak per run. Same-host measurement only; this trial does not establish graduation.',
         'Parity checks every warmup and measured run against V0 run 1 (identities and outcomes, not counts).', '',
         '| Project | Variant | Median wall (s) | Median CPU (s) | Median peak RSS (MiB) | Tests | Parity |',
         '| --- | --- | ---: | ---: | ---: | ---: | --- |'
@@ -105,7 +109,7 @@ export function summarize(root) {
 }
 
 if (process.argv[1] === new URL(import.meta.url).pathname) {
-    const root = resolve(process.argv[2] ?? '.ai-work/runner-77');
+    const root = resolve(process.argv[2] ?? process.env.TRIAL_OUTPUT ?? '.ai-work/runner-77-same-host');
     const result = summarize(root);
     writeFileSync(join(root, 'summary.md'), result.markdown);
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, result.markdown);

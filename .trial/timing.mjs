@@ -42,7 +42,7 @@ export function parseTiming(text, platform) {
     return timing;
 }
 
-export function measure(command, prefix) {
+export function measure(command, prefix, cwd) {
     const raw = `${prefix}.time.txt`;
     const log = openSync(`${prefix}.stdout.log`, 'wx');
     const error = process.platform === 'darwin' ? openSync(raw, 'wx') : log;
@@ -50,7 +50,7 @@ export function measure(command, prefix) {
     let result;
     try {
         result = spawnSync('/usr/bin/time', [...args, ...command], {
-            stdio: ['ignore', log, error], env: { ...process.env, LC_ALL: 'C' }, timeout: 600_000
+            stdio: ['ignore', log, error], cwd, env: { ...process.env, LC_ALL: 'C' }, timeout: 600_000
         });
     } finally {
         closeSync(log);

@@ -1,20 +1,24 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 import { spawnSync } from 'node:child_process';
-import { cpus, release } from 'node:os';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { measure } from './timing.mjs';
+import { hostMetadata } from './host.mjs';
 
 const dryRun = process.argv.includes('--dry-run');
 const [variant, phase = 'all', selectedProject] = process.argv.slice(2).filter(argument => argument !== '--dry-run');
 const projects = selectedProject ? [selectedProject] : ['Fundamentals.Specs', 'OpenTelemetry.Specs'];
 const repetitions = Number(process.env.N ?? 5);
+const selectedRun = process.env.TRIAL_RUN_INDEX;
+const source = resolve(process.env.TRIAL_SOURCE_ROOT ?? '.');
 if (!['V0', 'V4', 'V6'].includes(variant) || !['restore', 'build', 'test', 'all'].includes(phase)
     || projects.some(project => !['Fundamentals.Specs', 'OpenTelemetry.Specs'].includes(project))
     || !Number.isInteger(repetitions) || repetitions < 1) {
     throw new Error('Usage: node .trial/run.mjs V0|V4|V6 [restore|build|test|all] [Fundamentals.Specs|OpenTelemetry.Specs]; N >= 1');
 }
+if (selectedRun !== undefined && !/^(0|[1-9]\d*)$/.test(selectedRun)) throw new Error('Invalid run index');
+if (Number(selectedRun) > repetitions) throw new Error('Run index exceeds repetitions');
 const output = resolve(process.env.TRIAL_OUTPUT ?? '.ai-work/runner-77');
 const artifacts = join(output, variant, 'build');
 const results = join(output, variant, 'results');
@@ -22,18 +26,19 @@ const manifest = JSON.parse(readFileSync('.trial/manifest.json', 'utf8'));
 function execute(command) {
     console.log(`+ ${command.join(' ')}`);
     if (dryRun) return;
-    const result = spawnSync(command[0], command.slice(1), { stdio: 'inherit' });
+    const result = spawnSync(command[0], command.slice(1), { stdio: 'inherit', cwd: source });
     if (result.error || result.status !== 0) {
         throw result.error ?? new Error(`Command failed: ${result.status} (${result.signal ?? 'no signal'})`);
     }
 }
 
 function projectPath(project) {
-    return `Source/DotNET/${project}/${project}.csproj`;
+    return join(source, `Source/DotNET/${project}/${project}.csproj`);
 }
 
 function executable(project) {
-    const assembly = readFileSync(projectPath(project), 'utf8').match(/<AssemblyName>([^<]+)<\/AssemblyName>/)?.[1];
+    const definition = dryRun ? resolve(`Source/DotNET/${project}/${project}.csproj`) : projectPath(project);
+    const assembly = readFileSync(definition, 'utf8').match(/<AssemblyName>([^<]+)<\/AssemblyName>/)?.[1];
     if (!assembly) throw new Error(`Missing AssemblyName: ${project}`);
     const folder = join(artifacts, 'bin', project);
     if (dryRun) return join(folder, 'release_net10.0', `${assembly}.dll`);
@@ -70,21 +75,23 @@ function runCase(project, run) {
     if (existsSync(directory)) throw new Error(`Refusing to overwrite results: ${directory}`);
     mkdirSync(directory, { recursive: true });
     if (run === 0) execute(command);
-    else measure(command, join(directory, 'timing'));
+    else measure(command, join(directory, 'timing'), source);
     if (!existsSync(join(directory, 'results.trx'))) throw new Error(`Missing TRX: ${directory}`);
 }
 
 function runProject(project) {
+    if (selectedRun !== undefined) {
+        runCase(project, Number(selectedRun));
+        return;
+    }
     for (let run = 0; run <= repetitions; run++) runCase(project, run);
 }
 
-// Workflow checkout contains the baseline as its parent, never a moving remote reference.
+// Require the pinned baseline in the checkout history, never a moving remote reference.
 execute(['git', 'merge-base', '--is-ancestor', manifest.baseline, 'HEAD']);
 if (!dryRun) mkdirSync(results, { recursive: true });
 const environment = {
-    variant, baseline: manifest.baseline, platform: process.platform, os_release: release(),
-    runner_image: process.env.ImageOS ?? 'local', runner_image_version: process.env.ImageVersion ?? 'local',
-    cpu_count: cpus().length, cpu_model: cpus()[0]?.model, repetitions, projects
+    ...hostMetadata(), variant, baseline: manifest.baseline, source_root: source, repetitions, projects
 };
 console.log(JSON.stringify(environment, null, 2));
 if (!dryRun) writeFileSync(join(results, 'environment.json'), `${JSON.stringify(environment, null, 2)}\n`);
