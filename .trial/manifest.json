@@ -1,0 +1,1492 @@
+{
+  "baseline": "cadf8e452b617fc29c431c7e578af9a60fa5f933",
+  "baseline_runner": "Cratis.Specifications.XUnit.v3 5.0.1; xunit.v3.mtp-off 4.0.2; VSTest",
+  "projects": [
+    "Fundamentals.Specs",
+    "Metrics.Roslyn.Specs",
+    "OpenTelemetry.Specs",
+    "Fundamentals.TypeDiscovery.Generator.Specs",
+    "Fundamentals.AOT.Specs"
+  ],
+  "theories": {
+    "Cratis.Strings.for_ToCamelCase.when_converting.ToCamelCaseTest": {
+      "params": [
+        "expectedResult",
+        "name"
+      ],
+      "rows": [
+        [
+          "URLValue",
+          "URLValue"
+        ],
+        [
+          "URL",
+          "URL"
+        ],
+        [
+          "ID",
+          "ID"
+        ],
+        [
+          "i",
+          "I"
+        ],
+        [
+          "",
+          ""
+        ],
+        [
+          "\ud83d\ude00\u845b\ud83c\udc04",
+          "\ud83d\ude00\u845b\ud83c\udc04"
+        ],
+        [
+          "\u03ac\u03bb\u03c6\u03b1\u0392\u03ae\u03c4\u03b1\u0393\u03ac\u03bc\u03bc\u03b1",
+          "\u0386\u03bb\u03c6\u03b1\u0392\u03ae\u03c4\u03b1\u0393\u03ac\u03bc\u03bc\u03b1"
+        ],
+        [
+          "\ud801\udc00\ud801\udc28\ud801\udc28\ud801\udc00\ud801\udc28\ud801\udc28",
+          "\ud801\udc00\ud801\udc28\ud801\udc28\ud801\udc00\ud801\udc28\ud801\udc28"
+        ],
+        [
+          "\ude00\ud83d",
+          "\ude00\ud83d"
+        ],
+        [
+          "person",
+          "Person"
+        ],
+        [
+          "iPhone",
+          "iPhone"
+        ],
+        [
+          "IPhone",
+          "IPhone"
+        ],
+        [
+          "i Phone",
+          "I Phone"
+        ],
+        [
+          "i  Phone",
+          "I  Phone"
+        ],
+        [
+          " IPhone",
+          " IPhone"
+        ],
+        [
+          " IPhone ",
+          " IPhone "
+        ],
+        [
+          "isCIA",
+          "IsCIA"
+        ],
+        [
+          "vmQ",
+          "VmQ"
+        ],
+        [
+          "xml2Json",
+          "Xml2Json"
+        ],
+        [
+          "snAkEcAsE",
+          "SnAkEcAsE"
+        ],
+        [
+          "snA__kEcAsE",
+          "SnA__kEcAsE"
+        ],
+        [
+          "snA__ kEcAsE",
+          "SnA__ kEcAsE"
+        ],
+        [
+          "already_snake_case_ ",
+          "already_snake_case_ "
+        ],
+        [
+          "isJSONProperty",
+          "IsJSONProperty"
+        ],
+        [
+          "SHOUTING_CASE",
+          "SHOUTING_CASE"
+        ],
+        [
+          "9999-12-31T23:59:59.9999999Z",
+          "9999-12-31T23:59:59.9999999Z"
+        ],
+        [
+          "hi!! This is text. Time to test.",
+          "Hi!! This is text. Time to test."
+        ],
+        [
+          "BUILDING",
+          "BUILDING"
+        ],
+        [
+          "BUILDING Property",
+          "BUILDING Property"
+        ],
+        [
+          "building Property",
+          "Building Property"
+        ],
+        [
+          "BUILDING PROPERTY",
+          "BUILDING PROPERTY"
+        ]
+      ]
+    },
+    "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid.should_fail_setup_with_the_endpoint_error": {
+      "params": [
+        "endpoint",
+        "key"
+      ],
+      "rows": [
+        [
+          "/relative",
+          "OTEL_EXPORTER_OTLP_ENDPOINT"
+        ],
+        [
+          "ftp://collector:4318",
+          "OTEL_EXPORTER_OTLP_ENDPOINT"
+        ],
+        [
+          "not a URI",
+          "OTEL_EXPORTER_OTLP_ENDPOINT"
+        ],
+        [
+          "/relative",
+          "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
+        ],
+        [
+          "/relative",
+          "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"
+        ],
+        [
+          "/relative",
+          "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"
+        ]
+      ]
+    },
+    "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_a_factory_resource_detector.should_resolve_the_detector_once_per_provider_and_preserve_its_identity": {
+      "params": [
+        "overrideIdentity"
+      ],
+      "rows": [
+        [
+          false
+        ],
+        [
+          true
+        ]
+      ]
+    },
+    "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host.should_preserve_configuration_and_honor_settings_registered_after_composition": {
+      "params": [
+        "web"
+      ],
+      "rows": [
+        [
+          false
+        ],
+        [
+          true
+        ]
+      ]
+    },
+    "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host.should_keep_application_configuration_with_separate_telemetry_configuration": {
+      "params": [
+        "web"
+      ],
+      "rows": [
+        [
+          false
+        ],
+        [
+          true
+        ]
+      ]
+    },
+    "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration": {
+      "params": [
+        "web",
+        "setup",
+        "disabled"
+      ],
+      "rows": [
+        [
+          false,
+          "host",
+          false
+        ],
+        [
+          true,
+          "host",
+          false
+        ],
+        [
+          false,
+          "composition",
+          false
+        ],
+        [
+          true,
+          "composition",
+          false
+        ],
+        [
+          false,
+          "separate",
+          false
+        ],
+        [
+          true,
+          "separate",
+          false
+        ],
+        [
+          false,
+          "host",
+          true
+        ],
+        [
+          true,
+          "host",
+          true
+        ],
+        [
+          false,
+          "composition",
+          true
+        ],
+        [
+          true,
+          "composition",
+          true
+        ],
+        [
+          false,
+          "separate",
+          true
+        ],
+        [
+          true,
+          "separate",
+          true
+        ]
+      ]
+    },
+    "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices": {
+      "params": [
+        "sampler",
+        "ratio",
+        "sampled"
+      ],
+      "rows": [
+        [
+          "always_on",
+          "0",
+          true
+        ],
+        [
+          "always_off",
+          "1",
+          false
+        ],
+        [
+          "traceidratio",
+          "0",
+          false
+        ],
+        [
+          "traceidratio",
+          "1",
+          true
+        ],
+        [
+          "parentbased_always_on",
+          "0",
+          true
+        ],
+        [
+          "parentbased_always_off",
+          "1",
+          false
+        ],
+        [
+          "parentbased_traceidratio",
+          "0",
+          false
+        ],
+        [
+          "parentbased_traceidratio",
+          "1",
+          true
+        ]
+      ]
+    },
+    "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_case_insensitive_environment_sampling_over_configuration": {
+      "params": [
+        "sampler",
+        "separate"
+      ],
+      "rows": [
+        [
+          "ALWAYS_OFF",
+          false
+        ],
+        [
+          "PaReNtBaSeD_AlWaYs_OfF",
+          false
+        ],
+        [
+          "ALWAYS_OFF",
+          true
+        ],
+        [
+          "PaReNtBaSeD_AlWaYs_OfF",
+          true
+        ]
+      ]
+    }
+  },
+  "variants": {
+    "V0": {
+      "files": 0,
+      "patch_lines": 0,
+      "aliases": {},
+      "renames": {}
+    },
+    "V4": {
+      "files": 2,
+      "patch_lines": 21,
+      "aliases": {},
+      "renames": {}
+    },
+    "V6": {
+      "files": 42,
+      "patch_lines": 515,
+      "aliases": {
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_000": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "URLValue",
+            "URLValue"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_001": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "URL",
+            "URL"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_002": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "ID",
+            "ID"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_003": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "i",
+            "I"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_004": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "",
+            ""
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_005": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "\ud83d\ude00\u845b\ud83c\udc04",
+            "\ud83d\ude00\u845b\ud83c\udc04"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_006": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "\u03ac\u03bb\u03c6\u03b1\u0392\u03ae\u03c4\u03b1\u0393\u03ac\u03bc\u03bc\u03b1",
+            "\u0386\u03bb\u03c6\u03b1\u0392\u03ae\u03c4\u03b1\u0393\u03ac\u03bc\u03bc\u03b1"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_007": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "\ud801\udc00\ud801\udc28\ud801\udc28\ud801\udc00\ud801\udc28\ud801\udc28",
+            "\ud801\udc00\ud801\udc28\ud801\udc28\ud801\udc00\ud801\udc28\ud801\udc28"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_008": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "\ude00\ud83d",
+            "\ude00\ud83d"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_009": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "person",
+            "Person"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_010": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "iPhone",
+            "iPhone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_011": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "IPhone",
+            "IPhone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_012": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "i Phone",
+            "I Phone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_013": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "i  Phone",
+            "I  Phone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_014": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            " IPhone",
+            " IPhone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_015": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            " IPhone ",
+            " IPhone "
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_016": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "isCIA",
+            "IsCIA"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_017": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "vmQ",
+            "VmQ"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_018": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "xml2Json",
+            "Xml2Json"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_019": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "snAkEcAsE",
+            "SnAkEcAsE"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_020": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "snA__kEcAsE",
+            "SnA__kEcAsE"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_021": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "snA__ kEcAsE",
+            "SnA__ kEcAsE"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_022": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "already_snake_case_ ",
+            "already_snake_case_ "
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_023": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "isJSONProperty",
+            "IsJSONProperty"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_024": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "SHOUTING_CASE",
+            "SHOUTING_CASE"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_025": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "9999-12-31T23:59:59.9999999Z",
+            "9999-12-31T23:59:59.9999999Z"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_026": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "hi!! This is text. Time to test.",
+            "Hi!! This is text. Time to test."
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_027": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "BUILDING",
+            "BUILDING"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_028": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "BUILDING Property",
+            "BUILDING Property"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_029": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "building Property",
+            "Building Property"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_030": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "BUILDING PROPERTY",
+            "BUILDING PROPERTY"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_000.should_fail_setup_with_the_endpoint_error__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "/relative",
+            "OTEL_EXPORTER_OTLP_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_001.should_fail_setup_with_the_endpoint_error__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "ftp://collector:4318",
+            "OTEL_EXPORTER_OTLP_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_002.should_fail_setup_with_the_endpoint_error__trial_case_002": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "not a URI",
+            "OTEL_EXPORTER_OTLP_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_003.should_fail_setup_with_the_endpoint_error__trial_case_003": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "/relative",
+            "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_004.should_fail_setup_with_the_endpoint_error__trial_case_004": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "/relative",
+            "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_005.should_fail_setup_with_the_endpoint_error__trial_case_005": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "/relative",
+            "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_a_factory_resource_detector__trial_should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_000.should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_a_factory_resource_detector",
+          "method": "should_resolve_the_detector_once_per_provider_and_preserve_its_identity",
+          "args": [
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_a_factory_resource_detector__trial_should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_001.should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_a_factory_resource_detector",
+          "method": "should_resolve_the_detector_once_per_provider_and_preserve_its_identity",
+          "args": [
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host__trial_should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_000.should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host",
+          "method": "should_preserve_configuration_and_honor_settings_registered_after_composition",
+          "args": [
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host__trial_should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_001.should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host",
+          "method": "should_preserve_configuration_and_honor_settings_registered_after_composition",
+          "args": [
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host__trial_should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_000.should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host",
+          "method": "should_keep_application_configuration_with_separate_telemetry_configuration",
+          "args": [
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host__trial_should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_001.should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host",
+          "method": "should_keep_application_configuration_with_separate_telemetry_configuration",
+          "args": [
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_000.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "host",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_001.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "host",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_002.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_002": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "composition",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_003.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_003": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "composition",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_004.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_004": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "separate",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_005.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_005": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "separate",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_006.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_006": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "host",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_007.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_007": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "host",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_008.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_008": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "composition",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_009.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_009": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "composition",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_010.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_010": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "separate",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_011.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_011": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "separate",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "always_on",
+            "0",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "always_off",
+            "1",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_002": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "traceidratio",
+            "0",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_003": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "traceidratio",
+            "1",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_004": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "parentbased_always_on",
+            "0",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_005": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "parentbased_always_off",
+            "1",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_006": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "parentbased_traceidratio",
+            "0",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_007": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "parentbased_traceidratio",
+            "1",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_case_insensitive_environment_sampling_over_configuration",
+          "args": [
+            "ALWAYS_OFF",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_case_insensitive_environment_sampling_over_configuration",
+          "args": [
+            "PaReNtBaSeD_AlWaYs_OfF",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_002": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_case_insensitive_environment_sampling_over_configuration",
+          "args": [
+            "ALWAYS_OFF",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_003": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_case_insensitive_environment_sampling_over_configuration",
+          "args": [
+            "PaReNtBaSeD_AlWaYs_OfF",
+            true
+          ]
+        }
+      },
+      "renames": {
+        "Cratis.Concepts.for_ConceptAs.when_implicitly_converting.should_convert_from_concept_to_primitive": "ShouldConvertFromConceptToPrimitive",
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_return_null_for_null_name": "CamelCaseNullNameReturnsNull"
+      }
+    },
+    "V7": {
+      "files": 43,
+      "patch_lines": 527,
+      "aliases": {
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_000": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "URLValue",
+            "URLValue"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_001": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "URL",
+            "URL"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_002": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "ID",
+            "ID"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_003": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "i",
+            "I"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_004": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "",
+            ""
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_005": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "\ud83d\ude00\u845b\ud83c\udc04",
+            "\ud83d\ude00\u845b\ud83c\udc04"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_006": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "\u03ac\u03bb\u03c6\u03b1\u0392\u03ae\u03c4\u03b1\u0393\u03ac\u03bc\u03bc\u03b1",
+            "\u0386\u03bb\u03c6\u03b1\u0392\u03ae\u03c4\u03b1\u0393\u03ac\u03bc\u03bc\u03b1"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_007": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "\ud801\udc00\ud801\udc28\ud801\udc28\ud801\udc00\ud801\udc28\ud801\udc28",
+            "\ud801\udc00\ud801\udc28\ud801\udc28\ud801\udc00\ud801\udc28\ud801\udc28"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_008": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "\ude00\ud83d",
+            "\ude00\ud83d"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_009": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "person",
+            "Person"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_010": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "iPhone",
+            "iPhone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_011": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "IPhone",
+            "IPhone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_012": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "i Phone",
+            "I Phone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_013": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "i  Phone",
+            "I  Phone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_014": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            " IPhone",
+            " IPhone"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_015": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            " IPhone ",
+            " IPhone "
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_016": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "isCIA",
+            "IsCIA"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_017": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "vmQ",
+            "VmQ"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_018": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "xml2Json",
+            "Xml2Json"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_019": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "snAkEcAsE",
+            "SnAkEcAsE"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_020": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "snA__kEcAsE",
+            "SnA__kEcAsE"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_021": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "snA__ kEcAsE",
+            "SnA__ kEcAsE"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_022": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "already_snake_case_ ",
+            "already_snake_case_ "
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_023": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "isJSONProperty",
+            "IsJSONProperty"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_024": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "SHOUTING_CASE",
+            "SHOUTING_CASE"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_025": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "9999-12-31T23:59:59.9999999Z",
+            "9999-12-31T23:59:59.9999999Z"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_026": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "hi!! This is text. Time to test.",
+            "Hi!! This is text. Time to test."
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_027": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "BUILDING",
+            "BUILDING"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_028": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "BUILDING Property",
+            "BUILDING Property"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_029": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "building Property",
+            "Building Property"
+          ]
+        },
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_convert_to_camel_case__trial_case_030": {
+          "class": "Cratis.Strings.for_ToCamelCase.when_converting",
+          "method": "ToCamelCaseTest",
+          "args": [
+            "BUILDING PROPERTY",
+            "BUILDING PROPERTY"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_000.should_fail_setup_with_the_endpoint_error__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "/relative",
+            "OTEL_EXPORTER_OTLP_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_001.should_fail_setup_with_the_endpoint_error__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "ftp://collector:4318",
+            "OTEL_EXPORTER_OTLP_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_002.should_fail_setup_with_the_endpoint_error__trial_case_002": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "not a URI",
+            "OTEL_EXPORTER_OTLP_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_003.should_fail_setup_with_the_endpoint_error__trial_case_003": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "/relative",
+            "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_004.should_fail_setup_with_the_endpoint_error__trial_case_004": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "/relative",
+            "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_005.should_fail_setup_with_the_endpoint_error__trial_case_005": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_an_endpoint_is_invalid",
+          "method": "should_fail_setup_with_the_endpoint_error",
+          "args": [
+            "/relative",
+            "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_a_factory_resource_detector__trial_should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_000.should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_a_factory_resource_detector",
+          "method": "should_resolve_the_detector_once_per_provider_and_preserve_its_identity",
+          "args": [
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_a_factory_resource_detector__trial_should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_001.should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_a_factory_resource_detector",
+          "method": "should_resolve_the_detector_once_per_provider_and_preserve_its_identity",
+          "args": [
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host__trial_should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_000.should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host",
+          "method": "should_preserve_configuration_and_honor_settings_registered_after_composition",
+          "args": [
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host__trial_should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_001.should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host",
+          "method": "should_preserve_configuration_and_honor_settings_registered_after_composition",
+          "args": [
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host__trial_should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_000.should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host",
+          "method": "should_keep_application_configuration_with_separate_telemetry_configuration",
+          "args": [
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host__trial_should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_001.should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_composing_telemetry_in_a_host",
+          "method": "should_keep_application_configuration_with_separate_telemetry_configuration",
+          "args": [
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_000.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "host",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_001.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "host",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_002.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_002": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "composition",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_003.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_003": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "composition",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_004.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_004": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "separate",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_005.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_005": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "separate",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_006.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_006": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "host",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_007.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_007": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "host",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_008.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_008": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "composition",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_009.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_009": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "composition",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_010.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_010": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            false,
+            "separate",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_011.should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_011": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_environment_overrides_sdk_disablement",
+          "method": "should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration",
+          "args": [
+            true,
+            "separate",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "always_on",
+            "0",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "always_off",
+            "1",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_002": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "traceidratio",
+            "0",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_003": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "traceidratio",
+            "1",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_004": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "parentbased_always_on",
+            "0",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_005": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "parentbased_always_off",
+            "1",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_006": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "parentbased_traceidratio",
+            "0",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_standard_root_sampling_choices__trial_case_007": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_standard_root_sampling_choices",
+          "args": [
+            "parentbased_traceidratio",
+            "1",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_000": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_case_insensitive_environment_sampling_over_configuration",
+          "args": [
+            "ALWAYS_OFF",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_001": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_case_insensitive_environment_sampling_over_configuration",
+          "args": [
+            "PaReNtBaSeD_AlWaYs_OfF",
+            false
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_002": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_case_insensitive_environment_sampling_over_configuration",
+          "args": [
+            "ALWAYS_OFF",
+            true
+          ]
+        },
+        "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration.should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_003": {
+          "class": "Cratis.OpenTelemetry.for_OpenTelemetryExtensions.when_sampling_from_application_configuration",
+          "method": "should_honor_case_insensitive_environment_sampling_over_configuration",
+          "args": [
+            "PaReNtBaSeD_AlWaYs_OfF",
+            true
+          ]
+        }
+      },
+      "renames": {
+        "Cratis.Concepts.for_ConceptAs.when_implicitly_converting.should_convert_from_concept_to_primitive": "ShouldConvertFromConceptToPrimitive",
+        "Cratis.Strings.for_ToCamelCase.when_converting.should_return_null_for_null_name": "CamelCaseNullNameReturnsNull"
+      }
+    }
+  }
+}

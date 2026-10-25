@@ -1,0 +1,795 @@
+--- a/Directory.Packages.props
++++ b/Directory.Packages.props
+@@ -19,7 +19,7 @@
+     <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
+     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.316" />
+     <!-- Specifications -->
+-    <PackageVersion Include="Cratis.Specifications.XUnit.v3" Version="5.0.1" />
++    <PackageVersion Include="Cratis.Specifications.Runner" Version="5.0.3" />
+     <PackageVersion Include="xunit.v3.mtp-off" Version="4.0.2" />
+     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
+     <PackageVersion Include="Moq" Version="4.21.0" />
+@@ -37,6 +37,7 @@
+     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.20.1" />
+     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.20.1" />
+     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.13" />
++    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
+   </ItemGroup>
+   <Import Project="$(MSBuildThisFileDirectory)/Directory.Packages.NET8.props" Condition=" '$(TargetFramework)' == 'net8.0' " />
+   <Import Project="$(MSBuildThisFileDirectory)/Directory.Packages.NET9.props" Condition=" '$(TargetFramework)' == 'net9.0' " />
+--- a/Source/DotNET/Directory.Build.props
++++ b/Source/DotNET/Directory.Build.props
+@@ -53,11 +53,9 @@
+     </ItemGroup>
+ 
+     <ItemGroup Condition="'$(IsTestProject)'=='true'">
+-        <PackageReference Include="Cratis.Specifications.XUnit.v3" />
++        <PackageReference Include="Cratis.Specifications.Runner" />
++        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+         <PackageReference Include="Moq" />
+-        <PackageReference Include="xunit.v3.mtp-off" />
+-        <PackageReference Include="xunit.runner.visualstudio" />
+-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+         <Compile Include="$(MSBuildThisFileDirectory)/GlobalUsings.Specs.cs" />
+     </ItemGroup>
+ 
+@@ -68,10 +66,8 @@
+         simply stop counting and nothing says so. Three projects in this repo were in that state.
+         Assert the adapter landed rather than trusting that referencing the package was enough.
+     -->
+-    <Target Name="EnsureTestProjectIsDiscoverable"
+-            AfterTargets="Build"
+-            Condition="'$(IsTestProject)'=='true' and '$(TargetFramework)'!=''">
+-        <Error Condition="!Exists('$(OutputPath)xunit.runner.visualstudio.testadapter.dll')"
+-               Text="$(MSBuildProjectName) is a test project but its output has no VSTest adapter, so `dotnet test` will silently skip it. This happens when the project sets the singular &lt;TargetFramework&gt; while Directory.Build.props sets &lt;TargetFrameworks&gt; - use the plural form." />
+-    </Target>
++    <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectName)').EndsWith('.Specs'))">
++        <CratisSpecificationsSharedLifecycle>true</CratisSpecificationsSharedLifecycle>
++        <CratisSpecificationsReadableNames>false</CratisSpecificationsReadableNames>
++    </PropertyGroup>
+ </Project>
+--- a/Source/DotNET/GlobalUsings.Specs.cs
++++ b/Source/DotNET/GlobalUsings.Specs.cs
+@@ -6,6 +6,5 @@
+ global using Cratis.Specifications;
+ global using Cratis.Types;
+ global using Moq;
+-global using Xunit;
+ global using static Moq.It;
+ global using static Moq.Times;
+--- a/Source/DotNET/Fundamentals.Specs/Concepts/for_ConceptAs/when_comparing_concepts.cs
++++ b/Source/DotNET/Fundamentals.Specs/Concepts/for_ConceptAs/when_comparing_concepts.cs
+@@ -33,7 +33,7 @@
+         var conceptA = new IntConcept(42);
+         var conceptB = new IntConcept(24);
+ 
+-        Assert.True(conceptA.CompareTo(conceptB) > 0);
++        (conceptA.CompareTo(conceptB) > 0).ShouldBeTrue();
+         conceptA.ShouldBeGreaterThan(conceptB);
+     }
+ 
+@@ -43,7 +43,7 @@
+         var conceptA = new IntConcept(24);
+         var conceptB = new IntConcept(42);
+ 
+-        Assert.True(conceptA.CompareTo(conceptB) < 0);
++        (conceptA.CompareTo(conceptB) < 0).ShouldBeTrue();
+         conceptA.ShouldBeLessThan(conceptB);
+     }
+ 
+--- a/Source/DotNET/Fundamentals.Specs/Concepts/for_ConceptAs/when_implicitly_converting.cs
++++ b/Source/DotNET/Fundamentals.Specs/Concepts/for_ConceptAs/when_implicitly_converting.cs
+@@ -5,7 +5,7 @@
+ 
+ namespace Cratis.Concepts.for_ConceptAs;
+ 
+-public class when_implicitly_converting
++public class when_implicitly_converting : Specification
+ {
+     [Fact]
+     public void should_convert_from_primitive_to_concept()
+@@ -17,7 +17,7 @@
+     }
+ 
+     [Fact]
+-    public void ShouldConvertFromConceptToPrimitive()
++    public void should_convert_from_concept_to_primitive()
+     {
+         IntConcept conceptValue = new(42);
+         int intValue = conceptValue;
+--- a/Source/DotNET/Fundamentals.Specs/Json/for_ConceptAsJsonConverter/given/converter_for_converting_from_json.cs
++++ b/Source/DotNET/Fundamentals.Specs/Json/for_ConceptAsJsonConverter/given/converter_for_converting_from_json.cs
+@@ -15,7 +15,7 @@
+     protected abstract string FormattedInput { get; }
+     protected Type ConceptType => typeof(TConcept);
+ 
+-    void Establish()
++    internal void Establish()
+     {
+         converter = new();
+         input = InputValue;
+--- a/Source/DotNET/Fundamentals.Specs/Json/for_ConceptAsJsonConverter/given/converter_for_converting_to_json.cs
++++ b/Source/DotNET/Fundamentals.Specs/Json/for_ConceptAsJsonConverter/given/converter_for_converting_to_json.cs
+@@ -16,7 +16,7 @@
+     protected abstract TUnderlying Expected { get; }
+     protected abstract string FormattedExpected { get; }
+ 
+-    void Establish()
++    internal void Establish()
+     {
+         converter = new();
+ 
+--- a/Source/DotNET/Fundamentals.Specs/Json/for_JsonElementExtensions/when_trying_to_get_value_of_type.cs
++++ b/Source/DotNET/Fundamentals.Specs/Json/for_JsonElementExtensions/when_trying_to_get_value_of_type.cs
+@@ -11,7 +11,7 @@
+     protected T output;
+     protected abstract T expected { get; }
+ 
+-    void Because()
++    internal void Because()
+     {
+         var document = typeof(T).IsPrimitive ?
+             JsonDocument.Parse($"{{\"TheValue\":{expected}}}") :
+--- a/Source/DotNET/Fundamentals.Specs/Strings/for_ToCamelCase/when_converting.cs
++++ b/Source/DotNET/Fundamentals.Specs/Strings/for_ToCamelCase/when_converting.cs
+@@ -3,53 +3,114 @@
+ 
+ namespace Cratis.Strings.for_ToCamelCase;
+ 
+-public static class when_converting
++public class when_converting : Specification
+ {
+ #pragma warning disable RCS1181
+     // These test cases were copied from Json.NET via System.Text.Json in the DotNet framework.
+ #pragma warning restore RCS1181
+-    [Theory]
+-    [InlineData("URLValue", "URLValue")]
+-    [InlineData("URL", "URL")]
+-    [InlineData("ID", "ID")]
+-    [InlineData("i", "I")]
+-    [InlineData("", "")]
+-    [InlineData("😀葛🀄", "😀葛🀄")] // Surrogate pairs
+-    [InlineData("άλφαΒήταΓάμμα", "ΆλφαΒήταΓάμμα")] // Non-ascii letters
+-    [InlineData("𐐀𐐨𐐨𐐀𐐨𐐨", "𐐀𐐨𐐨𐐀𐐨𐐨")] // Surrogate pair letters don't normalize
+-    [InlineData("\ude00\ud83d", "\ude00\ud83d")] // Unpaired surrogates
+-    [InlineData("person", "Person")]
+-    [InlineData("iPhone", "iPhone")]
+-    [InlineData("IPhone", "IPhone")]
+-    [InlineData("i Phone", "I Phone")]
+-    [InlineData("i  Phone", "I  Phone")]
+-    [InlineData(" IPhone", " IPhone")]
+-    [InlineData(" IPhone ", " IPhone ")]
+-    [InlineData("isCIA", "IsCIA")]
+-    [InlineData("vmQ", "VmQ")]
+-    [InlineData("xml2Json", "Xml2Json")]
+-    [InlineData("snAkEcAsE", "SnAkEcAsE")]
+-    [InlineData("snA__kEcAsE", "SnA__kEcAsE")]
+-    [InlineData("snA__ kEcAsE", "SnA__ kEcAsE")]
+-    [InlineData("already_snake_case_ ", "already_snake_case_ ")]
+-    [InlineData("isJSONProperty", "IsJSONProperty")]
+-    [InlineData("SHOUTING_CASE", "SHOUTING_CASE")]
+-    [InlineData("9999-12-31T23:59:59.9999999Z", "9999-12-31T23:59:59.9999999Z")]
+-    [InlineData("hi!! This is text. Time to test.", "Hi!! This is text. Time to test.")]
+-    [InlineData("BUILDING", "BUILDING")]
+-    [InlineData("BUILDING Property", "BUILDING Property")]
+-    [InlineData("building Property", "Building Property")]
+-    [InlineData("BUILDING PROPERTY", "BUILDING PROPERTY")]
+-    public static void ToCamelCaseTest(string expectedResult, string name)
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_000() => ToCamelCaseTest("URLValue", "URLValue");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_001() => ToCamelCaseTest("URL", "URL");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_002() => ToCamelCaseTest("ID", "ID");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_003() => ToCamelCaseTest("i", "I");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_004() => ToCamelCaseTest("", "");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_005() => ToCamelCaseTest("😀葛🀄", "😀葛🀄");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_006() => ToCamelCaseTest("άλφαΒήταΓάμμα", "ΆλφαΒήταΓάμμα");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_007() => ToCamelCaseTest("𐐀𐐨𐐨𐐀𐐨𐐨", "𐐀𐐨𐐨𐐀𐐨𐐨");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_008() => ToCamelCaseTest("\ude00\ud83d", "\ude00\ud83d");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_009() => ToCamelCaseTest("person", "Person");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_010() => ToCamelCaseTest("iPhone", "iPhone");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_011() => ToCamelCaseTest("IPhone", "IPhone");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_012() => ToCamelCaseTest("i Phone", "I Phone");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_013() => ToCamelCaseTest("i  Phone", "I  Phone");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_014() => ToCamelCaseTest(" IPhone", " IPhone");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_015() => ToCamelCaseTest(" IPhone ", " IPhone ");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_016() => ToCamelCaseTest("isCIA", "IsCIA");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_017() => ToCamelCaseTest("vmQ", "VmQ");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_018() => ToCamelCaseTest("xml2Json", "Xml2Json");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_019() => ToCamelCaseTest("snAkEcAsE", "SnAkEcAsE");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_020() => ToCamelCaseTest("snA__kEcAsE", "SnA__kEcAsE");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_021() => ToCamelCaseTest("snA__ kEcAsE", "SnA__ kEcAsE");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_022() => ToCamelCaseTest("already_snake_case_ ", "already_snake_case_ ");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_023() => ToCamelCaseTest("isJSONProperty", "IsJSONProperty");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_024() => ToCamelCaseTest("SHOUTING_CASE", "SHOUTING_CASE");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_025() => ToCamelCaseTest("9999-12-31T23:59:59.9999999Z", "9999-12-31T23:59:59.9999999Z");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_026() => ToCamelCaseTest("hi!! This is text. Time to test.", "Hi!! This is text. Time to test.");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_027() => ToCamelCaseTest("BUILDING", "BUILDING");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_028() => ToCamelCaseTest("BUILDING Property", "BUILDING Property");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_029() => ToCamelCaseTest("building Property", "Building Property");
++
++    [Fact]
++    public void should_convert_to_camel_case__trial_case_030() => ToCamelCaseTest("BUILDING PROPERTY", "BUILDING PROPERTY");
++
++    private void ToCamelCaseTest(string expectedResult, string name)
+     {
+         var converted = name.ToCamelCase();
+-        Assert.Equal(expectedResult, converted);
++        converted.ShouldEqual(expectedResult);
+     }
+ 
+     [Fact]
+-    public static void CamelCaseNullNameReturnsNull()
++    public void should_return_null_for_null_name()
+     {
+         const string name = null;
+-        Assert.Null(name.ToCamelCase());
++        name.ToCamelCase().ShouldBeNull();
+     }
+ }
+\ No newline at end of file
+--- a/Source/DotNET/Fundamentals.TypeDiscovery.Generator.Specs/GlobalUsings.cs
++++ b/Source/DotNET/Fundamentals.TypeDiscovery.Generator.Specs/GlobalUsings.cs
+@@ -2,4 +2,3 @@
+ // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+ 
+ global using Cratis.Specifications;
+-global using Xunit;
+--- a/Source/DotNET/Metrics.Roslyn.Specs/GlobalUsings.cs
++++ b/Source/DotNET/Metrics.Roslyn.Specs/GlobalUsings.cs
+@@ -2,4 +2,3 @@
+ // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+ 
+ global using Cratis.Specifications;
+-global using Xunit;
+--- a/Source/DotNET/OpenTelemetry.Specs/AssemblyInfo.cs
++++ b/Source/DotNET/OpenTelemetry.Specs/AssemblyInfo.cs
+@@ -1,4 +1,4 @@
+ // Copyright (c) Cratis. All rights reserved.
+ // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+ 
+-[assembly: Xunit.v3.Parallelization(Mode = Xunit.Sdk.ParallelMode.None)]
++[assembly: System.Reflection.AssemblyMetadata("Trial.Parallelism", "Serialized by runner command-line options")]
+--- a/Source/DotNET/OpenTelemetry.Specs/OpenTelemetry.Specs.csproj
++++ b/Source/DotNET/OpenTelemetry.Specs/OpenTelemetry.Specs.csproj
+@@ -11,7 +11,6 @@
+     <ItemGroup>
+         <Compile Remove="$(MSBuildThisFileDirectory)/../GlobalUsings.Specs.cs" />
+         <Using Include="Cratis.Specifications" />
+-        <Using Include="Xunit" />
+     </ItemGroup>
+     <ItemGroup>
+         <FrameworkReference Include="Microsoft.AspNetCore.App" />
+--- a/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_an_endpoint_is_invalid.cs
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_an_endpoint_is_invalid.cs
+@@ -6,16 +6,9 @@
+ 
+ namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
+ 
+-public class when_an_endpoint_is_invalid : given.a_clean_environment
++public abstract class when_an_endpoint_is_invalid : given.a_clean_environment
+ {
+-    [Theory]
+-    [InlineData("/relative", "OTEL_EXPORTER_OTLP_ENDPOINT")]
+-    [InlineData("ftp://collector:4318", "OTEL_EXPORTER_OTLP_ENDPOINT")]
+-    [InlineData("not a URI", "OTEL_EXPORTER_OTLP_ENDPOINT")]
+-    [InlineData("/relative", "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")]
+-    [InlineData("/relative", "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT")]
+-    [InlineData("/relative", "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT")]
+-    void should_fail_setup_with_the_endpoint_error(string endpoint, string key)
++    protected void should_fail_setup_with_the_endpoint_error(string endpoint, string key)
+     {
+         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+         {
+--- a/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_a_factory_resource_detector.cs
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_a_factory_resource_detector.cs
+@@ -11,12 +11,9 @@
+ 
+ namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
+ 
+-public class when_composing_a_factory_resource_detector : given.a_clean_environment
++public abstract class when_composing_a_factory_resource_detector : given.a_clean_environment
+ {
+-    [Theory]
+-    [InlineData(false)]
+-    [InlineData(true)]
+-    void should_resolve_the_detector_once_per_provider_and_preserve_its_identity(bool overrideIdentity)
++    protected void should_resolve_the_detector_once_per_provider_and_preserve_its_identity(bool overrideIdentity)
+     {
+         var builder = Host.CreateApplicationBuilder();
+         if (overrideIdentity)
+--- a/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_telemetry_in_a_host.cs
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_telemetry_in_a_host.cs
+@@ -14,12 +14,9 @@
+ 
+ namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
+ 
+-public class when_composing_telemetry_in_a_host : given.a_clean_environment
++public abstract class when_composing_telemetry_in_a_host : given.a_clean_environment
+ {
+-    [Theory]
+-    [InlineData(false)]
+-    [InlineData(true)]
+-    void should_preserve_configuration_and_honor_settings_registered_after_composition(bool web)
++    protected void should_preserve_configuration_and_honor_settings_registered_after_composition(bool web)
+     {
+         IHostApplicationBuilder builder = web ? WebApplication.CreateBuilder() : Host.CreateApplicationBuilder();
+         builder.Services.AddOpenTelemetry().WithCratis();
+@@ -43,10 +40,7 @@
+         host.Services.GetRequiredService<IOptions<PeriodicExportingMetricReaderOptions>>().Value.ExportIntervalMilliseconds.ShouldEqual(12345);
+     }
+ 
+-    [Theory]
+-    [InlineData(false)]
+-    [InlineData(true)]
+-    void should_keep_application_configuration_with_separate_telemetry_configuration(bool web)
++    protected void should_keep_application_configuration_with_separate_telemetry_configuration(bool web)
+     {
+         IHostApplicationBuilder builder = web ? WebApplication.CreateBuilder() : Host.CreateApplicationBuilder();
+         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+--- a/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement.cs
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement.cs
+@@ -14,22 +14,9 @@
+ 
+ namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
+ 
+-public class when_environment_overrides_sdk_disablement : given.a_recording_exporter
++public abstract class when_environment_overrides_sdk_disablement : given.a_recording_exporter
+ {
+-    [Theory]
+-    [InlineData(false, "host", false)]
+-    [InlineData(true, "host", false)]
+-    [InlineData(false, "composition", false)]
+-    [InlineData(true, "composition", false)]
+-    [InlineData(false, "separate", false)]
+-    [InlineData(true, "separate", false)]
+-    [InlineData(false, "host", true)]
+-    [InlineData(true, "host", true)]
+-    [InlineData(false, "composition", true)]
+-    [InlineData(true, "composition", true)]
+-    [InlineData(false, "separate", true)]
+-    [InlineData(true, "separate", true)]
+-    void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(bool web, string setup, bool disabled)
++    protected void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(bool web, string setup, bool disabled)
+     {
+         Environment.SetEnvironmentVariable("OTEL_SDK_DISABLED", disabled ? "true" : "false");
+         IHostApplicationBuilder builder = web ? WebApplication.CreateBuilder() : Host.CreateApplicationBuilder();
+--- a/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_sampling_from_application_configuration.cs
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_sampling_from_application_configuration.cs
+@@ -11,16 +11,31 @@
+ 
+ public class when_sampling_from_application_configuration : given.a_clean_environment
+ {
+-    [Theory]
+-    [InlineData("always_on", "0", true)]
+-    [InlineData("always_off", "1", false)]
+-    [InlineData("traceidratio", "0", false)]
+-    [InlineData("traceidratio", "1", true)]
+-    [InlineData("parentbased_always_on", "0", true)]
+-    [InlineData("parentbased_always_off", "1", false)]
+-    [InlineData("parentbased_traceidratio", "0", false)]
+-    [InlineData("parentbased_traceidratio", "1", true)]
+-    void should_honor_standard_root_sampling_choices(string sampler, string ratio, bool sampled)
++    [Fact]
++    public void should_honor_standard_root_sampling_choices__trial_case_000() => should_honor_standard_root_sampling_choices("always_on", "0", true);
++
++    [Fact]
++    public void should_honor_standard_root_sampling_choices__trial_case_001() => should_honor_standard_root_sampling_choices("always_off", "1", false);
++
++    [Fact]
++    public void should_honor_standard_root_sampling_choices__trial_case_002() => should_honor_standard_root_sampling_choices("traceidratio", "0", false);
++
++    [Fact]
++    public void should_honor_standard_root_sampling_choices__trial_case_003() => should_honor_standard_root_sampling_choices("traceidratio", "1", true);
++
++    [Fact]
++    public void should_honor_standard_root_sampling_choices__trial_case_004() => should_honor_standard_root_sampling_choices("parentbased_always_on", "0", true);
++
++    [Fact]
++    public void should_honor_standard_root_sampling_choices__trial_case_005() => should_honor_standard_root_sampling_choices("parentbased_always_off", "1", false);
++
++    [Fact]
++    public void should_honor_standard_root_sampling_choices__trial_case_006() => should_honor_standard_root_sampling_choices("parentbased_traceidratio", "0", false);
++
++    [Fact]
++    public void should_honor_standard_root_sampling_choices__trial_case_007() => should_honor_standard_root_sampling_choices("parentbased_traceidratio", "1", true);
++
++    private void should_honor_standard_root_sampling_choices(string sampler, string ratio, bool sampled)
+     {
+         var builder = Host.CreateApplicationBuilder();
+         builder.Services.AddOpenTelemetry().WithCratis();
+@@ -36,12 +51,19 @@
+         activity!.Recorded.ShouldEqual(sampled);
+     }
+ 
+-    [Theory]
+-    [InlineData("ALWAYS_OFF", false)]
+-    [InlineData("PaReNtBaSeD_AlWaYs_OfF", false)]
+-    [InlineData("ALWAYS_OFF", true)]
+-    [InlineData("PaReNtBaSeD_AlWaYs_OfF", true)]
+-    void should_honor_case_insensitive_environment_sampling_over_configuration(string sampler, bool separate)
++    [Fact]
++    public void should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_000() => should_honor_case_insensitive_environment_sampling_over_configuration("ALWAYS_OFF", false);
++
++    [Fact]
++    public void should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_001() => should_honor_case_insensitive_environment_sampling_over_configuration("PaReNtBaSeD_AlWaYs_OfF", false);
++
++    [Fact]
++    public void should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_002() => should_honor_case_insensitive_environment_sampling_over_configuration("ALWAYS_OFF", true);
++
++    [Fact]
++    public void should_honor_case_insensitive_environment_sampling_over_configuration__trial_case_003() => should_honor_case_insensitive_environment_sampling_over_configuration("PaReNtBaSeD_AlWaYs_OfF", true);
++
++    private void should_honor_case_insensitive_environment_sampling_over_configuration(string sampler, bool separate)
+     {
+         Environment.SetEnvironmentVariable("OTEL_TRACES_SAMPLER", sampler);
+         var builder = Host.CreateApplicationBuilder();
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_000.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_000 : when_an_endpoint_is_invalid
++{
++    [Fact]
++    public void should_fail_setup_with_the_endpoint_error__trial_case_000() => should_fail_setup_with_the_endpoint_error("/relative", "OTEL_EXPORTER_OTLP_ENDPOINT");
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_001.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_001 : when_an_endpoint_is_invalid
++{
++    [Fact]
++    public void should_fail_setup_with_the_endpoint_error__trial_case_001() => should_fail_setup_with_the_endpoint_error("ftp://collector:4318", "OTEL_EXPORTER_OTLP_ENDPOINT");
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_002.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_002 : when_an_endpoint_is_invalid
++{
++    [Fact]
++    public void should_fail_setup_with_the_endpoint_error__trial_case_002() => should_fail_setup_with_the_endpoint_error("not a URI", "OTEL_EXPORTER_OTLP_ENDPOINT");
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_003.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_003 : when_an_endpoint_is_invalid
++{
++    [Fact]
++    public void should_fail_setup_with_the_endpoint_error__trial_case_003() => should_fail_setup_with_the_endpoint_error("/relative", "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_004.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_004 : when_an_endpoint_is_invalid
++{
++    [Fact]
++    public void should_fail_setup_with_the_endpoint_error__trial_case_004() => should_fail_setup_with_the_endpoint_error("/relative", "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT");
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_005.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_an_endpoint_is_invalid__trial_should_fail_setup_with_the_endpoint_error__trial_case_005 : when_an_endpoint_is_invalid
++{
++    [Fact]
++    public void should_fail_setup_with_the_endpoint_error__trial_case_005() => should_fail_setup_with_the_endpoint_error("/relative", "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT");
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_a_factory_resource_detector__trial_should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_000.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_composing_a_factory_resource_detector__trial_should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_000 : when_composing_a_factory_resource_detector
++{
++    [Fact]
++    public void should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_000() => should_resolve_the_detector_once_per_provider_and_preserve_its_identity(false);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_a_factory_resource_detector__trial_should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_001.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_composing_a_factory_resource_detector__trial_should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_001 : when_composing_a_factory_resource_detector
++{
++    [Fact]
++    public void should_resolve_the_detector_once_per_provider_and_preserve_its_identity__trial_case_001() => should_resolve_the_detector_once_per_provider_and_preserve_its_identity(true);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_telemetry_in_a_host__trial_should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_000.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_composing_telemetry_in_a_host__trial_should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_000 : when_composing_telemetry_in_a_host
++{
++    [Fact]
++    public void should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_000() => should_preserve_configuration_and_honor_settings_registered_after_composition(false);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_telemetry_in_a_host__trial_should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_001.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_composing_telemetry_in_a_host__trial_should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_001 : when_composing_telemetry_in_a_host
++{
++    [Fact]
++    public void should_preserve_configuration_and_honor_settings_registered_after_composition__trial_case_001() => should_preserve_configuration_and_honor_settings_registered_after_composition(true);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_telemetry_in_a_host__trial_should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_000.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_composing_telemetry_in_a_host__trial_should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_000 : when_composing_telemetry_in_a_host
++{
++    [Fact]
++    public void should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_000() => should_keep_application_configuration_with_separate_telemetry_configuration(false);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_composing_telemetry_in_a_host__trial_should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_001.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_composing_telemetry_in_a_host__trial_should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_001 : when_composing_telemetry_in_a_host
++{
++    [Fact]
++    public void should_keep_application_configuration_with_separate_telemetry_configuration__trial_case_001() => should_keep_application_configuration_with_separate_telemetry_configuration(true);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_000.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_000 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_000() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(false, "host", false);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_001.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_001 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_001() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(true, "host", false);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_002.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_002 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_002() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(false, "composition", false);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_003.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_003 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_003() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(true, "composition", false);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_004.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_004 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_004() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(false, "separate", false);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_005.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_005 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_005() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(true, "separate", false);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_006.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_006 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_006() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(false, "host", true);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_007.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_007 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_007() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(true, "host", true);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_008.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_008 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_008() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(false, "composition", true);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_009.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_009 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_009() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(true, "composition", true);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_010.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_010 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_010() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(false, "separate", true);
++}
+--- /dev/null
++++ b/Source/DotNET/OpenTelemetry.Specs/for_OpenTelemetryExtensions/when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_011.cs
+@@ -0,0 +1,10 @@
++// Copyright (c) Cratis. All rights reserved.
++// Licensed under the MIT license. See LICENSE file in the project root for full license information.
++
++namespace Cratis.OpenTelemetry.for_OpenTelemetryExtensions;
++
++public class when_environment_overrides_sdk_disablement__trial_should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_011 : when_environment_overrides_sdk_disablement
++{
++    [Fact]
++    public void should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration__trial_case_011() => should_apply_the_environment_decision_to_all_providers_without_changing_application_configuration(true, "separate", true);
++}
