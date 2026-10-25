@@ -127,6 +127,21 @@ trimmed away. Generated registration does not root its own assembly. Root such a
 with `TrimmerRootAssembly` or `DynamicDependency`; no reference walk could recover an assembly removed
 by trimming. The type-discovery sample demonstrates discovery in a native executable.
 
+Generated convention and self bindings preserve public instance constructors of bound, non-static,
+non-abstract classes and structs through `DynamicDependency` attributes on the generated module
+initializer, including open generic definitions. A type must have at least one public instance
+constructor; for structs it must be explicitly declared. An implicit struct parameterless constructor
+has no IL member to preserve, so no attribute is emitted for it. Enums, interfaces, delegates and types
+with only non-public constructors get no attribute. These checks do not change the binding lists.
+This allows dependency injection to activate types referenced only through discovery. Assemblies compiled
+with an older generator version must be rebuilt to gain this constructor preservation.
+
+Hand-written `ICanProvideConventionsForDependencyInjection` providers must preserve their implementation
+types' public constructors themselves. For example, put
+`[DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(MyImplementation))]`
+on a method that is kept when the provider is used. Passing `typeof(MyImplementation)` in a binding alone
+does not preserve its constructors.
+
 ## Watching discovery happen
 
 The universe is built from a static field initializer, before any container or logger exists, so the

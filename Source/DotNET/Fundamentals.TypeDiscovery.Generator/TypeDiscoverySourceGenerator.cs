@@ -144,7 +144,7 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
             .OrderBy(static id => id, StringComparer.Ordinal)
             .ToImmutableArray();
 
-        var source = GeneratedSourceBuilder.Build(namedTypes, contractsAndImplementors, conventionServiceBindings, conventionSelfBindings, experimentalDiagnosticIds);
+        var source = GeneratedSourceBuilder.Build(namedTypes, contractsAndImplementors, conventionServiceBindings, conventionSelfBindings, symbols.Concat(packageSymbols), experimentalDiagnosticIds);
         context.AddSource("GeneratedTypeDiscoveryProvider.g.cs", source);
     }
 
