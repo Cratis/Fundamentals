@@ -14,13 +14,14 @@ static class OpenTelemetryLogBatch
 {
     /// <summary>
     /// Configures batch options from the OTEL_BLRP_* settings, keeping current values when a setting is missing or not positive.
+    /// The export batch size never exceeds the queue size, as the batch processor requires.
     /// </summary>
     /// <param name="options">The batch options to update.</param>
     /// <param name="read">A function that reads a setting by name.</param>
     internal static void Configure(BatchExportLogRecordProcessorOptions options, Func<string, string?> read)
     {
         options.MaxQueueSize = ReadPositive(read("OTEL_BLRP_MAX_QUEUE_SIZE"), options.MaxQueueSize);
-        options.MaxExportBatchSize = ReadPositive(read("OTEL_BLRP_MAX_EXPORT_BATCH_SIZE"), options.MaxExportBatchSize);
+        options.MaxExportBatchSize = Math.Min(ReadPositive(read("OTEL_BLRP_MAX_EXPORT_BATCH_SIZE"), options.MaxExportBatchSize), options.MaxQueueSize);
         options.ScheduledDelayMilliseconds = ReadPositive(read("OTEL_BLRP_SCHEDULE_DELAY"), options.ScheduledDelayMilliseconds);
         options.ExporterTimeoutMilliseconds = ReadPositive(read("OTEL_BLRP_EXPORT_TIMEOUT"), options.ExporterTimeoutMilliseconds);
     }

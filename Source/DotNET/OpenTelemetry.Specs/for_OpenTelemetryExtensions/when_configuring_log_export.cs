@@ -39,6 +39,23 @@ public class when_configuring_log_export : given.a_configured_environment
         batch.ExporterTimeoutMilliseconds.ShouldEqual(500 * multiplier);
     }
 
+    [Fact]
+    void should_keep_the_export_batch_within_a_smaller_queue()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://collector:4318",
+            ["OTEL_BLRP_MAX_QUEUE_SIZE"] = "256"
+        }).Build();
+        var builder = CreateBuilder(configuration);
+        builder.AddCratisOpenTelemetry();
+        using var services = builder.Services.BuildServiceProvider();
+        var batch = services.GetRequiredService<IOptions<LogRecordExportProcessorOptions>>().Value.BatchExportProcessorOptions;
+        batch.MaxQueueSize.ShouldEqual(256);
+        batch.MaxExportBatchSize.ShouldEqual(256);
+        services.GetRequiredService<LoggerProvider>().ShouldNotBeNull();
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
