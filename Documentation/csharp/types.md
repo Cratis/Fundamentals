@@ -115,6 +115,18 @@ is the answer.
 > `Cratis.Fundamentals` in `Assemblies` — and none of that project's own types are found. Reference the
 > generator explicitly from such a project.
 
+## Native AOT
+
+Under NativeAOT, all compiled module initializers run before `Main`, so the generated provider registry
+is complete after startup. `GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered()` detects that
+assembly-reference enumeration is unsupported and skips the reference walk; it does not need to load
+assemblies or run their initializers again.
+
+An assembly that contributes only through reflection and is never referenced from compiled code may be
+trimmed away. Generated registration does not root its own assembly. Root such assemblies explicitly
+with `TrimmerRootAssembly` or `DynamicDependency`; no reference walk could recover an assembly removed
+by trimming. The type-discovery sample demonstrates discovery in a native executable.
+
 ## Watching discovery happen
 
 The universe is built from a static field initializer, before any container or logger exists, so the
