@@ -66,7 +66,7 @@ public class when_sampling_from_application_configuration : given.a_clean_enviro
     }
 
     [Fact]
-    void should_allow_application_callbacks_to_override_the_shared_sampler()
+    void should_keep_standard_sampling_settings_over_application_callbacks()
     {
         var builder = Host.CreateApplicationBuilder();
         builder.Configuration["OTEL_TRACES_SAMPLER"] = "always_off";
@@ -75,6 +75,6 @@ public class when_sampling_from_application_configuration : given.a_clean_enviro
         host.Services.GetRequiredService<TracerProvider>();
         using var source = new ActivitySource("Cratis.Test.HostSampler");
         using var activity = source.StartActivity("sample", ActivityKind.Internal, default(ActivityContext));
-        activity!.Recorded.ShouldBeTrue();
+        activity!.Recorded.ShouldBeFalse();
     }
 }
