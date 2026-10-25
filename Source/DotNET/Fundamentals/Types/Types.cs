@@ -35,7 +35,7 @@ public class Types : ITypes
     /// <c language="csharp">AddTypeDiscovery()</c> supply it - that reuses one universe per distinct provider set and
     /// rebuilds when the set grows - rather than capturing this field early and holding it. Outside a
     /// container, <c language="csharp">TypesServiceCollectionExtensions.CurrentTypeUniverse()</c> returns that same
-    /// instance, and <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered"/> is what
+    /// instance, and <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered()"/> is what
     /// makes the provider set complete before either is read.
     /// </para>
     /// </remarks>
