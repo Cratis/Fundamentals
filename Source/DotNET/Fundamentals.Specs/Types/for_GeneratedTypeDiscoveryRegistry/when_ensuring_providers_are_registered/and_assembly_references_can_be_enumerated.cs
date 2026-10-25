@@ -3,9 +3,9 @@
 
 using System.Reflection;
 
-namespace Cratis.Types.for_GeneratedTypeDiscoveryRegistry;
+namespace Cratis.Types.for_GeneratedTypeDiscoveryRegistry.when_ensuring_providers_are_registered;
 
-public class when_ensuring_providers_are_registered : Specification
+public class and_assembly_references_can_be_enumerated : Specification
 {
     const string _probeAssemblyName = "Cratis.Fundamentals.Specs.ModuleInitializerProbe";
 

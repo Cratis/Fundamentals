@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 using Cratis.Collections;
 using Cratis.DependencyInjection;
 using Cratis.Types;
@@ -14,19 +12,7 @@ internal static class Program
 {
     public static void Main()
     {
-        PreserveConstructorsForConventionBasedActivation();
-
         Console.WriteLine("=== AOT-Friendly Type Discovery Demo ===");
-
-        // Keep explicit references so analyzers understand these types are intentionally used via discovery/conventions.
-        var referencedTypes = new Type[]
-        {
-            typeof(FirstImplementation),
-            typeof(SecondImplementation),
-            typeof(ConventionalService),
-            typeof(ScopedSelfBinding),
-            typeof(GenericDemo)
-        };
 
         var services = new ServiceCollection();
         services.AddTypeDiscovery();
@@ -62,18 +48,15 @@ internal static class Program
         var scopedSelfBinding = scope.ServiceProvider.GetRequiredService<ScopedSelfBinding>();
         Console.WriteLine($"Self binding resolved: {scopedSelfBinding.Describe()}");
 
+        var dependent = serviceProvider.GetRequiredService<IDependentService>();
+        Console.WriteLine($"Discovery-only convention binding resolved: {dependent.Describe()}");
+
+        var selfBoundType = types.All.Single(type => type.Name == "OnlySelfBound");
+        var selfBound = serviceProvider.GetRequiredService(selfBoundType);
+        Console.WriteLine($"Discovery-only self binding resolved: {selfBound.GetType().Name}");
+
         Console.WriteLine();
         Console.WriteLine($"Total discovered types: {types.All.Count()}");
         Console.WriteLine("Demo complete.");
-        GC.KeepAlive(referencedTypes);
-    }
-
-    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(FirstImplementation))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(SecondImplementation))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(ConventionalService))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(ScopedSelfBinding))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(GenericDemo))]
-    static void PreserveConstructorsForConventionBasedActivation()
-    {
     }
 }

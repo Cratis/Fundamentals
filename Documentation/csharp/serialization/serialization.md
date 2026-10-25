@@ -5,26 +5,26 @@ description: Configure the default JsonSerializerOptions in .NET with support fo
 
 ## JsonSerializerOptions
 
-When using the `.AddControllersFromProjectReferencedAssemblies()` method, it sets up the default JSON options for serialization for API controllers.
-This configuration includes support for [concepts](../concepts.md), `DateOnly`, `TimeOnly`, and additional converters.
-The options are set up as the default options for the ASP.NET pipelines.
-
-If you want to have access to the default `JsonSerializerOptions` in your own code, you can simply take a dependency in your constructor to it:
+Pass `Cratis.Json.Globals.JsonSerializerOptions` explicitly to `System.Text.Json.JsonSerializer` to use the Fundamentals JSON configuration.
+It includes converters for [concepts](../concepts.md), `DateOnly`, `TimeOnly`, enums, derived types, and additional types.
+Accessing this property does not register the options in dependency injection or configure ASP.NET JSON pipelines.
 
 ```csharp
+using System;
 using System.Text.Json;
 
-public class MyService
-{
-    public MyService(JsonSerializerOptions options)
-    {
-        // use the options
-    }
-}
+var options = Cratis.Json.Globals.JsonSerializerOptions;
+var json = JsonSerializer.Serialize(new Person("Ada"), options);
+Console.WriteLine(json); // {"firstName":"Ada"}
+var person = JsonSerializer.Deserialize<Person>(json, options);
+Console.WriteLine(person!.FirstName); // Ada
+
+public record Person(string FirstName);
 ```
 
-Default behavior for the JSON serializer options is to use **camelCase** instead of **PascalCase** and automatically translate between
-the two when serializing and deserializing.
+The options use acronym-friendly **camelCase** property names and set `DefaultIgnoreCondition` to `WhenWritingNull`.
+Naming applies to both serialization and deserialization, but does not enable case-insensitive input: the options leave `PropertyNameCaseInsensitive` at its default, `false`.
+Custom converters can have their own naming and null-handling behavior.
 
 ## Polymorphism and Type Discriminators
 
@@ -65,12 +65,16 @@ public record DebitAccount(AccountId Id, AccountName Name, AccountType Type) : I
 public record CreditAccount(AccountId Id, AccountName Name, AccountType Type) : IAccount;
 ```
 
-The `[DerivedType]` attribute requires a unique identifier in the form of a string representation of a `Guid`.
+The `[DerivedType]` attribute accepts a unique string identifier; a `Guid` string is one possible choice.
+These account excerpts assume application-defined `AccountId`, `AccountName`, and `AccountType` types.
 
 ### JSON
 
-The JSON serializer will add a `_derivedTypeId` to the payload referring to the type discriminator of the type.
-With this, the consumer can recognize the type.
+With the Fundamentals options, serialize through the declared interface (such as `JsonSerializer.Serialize<IAccount>(account, options)`) to use the derived-type converter.
+The converter adds `_derivedTypeId` for an attributed concrete type, so the consumer can recognize it.
+Deserialize through the same interface using `JsonSerializer.Deserialize<IAccount>(json, options)`; the identifier selects a registered derivative of that interface.
+If `_derivedTypeId` is missing, the converter returns the default value (`null` for an interface).
+Serializing a concrete type directly does not by itself select this converter merely because it has `[DerivedType]`.
 
 ### Client
 

@@ -53,7 +53,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(typeof(IActivitySource<>), typeof(UnkeyedActivitySource<>));
     }
 
-    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated providers use DynamicDependency on their module initializer to preserve public instance constructors of bound non-static, non-abstract classes and structs that have them; implicit struct constructors have no IL member and are excluded. Hand-written providers must preserve their implementation types' public constructors themselves, for example with a matching DynamicDependency on kept code.")]
     static bool TryAddGeneratedBindingsByConvention(IServiceCollection services)
     {
         GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered();
@@ -88,7 +88,7 @@ public static class ServiceCollectionExtensions
         return true;
     }
 
-    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated providers use DynamicDependency on their module initializer to preserve public instance constructors of bound non-static, non-abstract classes and structs that have them; implicit struct constructors have no IL member and are excluded. Hand-written providers must preserve their implementation types' public constructors themselves, for example with a matching DynamicDependency on kept code.")]
     static bool TryAddGeneratedSelfBindings(IServiceCollection services)
     {
         GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered();

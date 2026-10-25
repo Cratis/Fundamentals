@@ -65,7 +65,7 @@ public static class GeneratedTypeDiscoveryRegistry
     /// <remarks>
     /// <para>
     /// A generated provider registers itself from a <c language="csharp">[ModuleInitializer]</c> in the assembly that
-    /// declares it, and a module constructor runs only when the runtime first needs that assembly -
+    /// declares it. Under JIT, a module constructor runs only when the runtime first needs that assembly -
     /// which for a referenced assembly nothing has touched yet is never.
     /// <see cref="Assembly.Load(AssemblyName)"/> does not run one either. So this walks the reference
     /// closure from the loaded assemblies and the entry assembly, loads what is missing, and runs each
@@ -73,6 +73,13 @@ public static class GeneratedTypeDiscoveryRegistry
     /// on: the closure of a real application names assemblies that are genuinely absent at runtime. A
     /// module initializer that itself throws is not swallowed - it propagates, and because the runtime
     /// caches a failed type initialization, every later call throws the same way.
+    /// </para>
+    /// <para>
+    /// NativeAOT runs all compiled module initializers before Main, so after startup the registry is complete
+    /// and no reference walk is needed. An assembly contributing only through reflection and never referenced
+    /// from compiled code may be trimmed: generated registration does not root its own assembly. Root such
+    /// assemblies explicitly with <c language="xml">TrimmerRootAssembly</c> or <see cref="DynamicDependencyAttribute"/>;
+    /// no reference walk can recover an assembly removed by trimming.
     /// </para>
     /// <para>
     /// Safe to call repeatedly and from several threads at once. Module constructors run once per
@@ -90,9 +97,22 @@ public static class GeneratedTypeDiscoveryRegistry
     /// nobody wrote.
     /// </para>
     /// </remarks>
-    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Referenced assemblies must be visited to run module initializers that register generated providers.")]
-    public static void EnsureProvidersRegistered()
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Only reached when reference enumeration is supported. Referenced assemblies may have been removed by trimming or fail to load and are skipped; NativeAOT runs compiled module initializers at startup instead.")]
+    public static void EnsureProvidersRegistered() =>
+        EnsureProvidersRegistered(AssemblyReferenceEnumeration.IsSupported, static assembly => assembly.GetReferencedAssemblies());
+
+    /// <summary>
+    /// Ensures providers are registered when the runtime supports walking references.
+    /// </summary>
+    /// <param name="referencesCanBeEnumerated">Whether the runtime supports reference enumeration.</param>
+    /// <param name="referencesOf">The operation that enumerates an assembly's references.</param>
+    internal static void EnsureProvidersRegistered(bool referencesCanBeEnumerated, Func<Assembly, AssemblyName[]> referencesOf)
     {
+        if (!referencesCanBeEnumerated)
+        {
+            return;
+        }
+
         // The walk only produces a new outcome when an assembly no previous walk has seen enters the
         // AppDomain - module constructors run once per process, so re-walking an unchanged assembly set
         // is pure cost. The gate tracks the exact assemblies a completed walk processed rather than a
@@ -108,7 +128,7 @@ public static class GeneratedTypeDiscoveryRegistry
                 return;
             }
 
-            WalkAssemblyClosureAndRunModuleConstructors();
+            WalkAssemblyClosureAndRunModuleConstructors(referencesOf);
         }
     }
 
@@ -116,6 +136,7 @@ public static class GeneratedTypeDiscoveryRegistry
     /// Walks the reference closure of every assembly no previous walk processed, loads what is missing and runs
     /// each newly reached module constructor.
     /// </summary>
+    /// <param name="referencesOf">The operation that enumerates an assembly's references.</param>
     /// <remarks>
     /// The walk is incremental. An assembly a previous walk processed had its whole reference closure loaded
     /// and processed by that walk, so only what is new since then - an assembly loaded by the application, a
@@ -125,8 +146,8 @@ public static class GeneratedTypeDiscoveryRegistry
     /// with the square of it. A process that emits an assembly between calls - a spec harness building a service
     /// provider per spec does - paid that on every call.
     /// </remarks>
-    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Referenced assemblies must be visited to run module initializers that register generated providers.")]
-    static void WalkAssemblyClosureAndRunModuleConstructors()
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Only reached when reference enumeration is supported. Referenced assemblies may have been removed by trimming or fail to load and are skipped; NativeAOT runs compiled module initializers at startup instead.")]
+    static void WalkAssemblyClosureAndRunModuleConstructors(Func<Assembly, AssemblyName[]> referencesOf)
     {
         var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
         var loadedByName = new Dictionary<string, List<(AssemblyName Name, Assembly Assembly)>>(StringComparer.OrdinalIgnoreCase);
@@ -200,7 +221,7 @@ public static class GeneratedTypeDiscoveryRegistry
             }
 
             newlyReached.Add(assembly);
-            foreach (var referencedAssemblyName in assembly.GetReferencedAssemblies())
+            foreach (var referencedAssemblyName in referencesOf(assembly))
             {
                 if (visitedAssemblyNames.Add(referencedAssemblyName.FullName))
                 {
