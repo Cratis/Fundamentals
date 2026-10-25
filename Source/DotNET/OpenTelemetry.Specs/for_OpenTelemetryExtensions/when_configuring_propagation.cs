@@ -18,11 +18,27 @@ public class when_configuring_propagation : given.a_configured_environment
     [Fact] void should_allow_disabling_propagation() => Fields("none").ShouldBeEmpty();
     [Fact] void should_allow_baggage_without_trace_context() => Fields("baggage").ShouldNotContain("traceparent");
     [Fact] void should_allow_trace_context_without_baggage() => Fields("tracecontext").ShouldNotContain("baggage");
+    [Fact] void should_prefer_the_environment_over_configuration() => VerifyEnvironmentPrecedence();
+
     [Fact]
-    void should_prefer_the_environment_over_configuration()
+    void should_restore_configuration_after_environment_precedence()
     {
-        Environment.SetEnvironmentVariable("OTEL_PROPAGATORS", "none");
-        Fields("tracecontext,baggage").ShouldBeEmpty();
+        VerifyEnvironmentPrecedence();
+        Fields("tracecontext,baggage").ShouldContain("traceparent");
+    }
+
+    void VerifyEnvironmentPrecedence()
+    {
+        var previous = Environment.GetEnvironmentVariable("OTEL_PROPAGATORS");
+        try
+        {
+            Environment.SetEnvironmentVariable("OTEL_PROPAGATORS", "none");
+            Fields("tracecontext,baggage").ShouldBeEmpty();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("OTEL_PROPAGATORS", previous);
+        }
     }
 
     string[] Fields(string? propagators)
