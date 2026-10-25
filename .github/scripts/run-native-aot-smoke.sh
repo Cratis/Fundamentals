@@ -27,7 +27,9 @@ if [[ $status -ne 0 ]]; then
     echo "::error::Native type-discovery sample exited with $status" >&2
     exit "$status"
 fi
-for expected in 'Convention binding resolved:' 'Demo complete.'; do
+for expected in 'Convention binding resolved:' 'Self binding resolved:' \
+    'Discovery-only convention binding resolved: Registered through AddBindingsByConvention' \
+    'Discovery-only self binding resolved: OnlySelfBound' 'Demo complete.'; do
     if ! grep -Fq "$expected" "$output/sample.log"; then
         echo "::error::Native type-discovery sample did not report: $expected" >&2
         exit 1
