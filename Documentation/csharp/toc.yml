@@ -22,5 +22,7 @@
   href: traces/toc.yml
 - name: Serialization
   href: serialization/toc.yml
+- name: Microsoft library guidance
+  href: library-guidance.md
 - name: API Reference
   href: ../../../api/fundamentals/
