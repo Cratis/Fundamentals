@@ -3,39 +3,19 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <TargetFrameworks></TargetFrameworks>
         <LangVersion>12.0</LangVersion>
-        <AssemblyName>Cratis.Metrics.Roslyn</AssemblyName>
-        <RootNamespace>Cratis.Metrics.Roslyn</RootNamespace>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-        <Description>Roslyn source generator for strongly typed metrics in .NET applications, part of Cratis Fundamentals</Description>
-        <PackageTags>metrics;source-generator;roslyn;utilities;cratis</PackageTags>
+        <AssemblyName>Cratis.Metrics.Roslyn.Forwarding</AssemblyName>
+        <PackageId>Cratis.Metrics.Roslyn</PackageId>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeSymbols>false</IncludeSymbols>
+        <Description>Deprecated: renamed to Cratis.Observability.SourceGenerators. This package only depends on Cratis.Observability.SourceGenerators so existing references keep working; reference Cratis.Observability.SourceGenerators directly.</Description>
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="$(MSBuildThisFileDirectory)/Templates/**/*.hbs" />
+        <PackageReference Remove="System.Text.Json" />
+        <ProjectReference Include="../Observability.SourceGenerators/Observability.SourceGenerators.csproj" PrivateAssets="none" />
     </ItemGroup>
 
     <ItemGroup>
-        <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
-        <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Handlebars.Net" GeneratePathProperty="true" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Update="@(PackageReference)" PrivateAssets="All" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Content Include="$(PKGHandlebars_Net)\lib\netstandard2.0\Handlebars.dll" PackagePath="analyzers/dotnet/cs" />
-        <Content Include="$(PKGHandlebars_Net)\lib\netstandard2.0\Handlebars.dll" PackagePath="lib/netstandard2.0" />
+        <None Include="_._" Pack="true" PackagePath="lib/netstandard2.0" />
     </ItemGroup>
 </Project>

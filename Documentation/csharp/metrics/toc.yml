@@ -2,5 +2,5 @@
   href: index.md
 - name: Named Registration
   href: named-registration.md
-- name: Roslyn
+- name: Source Generator
   href: roslyn.md

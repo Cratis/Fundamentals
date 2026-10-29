@@ -29,7 +29,7 @@ The metrics system in Cratis Fundamentals offers:
 To start using the metrics system in your project:
 
 1. Add a reference to the `Cratis.Fundamentals` package
-2. Add the `Cratis.Metrics.Roslyn` source generator package (optional but recommended)
+2. Add the `Cratis.Observability.SourceGenerators` source generator package (optional but recommended)
 3. Define your metrics interface
 4. Use dependency injection to get access to your metrics
 
@@ -138,7 +138,7 @@ Use `IMeterScope<T>` to include scope tags. Omitting the unit leaves the instrum
 
 ## Using Source Generation
 
-The `Cratis.Metrics.Roslyn` source generator automatically implements your metrics methods. To use it:
+The `Cratis.Observability.SourceGenerators` source generator automatically implements your metrics methods. To use it:
 
 1. Create a partial class
 2. Define partial methods with appropriate attributes

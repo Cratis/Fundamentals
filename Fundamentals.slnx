@@ -7,7 +7,8 @@
         <Project Path="Source/DotNET/Fundamentals.TypeDiscovery.Generator.Specs/Fundamentals.TypeDiscovery.Generator.Specs.csproj" />
         <Project Path="Source/DotNET/Fundamentals.TypeDiscovery.Generator/Fundamentals.TypeDiscovery.Generator.csproj" />
         <Project Path="Source/DotNET/Metrics.Roslyn/Metrics.Roslyn.csproj" />
-        <Project Path="Source/DotNET/Metrics.Roslyn.Specs/Metrics.Roslyn.Specs.csproj" />
+        <Project Path="Source/DotNET/Observability.SourceGenerators/Observability.SourceGenerators.csproj" />
+        <Project Path="Source/DotNET/Observability.SourceGenerators.Specs/Observability.SourceGenerators.Specs.csproj" />
         <Project Path="Source/DotNET/OpenTelemetry/OpenTelemetry.csproj" />
         <Project Path="Source/DotNET/OpenTelemetry.Specs/OpenTelemetry.Specs.csproj" />
     </Folder>
