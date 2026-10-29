@@ -8,6 +8,8 @@ Production randomness stays secure, and the spec stays repeatable.
 
 ## Pin by value
 
+A `UuidV5` value needs no pinning: a spec can assert the exact expected value for a fixed namespace and name.
+
 Construct the concept from a known value and pass it to the behavior under test. A concept is a record, so equality compares the wrapped value:
 
 ```csharp

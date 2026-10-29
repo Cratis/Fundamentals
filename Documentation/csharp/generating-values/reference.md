@@ -26,11 +26,13 @@ If a type implements both, callers use the context form. Neither interface dispa
 
 ## GenerateValue
 
-`public static partial class GenerateValue`. Every method uses a cryptographically secure generator.
+`public static partial class GenerateValue`. Every generation method except `UuidV5` uses a cryptographically secure generator.
+`UuidV5` is deterministic and uses no randomness.
 
 | Signature | Output shape | Random bits | Time-ordered | Limits and exceptions |
 | --- | --- | --- | --- | --- |
 | `Guid Uuid()` | RFC 9562 version 4, RFC variant | 122 | No | None |
+| `Guid UuidV5(Guid @namespace, string name)` | RFC 9562 version 5 (SHA-1 of namespace bytes in network order + UTF-8 name), RFC variant | 0 (deterministic) | No | `ArgumentNullException`, `InvalidUuidV5Name` |
 | `Guid UuidV7()` | RFC 9562 version 7 using the current UTC time | 74 | Yes | None |
 | `Guid UuidV7(GenerationContext context)` | Version 7 using `context.Now` | 74 | Yes | `MissingGenerationTime`, `GenerationTimeBeforeUnixEpoch` |
 | `string Ulid()` | 26 uppercase Crockford base32 characters; first character `0` to `7` | 80 | Yes | None |
@@ -47,7 +49,13 @@ If a type implements both, callers use the context form. Neither interface dispa
 It returns false for non-printable/non-ASCII text, truncated or nondigit suffixes, incorrect arithmetic and Mod11 output 10.
 Null throws `ArgumentNullException`; None or an undefined algorithm throws `UnknownChecksum`.
 
+A UUID v5 can be recomputed by anyone who knows its namespace and name. It is not a secret or an unguessable identifier.
+SHA-1 is required by RFC 9562 for this identifier format, not used as a security boundary.
+Strict FIPS configurations may restrict SHA-1 and cause `CryptographicException`.
+
 Argument limits:
+
+- **UUID v5 name:** any well-formed string, including empty; encoded as UTF-8 without a BOM, normalization or case folding. Unpaired surrogates are rejected. Canonicalize first if needed.
 
 - **TypeID prefix:** empty, or 1 to 63 lowercase letters (`a`–`z`) and underscores, starting and ending with a letter. A null or invalid prefix throws `InvalidTypeIdPrefix`.
 - **NanoID size:** 1 to 256. The default is 21.
@@ -86,6 +94,7 @@ An empty digit payload counts as zero. Check digits add no entropy. Pattern reje
 | --- | --- |
 | `MissingGenerationTime` | A context overload receives a `default` `Now` |
 | `GenerationTimeBeforeUnixEpoch` | A UUID v7, ULID or TypeID context overload receives a `Now` before the Unix epoch |
+| `InvalidUuidV5Name` | The UUID v5 name contains an unpaired surrogate |
 | `InvalidTypeIdPrefix` | The TypeID prefix is null or breaks the prefix rule |
 | `InvalidNanoIdSize` | The size is outside 1 to 256 |
 | `InvalidNanoIdAlphabet` | The alphabet is outside 2 to 256 characters, not distinct, or not printable ASCII |
@@ -96,7 +105,7 @@ An empty digit payload counts as zero. Check digits add no entropy. Pattern reje
 | `EmptyPatternSupport` | No pattern payload has an emittable check digit for the substituted date |
 | `InvalidIntegerRange` | The minimum exceeds the maximum |
 | `UnknownChecksum` | The algorithm is undefined, or None is used for validation |
-| `ArgumentNullException` | `HasValidChecksum` receives null |
+| `ArgumentNullException` | `HasValidChecksum` receives null, or `UuidV5` receives a null name |
 
 ## Encodings of ULID and TypeID
 
@@ -116,7 +125,7 @@ Values from both are time-ordered but not monotonic within one millisecond. Cloc
 
 ## Randomness and runtime support
 
-- Every strategy uses `RandomNumberGenerator`. NanoID chooses characters with `RandomNumberGenerator.GetItems<char>`, so each character is uniform.
+- Every random strategy uses `RandomNumberGenerator`; `UuidV5` is deterministic. NanoID chooses characters with `RandomNumberGenerator.GetItems<char>`, so each character is uniform.
 - There is no seeded `Random`, injectable generator, seed configuration or within-millisecond counter.
 - The helpers and the static interface calls use no reflection or dynamic code and are safe for Native AOT and trimming.
 - Targets: .NET 8, 9 and 10.
