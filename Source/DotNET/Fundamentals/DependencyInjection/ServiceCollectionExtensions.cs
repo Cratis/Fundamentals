@@ -53,7 +53,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(typeof(IActivitySource<>), typeof(UnkeyedActivitySource<>));
     }
 
-    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated providers use DynamicDependency on their module initializer to preserve public instance constructors of bound non-static, non-abstract classes and structs that have them; implicit struct constructors have no IL member and are excluded. Hand-written providers must preserve their implementation types' public constructors themselves, for example with a matching DynamicDependency on kept code.")]
     static bool TryAddGeneratedBindingsByConvention(IServiceCollection services)
     {
         GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered();
@@ -88,7 +88,7 @@ public static class ServiceCollectionExtensions
         return true;
     }
 
-    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated convention metadata drives registration and constructors are preserved by generated usage in AOT scenarios.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Generated providers use DynamicDependency on their module initializer to preserve public instance constructors of bound non-static, non-abstract classes and structs that have them; implicit struct constructors have no IL member and are excluded. Hand-written providers must preserve their implementation types' public constructors themselves, for example with a matching DynamicDependency on kept code.")]
     static bool TryAddGeneratedSelfBindings(IServiceCollection services)
     {
         GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered();
@@ -128,6 +128,7 @@ public static class ServiceCollectionExtensions
     static IServiceCollection AddBindingsByConventionUsingReflectionFallback(IServiceCollection services)
     {
         var types = Types.Types.Instance;
+        var nonIgnoredTypes = types.All.Where(type => !ShouldIgnoreConvention(type)).ToArray();
 
         static bool convention(Type i, Type t) => i.Namespace == t.Namespace && i.Name == $"I{t.Name}";
 
@@ -145,7 +146,7 @@ public static class ServiceCollectionExtensions
                     var conventionInterface = interfaces.SingleOrDefault(i => convention(i, _));
                     if (conventionInterface != default)
                     {
-                        return types.All.Count(type => type.HasInterface(conventionInterface)) == 1;
+                        return nonIgnoredTypes.Count(type => type.HasInterface(conventionInterface)) == 1;
                     }
                 }
                 return false;

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
 
 namespace Cratis.Fundamentals.TypeDiscovery.Generator;
 
@@ -17,6 +18,7 @@ internal static class GeneratedSourceBuilder
     /// <param name="contractsAndImplementors">The contract-to-implementors map entries.</param>
     /// <param name="conventionServiceBindings">The I&lt;X&gt;/&lt;X&gt; convention bindings.</param>
     /// <param name="conventionSelfBindings">The self-binding type entries.</param>
+    /// <param name="implementationSymbols">The discovered symbols used to select constructors to preserve.</param>
     /// <param name="experimentalDiagnosticIds">Diagnostic ids of [Experimental] types referenced by the generated code, to suppress.</param>
     /// <returns>The complete C# source text.</returns>
     public static string Build(
@@ -24,6 +26,7 @@ internal static class GeneratedSourceBuilder
         ImmutableArray<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> contractsAndImplementors,
         ImmutableArray<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> conventionServiceBindings,
         ImmutableArray<(string ImplementationExpression, string LifetimeExpression)> conventionSelfBindings,
+        IEnumerable<INamedTypeSymbol> implementationSymbols,
         ImmutableArray<string> experimentalDiagnosticIds = default)
     {
         var experimentalIds = experimentalDiagnosticIds.IsDefault ? [] : experimentalDiagnosticIds;
@@ -39,6 +42,11 @@ internal static class GeneratedSourceBuilder
             ",\n",
             conventionSelfBindings.Select(static b =>
                 $"        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof({b.ImplementationExpression}), {b.LifetimeExpression})"));
+
+        var implementationsWithPublicConstructors = ConstructorPreservation.GetImplementationTypes(
+            implementationSymbols,
+            conventionServiceBindings.Select(static binding => binding.ImplementationExpression)
+                .Concat(conventionSelfBindings.Select(static binding => binding.ImplementationExpression)));
 
         return string.Join(
             "\n",
@@ -92,6 +100,8 @@ internal static class GeneratedSourceBuilder
                 "file static class GeneratedTypeDiscoveryProviderRegistration",
                 "{",
                 "    [ModuleInitializer]",
+                ..implementationsWithPublicConstructors.Select(static implementation =>
+                    $"    [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors, typeof({implementation}))]"),
                 "    public static void Register() =>",
                 "        global::Cratis.Types.GeneratedTypeDiscoveryRegistry.Register(new GeneratedTypeDiscoveryProvider());",
                 "}"

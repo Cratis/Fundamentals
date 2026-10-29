@@ -95,7 +95,6 @@ public static class OpenTelemetryExtensions
             }
             ValidateEndpoints(configuration);
             tracing.ConfigureResource(resource => ConfigureResource(resource, configuration));
-            ConfigureSampler(tracing, configuration);
             tracing.AddCratisInstrumentation();
             if (ShouldExport(configuration, "TRACES"))
             {
@@ -122,6 +121,31 @@ public static class OpenTelemetryExtensions
                 metrics.AddReader(new PeriodicExportingMetricReader(new OtlpMetricExporter(ExporterOptions(provider, configuration, "METRICS", "metrics")), reader.ExportIntervalMilliseconds ?? 60_000, reader.ExportTimeoutMilliseconds ?? 30_000));
             }
         });
+        ConfigureLogging(builder, resolveConfiguration, options);
+
+        // Instrumentation extensions register services, so they must run before DI
+        // is built. Keep application callbacks after the shared provider defaults.
+        builder.WithTracing(tracing =>
+        {
+            tracing.AddAspNetCoreInstrumentation(instrumentation => instrumentation.Filter = HealthRequestFilter.ShouldTrace).AddHttpClientInstrumentation();
+            options.ConfigureTracing?.Invoke(tracing);
+        }).WithMetrics(metrics =>
+        {
+            metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddRuntimeInstrumentation();
+            options.ConfigureMetrics?.Invoke(metrics);
+        });
+        builder.Services.ConfigureOpenTelemetryTracerProvider((provider, tracing) => ConfigureTracePolicy(tracing, resolveConfiguration(provider)));
+
+        return builder;
+    }
+
+    static void ConfigureLogging(OpenTelemetryBuilder builder, Func<IServiceProvider, IConfiguration> resolveConfiguration, CratisOpenTelemetryOptions options)
+    {
+        builder.Services.AddOptions<LogRecordExportProcessorOptions>().Configure<IServiceProvider>((processor, provider) =>
+        {
+            var configuration = resolveConfiguration(provider);
+            OpenTelemetryLogBatch.Configure(processor.BatchExportProcessorOptions, key => Read(configuration, key));
+        });
         builder.Services.ConfigureOpenTelemetryLoggerProvider((provider, logging) =>
         {
             var configuration = resolveConfiguration(provider);
@@ -131,25 +155,26 @@ public static class OpenTelemetryExtensions
             }
             ValidateEndpoints(configuration);
             logging.ConfigureResource(resource => ConfigureResource(resource, configuration));
+            if (!options.IncludeExceptionDetails)
+            {
+                logging.AddProcessor(new ExceptionTypeLogProcessor());
+            }
             if (ShouldExport(configuration, "LOGS"))
             {
-                logging.AddProcessor(new BatchLogRecordExportProcessor(new OtlpLogExporter(ExporterOptions(provider, configuration, "LOGS", "logs"))));
+                var batch = provider.GetRequiredService<IOptions<LogRecordExportProcessorOptions>>().Value.BatchExportProcessorOptions;
+                logging.AddProcessor(OpenTelemetryLogBatch.Create(new OtlpLogExporter(ExporterOptions(provider, configuration, "LOGS", "logs")), batch));
             }
         });
+    }
 
-        // Instrumentation extensions register services, so they must run before DI
-        // is built. Keep application callbacks after the shared provider defaults.
-        builder.WithTracing(tracing =>
+    static void ConfigureTracePolicy(TracerProviderBuilder tracing, IConfiguration configuration)
+    {
+        if (IsDisabled(configuration))
         {
-            tracing.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation();
-            options.ConfigureTracing?.Invoke(tracing);
-        }).WithMetrics(metrics =>
-        {
-            metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddRuntimeInstrumentation();
-            options.ConfigureMetrics?.Invoke(metrics);
-        });
-
-        return builder;
+            return;
+        }
+        ConfigureSampler(tracing, configuration);
+        OpenTelemetryPropagation.Configure(Read(configuration, "OTEL_PROPAGATORS"));
     }
 
     static void ConfigureProviderFactory<TProvider>(IServiceCollection services, Func<IServiceProvider, IConfiguration> resolveConfiguration)
@@ -201,17 +226,7 @@ public static class OpenTelemetryExtensions
 
     static void ConfigureSampler(TracerProviderBuilder tracing, IConfiguration configuration)
     {
-        var ratio = double.TryParse(Read(configuration, "OTEL_TRACES_SAMPLER_ARG"), CultureInfo.InvariantCulture, out var value) && value is >= 0 and <= 1 ? value : 1;
-        Sampler? sampler = Read(configuration, "OTEL_TRACES_SAMPLER")?.Trim().ToLowerInvariant() switch
-        {
-            "always_on" => new AlwaysOnSampler(),
-            "always_off" => new AlwaysOffSampler(),
-            "traceidratio" => new TraceIdRatioBasedSampler(ratio),
-            "parentbased_always_on" => new ParentBasedSampler(new AlwaysOnSampler()),
-            "parentbased_always_off" => new ParentBasedSampler(new AlwaysOffSampler()),
-            "parentbased_traceidratio" => new ParentBasedSampler(new TraceIdRatioBasedSampler(ratio)),
-            _ => null
-        };
+        var sampler = OpenTelemetrySampler.Create(Read(configuration, "OTEL_TRACES_SAMPLER"), Read(configuration, "OTEL_TRACES_SAMPLER_ARG"));
         if (sampler is not null)
         {
             tracing.SetSampler(sampler);
@@ -274,6 +289,10 @@ public static class OpenTelemetryExtensions
             ? new UriBuilder(uri) { Path = $"{uri.AbsolutePath.TrimEnd('/')}/v1/{path}" }.Uri
             : uri;
         exporter.Headers = Read(configuration, $"OTEL_EXPORTER_OTLP_{signal}_HEADERS") ?? Read(configuration, "OTEL_EXPORTER_OTLP_HEADERS");
+        OpenTelemetryExporterSettings.Apply(
+            exporter,
+            Read(configuration, $"OTEL_EXPORTER_OTLP_{signal}_TIMEOUT") ?? Read(configuration, "OTEL_EXPORTER_OTLP_TIMEOUT"),
+            Read(configuration, $"OTEL_EXPORTER_OTLP_{signal}_COMPRESSION") ?? Read(configuration, "OTEL_EXPORTER_OTLP_COMPRESSION"));
     }
 
     static Uri Endpoint(string value, string key)

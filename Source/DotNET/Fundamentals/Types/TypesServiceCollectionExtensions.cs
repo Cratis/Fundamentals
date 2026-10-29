@@ -63,7 +63,7 @@ public static class TypesServiceCollectionExtensions
     /// instance being an <c language="csharp">ImplementationInstance</c> rather than a factory.
     /// </para>
     /// <para>
-    /// It runs <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered"/> itself before it
+    /// It runs <see cref="GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered()"/> itself before it
     /// reads the registry, so the universe it returns - and the one the container gets - covers every
     /// generated provider the assembly closure walk can reach, no matter what has or has not run before.
     /// </para>

@@ -87,15 +87,10 @@ internal static class TypeDiscoveryCollector
         IAssemblySymbol? currentAssembly,
         HashSet<string>? globallyAccessibleAssemblyIdentities = null)
     {
-        var allTypes = symbols.ToArray();
+        var nonIgnoredTypes = symbols.Where(s => !s.ShouldIgnoreConvention()).ToArray();
 
-        foreach (var implementation in allTypes.Where(s => s.IsImplementation()))
+        foreach (var implementation in nonIgnoredTypes.Where(s => s.IsImplementation()))
         {
-            if (implementation.ShouldIgnoreConvention())
-            {
-                continue;
-            }
-
             var conventionInterfaces = implementation.AllInterfaces
                 .Where(i =>
                     i.ContainingNamespace.ToDisplayString() == implementation.ContainingNamespace.ToDisplayString() &&
@@ -109,7 +104,7 @@ internal static class TypeDiscoveryCollector
             }
 
             var conventionInterface = conventionInterfaces[0];
-            var implementationCount = allTypes.Count(t => t.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, conventionInterface)));
+            var implementationCount = nonIgnoredTypes.Count(t => t.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, conventionInterface)));
 
             if (implementationCount != 1)
             {

@@ -24,7 +24,14 @@ public class CratisOpenTelemetryOptions
     public string? ServiceVersion { get; set; } = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
     /// <summary>
+    /// Gets or sets a value indicating whether exception messages and stack traces are included in exported logs.
+    /// Defaults to false so only the exception type is exported.
+    /// </summary>
+    public bool IncludeExceptionDetails { get; set; }
+
+    /// <summary>
     /// Gets or sets additional tracing instrumentation, such as gRPC client, MongoDB or Orleans sources.
+    /// Standard OTEL sampling settings take precedence over samplers selected here.
     /// </summary>
     public Action<TracerProviderBuilder>? ConfigureTracing { get; set; }
 
