@@ -49,9 +49,8 @@ public class ProjectReferencedAssemblies : ICanProvideAssembliesForDiscovery
             var dependencyModel = DependencyContext.Load(entryAssembly);
             if (dependencyModel is null) return;
 
-            var projectReferencedAssemblies = dependencyModel.RuntimeLibraries
-                                .Where(_ => _.Type.Equals("project"))
-                                .Select(_ => AssemblyHelpers.Resolve(_.Name)!)
+            var projectReferencedAssemblies = GetAssemblyNames(dependencyModel.RuntimeLibraries)
+                                .Select(_ => AssemblyHelpers.Resolve(_)!)
                                 .Where(_ => _ is not null)
                                 .Distinct()
                                 .ToArray();
@@ -75,4 +74,16 @@ public class ProjectReferencedAssemblies : ICanProvideAssembliesForDiscovery
             _initialized = true;
         }
     }
+
+    /// <summary>
+    /// Gets the simple assembly names for project libraries, derived from their runtime assets and falling back to the library name when there are none.
+    /// </summary>
+    /// <param name="libraries">The runtime libraries to derive names from.</param>
+    /// <returns>The simple assembly names.</returns>
+    internal static IEnumerable<string> GetAssemblyNames(IEnumerable<RuntimeLibrary> libraries) =>
+        libraries.Where(_ => _.Type.Equals("project"))
+            .SelectMany(library => library.RuntimeAssemblyGroups
+                .SelectMany(_ => _.AssetPaths)
+                .Select(_ => Path.GetFileNameWithoutExtension(_))
+                .DefaultIfEmpty(library.Name));
 }

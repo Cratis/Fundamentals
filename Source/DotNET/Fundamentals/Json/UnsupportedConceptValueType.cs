@@ -10,6 +10,8 @@ namespace Cratis.Json;
 /// </summary>
 /// <remarks>
 /// Initializes a new instance of the <see cref="UnsupportedConceptValueType"/> class.
+/// It derives from <see cref="System.Text.Json.JsonException"/> so serializers and hosts treat it as malformed
+/// input (for example an HTTP 400 response) and attach the JSON path of the offending value.
 /// </remarks>
 /// <param name="conceptValueType">The underlying concept value <see cref="Type"/> that could not be read.</param>
-public class UnsupportedConceptValueType(Type conceptValueType) : Exception($"'{conceptValueType}' is not a supported underlying concept value type for a JSON number token.");
+public class UnsupportedConceptValueType(Type conceptValueType) : System.Text.Json.JsonException($"'{conceptValueType}' is not a supported underlying concept value type for a JSON number token.");
