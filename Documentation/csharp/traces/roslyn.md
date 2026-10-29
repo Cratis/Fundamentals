@@ -1,9 +1,9 @@
 ---
-description: Generate trace span implementations from partial methods marked with Span using the Cratis.Metrics.Roslyn source generator.
+description: Generate trace span implementations from partial methods marked with Span using the Cratis.Observability.SourceGenerators source generator.
 ---
 # Trace Source Generation
 
-The `Cratis.Metrics.Roslyn` package can generate trace span implementations from partial methods decorated with `[Span]`. This keeps raw `ActivitySource` usage out of your business code and applies a consistent convention for span creation and tagging.
+The `Cratis.Observability.SourceGenerators` package can generate trace span implementations from partial methods decorated with `[Span]`. This keeps raw `ActivitySource` usage out of your business code and applies a consistent convention for span creation and tagging.
 
 ## Table of Contents
 
@@ -18,16 +18,18 @@ The `Cratis.Metrics.Roslyn` package can generate trace span implementations from
 
 ## Installation
 
-Add the `Cratis.Metrics.Roslyn` package to your project:
+> Formerly `Cratis.Metrics.Roslyn`; that package still works as a forwarding package through the current major. It will be retired (no longer published) in the next major, together with the assembly and namespace rename. Replace your old package reference with `Cratis.Observability.SourceGenerators` rather than adding both.
+
+Add the `Cratis.Observability.SourceGenerators` package to your project:
 
 ```xml
-<PackageReference Include="Cratis.Metrics.Roslyn" Version="[version]" />
+<PackageReference Include="Cratis.Observability.SourceGenerators" Version="[version]" />
 ```
 
 Or use the `.NET` CLI:
 
 ```bash
-dotnet add package Cratis.Metrics.Roslyn
+dotnet add package Cratis.Observability.SourceGenerators
 ```
 
 ## How It Works

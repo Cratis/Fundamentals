@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFrameworks></TargetFrameworks>
+        <LangVersion>12.0</LangVersion>
+        <PackageId>Cratis.Observability.SourceGenerators</PackageId>
+        <AssemblyName>Cratis.Metrics.Roslyn</AssemblyName>
+        <RootNamespace>Cratis.Metrics.Roslyn</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <Description>Roslyn source generators and analyzers for strongly typed metrics and trace spans in .NET applications, part of Cratis Fundamentals</Description>
+        <PackageTags>observability;metrics;traces;source-generator;roslyn;cratis</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="$(MSBuildThisFileDirectory)/Templates/**/*.hbs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+        <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Handlebars.Net" GeneratePathProperty="true" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Update="@(PackageReference)" PrivateAssets="All" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="$(PKGHandlebars_Net)\lib\netstandard2.0\Handlebars.dll" PackagePath="analyzers/dotnet/cs" />
+        <Content Include="$(PKGHandlebars_Net)\lib\netstandard2.0\Handlebars.dll" PackagePath="lib/netstandard2.0" />
+    </ItemGroup>
+</Project>

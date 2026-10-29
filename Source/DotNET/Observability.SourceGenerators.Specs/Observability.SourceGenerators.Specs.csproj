@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../Metrics.Roslyn/Metrics.Roslyn.csproj" />
+        <ProjectReference Include="../Observability.SourceGenerators/Observability.SourceGenerators.csproj" />
         <ProjectReference Include="../Fundamentals/Fundamentals.csproj" />
         <PackageReference Include="Handlebars.Net" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />

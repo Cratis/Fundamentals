@@ -1,9 +1,9 @@
 ---
-description: Generate metric method implementations from partial methods with the Cratis.Metrics.Roslyn source generator and avoid boilerplate.
+description: Generate metric method implementations from partial methods with the Cratis.Observability.SourceGenerators source generator and avoid boilerplate.
 ---
-# Metrics Roslyn Source Generator
+# Metrics Source Generator
 
-The `Cratis.Metrics.Roslyn` package provides a powerful source generator that automatically implements metrics methods for you. This eliminates boilerplate code and ensures consistent, efficient metrics collection across your application.
+The `Cratis.Observability.SourceGenerators` package provides a powerful source generator that automatically implements metrics methods for you. This eliminates boilerplate code and ensures consistent, efficient metrics collection across your application.
 
 ## Table of Contents
 
@@ -18,16 +18,18 @@ The `Cratis.Metrics.Roslyn` package provides a powerful source generator that au
 
 ## Installation
 
-Add the `Cratis.Metrics.Roslyn` NuGet package to your project:
+> Formerly `Cratis.Metrics.Roslyn`; that package still works as a forwarding package through the current major. It will be retired (no longer published) in the next major, together with the assembly and namespace rename. Replace your old package reference with `Cratis.Observability.SourceGenerators` rather than adding both.
+
+Add the `Cratis.Observability.SourceGenerators` NuGet package to your project:
 
 ```xml
-<PackageReference Include="Cratis.Metrics.Roslyn" Version="[version]" />
+<PackageReference Include="Cratis.Observability.SourceGenerators" Version="[version]" />
 ```
 
 Or via the .NET CLI:
 
 ```bash
-dotnet add package Cratis.Metrics.Roslyn
+dotnet add package Cratis.Observability.SourceGenerators
 ```
 
 ## How It Works
@@ -196,7 +198,7 @@ Each instrument is created once per `Meter` instance, so calling the method with
 
 Import `Cratis.Diagnostics` to use `[Tag("…")]` on a span or metric parameter. Untagged metric parameters keep their parameter names; untagged span parameters keep their snake_case names for compatibility. Prefer explicit keys for new instrumentation.
 
-This declaration excerpt requires a partial class and `Cratis.Metrics.Roslyn`:
+This declaration excerpt requires a partial class and `Cratis.Observability.SourceGenerators`:
 
 ```csharp
 [Histogram<double>("cratis.my_app.request.duration", "Request duration", "s")]
@@ -361,7 +363,7 @@ public partial class DatabaseMetrics
 If methods aren't being generated:
 
 1. **Check build output** for any compilation errors
-2. **Verify package reference** includes `Cratis.Metrics.Roslyn`
+2. **Verify package reference** includes `Cratis.Observability.SourceGenerators`
 3. **Ensure methods are partial** and in partial classes
 4. **Check method signatures** match the required pattern
 

@@ -3,7 +3,7 @@ description: Create spans in .NET with typed IActivitySource and IActivityScope 
 ---
 # Traces
 
-The Cratis Fundamentals library provides a typed tracing API on top of `.NET` activities. You work with `IActivitySource<T>` and `IActivityScope<T>` instead of raw `ActivitySource` and `Activity`, and you can generate spans from partial methods with the `Cratis.Metrics.Roslyn` package.
+The Cratis Fundamentals library provides a typed tracing API on top of `.NET` activities. You work with `IActivitySource<T>` and `IActivityScope<T>` instead of raw `ActivitySource` and `Activity`, and you can generate spans from partial methods with the `Cratis.Observability.SourceGenerators` package.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ The tracing system gives you:
 To use traces in your project:
 
 1. Add a reference to `Cratis.Fundamentals`
-2. Add a reference to `Cratis.Metrics.Roslyn` if you want source-generated span methods
+2. Add a reference to `Cratis.Observability.SourceGenerators` if you want source-generated span methods
 3. Register your services with `AddBindingsByConvention()` or `AddSelfBindings()`
 4. Inject `IActivitySource<T>` into the service that creates spans
 
@@ -86,7 +86,7 @@ using var validationScope = _activitySource.ValidateOrder(order.Id);
 
 ## Using Source Generation
 
-The `Cratis.Metrics.Roslyn` package can implement your span methods at compile time.
+The `Cratis.Observability.SourceGenerators` package can implement your span methods at compile time.
 
 1. Create a partial class
 2. Add `static partial` methods that return `IActivityScope<T>`
