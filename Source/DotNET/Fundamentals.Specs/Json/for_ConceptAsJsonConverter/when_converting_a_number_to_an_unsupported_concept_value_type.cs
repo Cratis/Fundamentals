@@ -35,4 +35,5 @@ public class when_converting_a_number_to_an_unsupported_concept_value_type : Spe
     }
 
     [Fact] void should_throw_unsupported_concept_value_type() => result.ShouldBeOfExactType<UnsupportedConceptValueType>();
+    [Fact] void should_be_a_json_exception() => (result is JsonException).ShouldBeTrue();
 }
