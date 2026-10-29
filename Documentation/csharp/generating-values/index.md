@@ -18,7 +18,7 @@ flowchart LR
     subgraph Concept["The concept declares how"]
         A["IGeneratable&lt;T&gt;<br/>static T New()"]
         B["IGeneratableInContext&lt;T&gt;<br/>static T New(GenerationContext)"]
-        C["GenerateValue<br/>Uuid, UuidV7, Ulid, TypeId, NanoId, Bytes, Pattern, Integer"]
+        C["GenerateValue<br/>Uuid, UuidV5, UuidV7, Ulid, TypeId, NanoId, Bytes, Pattern, Integer"]
         A --> C
         B --> C
     end
@@ -36,7 +36,7 @@ flowchart LR
 - **One contract, one call.** A concept implements `IGeneratable<TSelf>` and its `New()` makes one call to `GenerateValue`.
 - **Generic code needs no reflection.** `T.New()` works on any `T : IGeneratable<T>`, and the result is the concept, not a raw `Guid` or `string`.
 - **The caller owns the "when".** Production code generates; a spec supplies a known value or a fixed `GenerationContext`.
-- **Secure by default.** Every strategy draws from a cryptographically secure random number generator.
+- **Secure by default.** Every random strategy draws from a cryptographically secure random number generator. `UuidV5` is deterministic, not random.
 
 ## What you will be able to do
 
@@ -44,6 +44,7 @@ By the end of this section you will:
 
 - make a concept generate its own values and call it from generic code;
 - pick between UUID v4, UUID v7, ULID, TypeID, NanoID, random bytes, readable patterns and integers for a stated reason;
+- derive a stable UUID from an input;
 - build identifiers whose time part follows the operation, not the clock at each call;
 - generate tokens and API keys without leaking them;
 - write specs that pin generated values instead of fighting them.

@@ -34,6 +34,7 @@ Random bits are the unpredictable part of each value. Collision figures are in t
 | Situation | Code | Example output | Random bits | Trade-off |
 | --- | --- | --- | --- | --- |
 | Ordinary entity id | `GenerateValue.Uuid()` | `212f34b8-1ff0-4da8-8c22-a43dece95de8` | 122 | The default; reveals nothing, does not sort |
+| Id that follows from an input | `GenerateValue.UuidV5(CustomerNamespace, email.ToLowerInvariant())` | `2ed6657d-e927-568b-95e1-2665a8aea6a2` (RFC example below) | 0 | Same input gives the same id; guessable by anyone who knows the namespace and input |
 | Index-friendly Guid column | `GenerateValue.UuidV7()` | `01a13571-f1e8-7c3c-8d30-16b90f487b02` | 74 | Appends to B-tree indexes; reveals creation time |
 | Sortable string id | `GenerateValue.Ulid()` | `01M4TQ3WF8QS2APSEB06E8VGDK` | 80 | Sorts by age; reveals creation time; not monotonic within a millisecond |
 | Self-describing id in logs | `GenerateValue.TypeId("user")` | `user_01m4tq3wf8fs7s4ahqpprc3gt4` | 74 | The prefix names the type; time-ordered |
@@ -71,11 +72,45 @@ collision reaches 1% is about the square root of `2 × 2^bits × ln(1/0.99)`:
 - Size for the total population over the life of the system, not for one request.
 - No strategy guarantees uniqueness.
 
+## Derive a stable id from an input
+
+When the same input must give the same id, use `UuidV5` with a fixed namespace per concept.
+Keep that namespace unchanged: changing it changes every derived id. For example:
+
+```csharp
+using Cratis.Concepts;
+
+public record EmailAddress(string Value) : ConceptAs<string>(Value);
+
+public record CustomerId(Guid Value) : ConceptAs<Guid>(Value)
+{
+    static readonly Guid CustomerNamespace = new("0f3e1d2c-4b5a-4968-8776-a5b4c3d2e1f0");
+
+    public static CustomerId For(EmailAddress email) =>
+        new(GenerateValue.UuidV5(CustomerNamespace, email.Value.ToLowerInvariant()));
+}
+```
+
+This concept deliberately treats email casing as insignificant. `UuidV5` itself performs no case folding or Unicode normalization.
+Its name encoding is UTF-8 without a BOM; unpaired UTF-16 surrogates throw `InvalidUuidV5Name`.
+Use an input-taking factory such as `For`, not `IGeneratable<TSelf>.New()`, which takes no input.
+
+The RFC 9562 Appendix A.4 example fixes both inputs and the result:
+
+```csharp
+var dnsNamespace = Guid.Parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
+var id = GenerateValue.UuidV5(dnsNamespace, "www.example.com");
+// 2ed6657d-e927-568b-95e1-2665a8aea6a2
+```
+
+A derived id does not make a retried command idempotent by itself. You still need a unique constraint or
+[freshness protection](/arc/backend/csharp/chronicle/commands/fresh-identifiers/) to reject duplicates.
+Anyone who knows the namespace and input can recompute it, so never use it as a secret.
+
 ## When not to generate
 
 - **The client supplied the id.** A client-supplied identifier is an input. Keep it; do not replace it with a generated one.
-- **The same input must give the same id.** Random generation does not deliver idempotency: a retry creates a different id.
-  Fundamentals has no deterministic, name-based id strategy today. Persist and reuse the first id, or derive the id yourself.
+- **The same input must give the same id.** Use `UuidV5` as shown above, or persist and reuse the first id. Random generation creates a different id on retry.
 - **The number must be gapless or legal.** Invoice and tax numbering needs an allocator that records every number. Random ids have gaps by design.
 - **The value would authorize something.** A generated id identifies; it never proves who is calling. Never use an id as a credential.
 - **A secret would come from a time-ordered id.** UUID v7, ULID and TypeID expose creation time and have fewer random bits. Use `Bytes`.
