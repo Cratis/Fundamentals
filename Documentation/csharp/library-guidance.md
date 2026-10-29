@@ -71,7 +71,7 @@ Reassess affected rows when public configuration, logging, target frameworks, or
 [telemetry-project]: https://github.com/Cratis/Fundamentals/blob/eb3728436ac6c3c7a3c78359b7a2b25e31195443/Source/DotNET/OpenTelemetry/OpenTelemetry.csproj#L1-L14
 [discovery-project]: https://github.com/Cratis/Fundamentals/blob/eb3728436ac6c3c7a3c78359b7a2b25e31195443/Source/DotNET/Fundamentals.TypeDiscovery.Generator/Fundamentals.TypeDiscovery.Generator.csproj#L1-L26
 [metrics-project]: https://github.com/Cratis/Fundamentals/blob/eb3728436ac6c3c7a3c78359b7a2b25e31195443/Source/DotNET/Metrics.Roslyn/Metrics.Roslyn.csproj#L1-L40
-[telemetry-options]: https://github.com/Cratis/Fundamentals/blob/eb3728436ac6c3c7a3c78359b7a2b25e31195443/Source/DotNET/OpenTelemetry/OpenTelemetryExtensions.cs#L25-L119
+[telemetry-options]: https://github.com/Cratis/Fundamentals/blob/eb3728436ac6c3c7a3c78359b7a2b25e31195443/Source/DotNET/OpenTelemetry/OpenTelemetryExtensions.cs#L25-L123
 [application-options]: https://github.com/Cratis/Fundamentals/blob/eb3728436ac6c3c7a3c78359b7a2b25e31195443/Source/DotNET/OpenTelemetry/CratisOpenTelemetryOptions.cs#L10-L41
 [logging-policy]: https://github.com/Cratis/Fundamentals/blob/eb3728436ac6c3c7a3c78359b7a2b25e31195443/.cratis/ai/rules/csharp.md#L315-L320
 [telemetry-logging]: https://github.com/Cratis/Fundamentals/blob/eb3728436ac6c3c7a3c78359b7a2b25e31195443/Source/DotNET/OpenTelemetry/OpenTelemetryExtensions.cs#L73-L167
