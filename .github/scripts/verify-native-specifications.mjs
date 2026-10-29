@@ -82,7 +82,8 @@ function failedFacts(mode, facts) {
 function compare(jit, native) {
     const missing = [...jit.keys()].filter(identity => !native.has(identity));
     const extra = [...native.keys()].filter(identity => !jit.has(identity));
-    const errors = [...missing.map(identity => `Missing native identity: ${identity}`),
+    const totals = jit.size === native.size ? [] : [`Fact totals differ: JIT ${jit.size}, native ${native.size}`];
+    const errors = [...totals, ...missing.map(identity => `Missing native identity: ${identity}`),
         ...extra.map(identity => `Extra native identity: ${identity}`),
         ...failedFacts('jit', jit), ...failedFacts('native', native)];
     if (errors.length) throw Error(errors.join('\n'));

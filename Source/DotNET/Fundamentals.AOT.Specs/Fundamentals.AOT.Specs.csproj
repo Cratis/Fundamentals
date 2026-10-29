@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <IsTestProject>true</IsTestProject>
         <UseCratisSpecificationsRunner>true</UseCratisSpecificationsRunner>
         <PublishAot>true</PublishAot>
         <!-- Cratis Specifications runner projects are executables -->
@@ -11,6 +10,17 @@
         <RootNamespace>Cratis.Fundamentals.AOT.Specs</RootNamespace>
         <TargetFrameworks>net10.0</TargetFrameworks>
         <NoWarn>$(NoWarn);SA1600</NoWarn>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(UseCratisSpecificationsRunner)'=='true'">
+        <!-- Run this standalone executable through run-specifications.sh, not the solution's VSTest dispatch.
+             MTP 2.x rejects VSTest on .NET 10 when IsTestingPlatformApplication is true, even for non-test projects.
+             Keep its generated entry point and extensions for direct JIT and NativeAOT execution. -->
+        <IsTestProject>false</IsTestProject>
+        <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+        <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
+        <GenerateTestingPlatformEntryPoint>true</GenerateTestingPlatformEntryPoint>
+        <GenerateSelfRegisteredExtensions>true</GenerateSelfRegisteredExtensions>
+        <GenerateTestingPlatformConfigurationFile>true</GenerateTestingPlatformConfigurationFile>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../Fundamentals/Fundamentals.csproj" />

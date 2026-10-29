@@ -103,6 +103,12 @@ for (const [name, names, identity] of [
     });
 }
 
+test('rejects unequal JIT and native totals even when both reports are internally consistent', t => {
+    const result = fixture(t, { native: trx(facts.slice(1)) });
+    assert.equal(result.status, 1, result.output);
+    assert.match(result.output, /Fact totals differ: JIT 3, native 2/);
+});
+
 test('decodes all five XML entities in identities', t => {
     const result = fixture(t, { jit: trx(['should_&lt;&gt;&quot;&apos;&amp;']), native: trx(['should_&lt;&gt;&quot;&apos;&amp;']) });
     assert.equal(result.status, 0, result.output);
