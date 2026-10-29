@@ -27,6 +27,7 @@ case ${OS:-$(uname -s)} in
 esac
 names=()
 executables=()
+runners=()
 for project in "${projects[@]}"; do
     assembly=$(sed -n 's/.*<AssemblyName>\([^<]*\)<\/AssemblyName>.*/\1/p' "$project")
     if [[ -z $assembly || $assembly == *$'\n'* ]]; then
@@ -40,6 +41,11 @@ for project in "${projects[@]}"; do
     fi
     names+=("${project##*/}")
     executables+=("$executable")
+    if [[ $(<"$project") == *'<UseCratisSpecificationsRunner>true</UseCratisSpecificationsRunner>'* ]]; then
+        runners+=(true)
+    else
+        runners+=(false)
+    fi
 done
 
 mkdir -p "$root/TestResults" || exit 2
@@ -48,7 +54,12 @@ echo "Running ${#projects[@]} specification projects; results: $out"
 pids=()
 for index in "${!executables[@]}"; do
     name=${names[$index]%.csproj}
-    "${executables[$index]}" -noLogo -noColor -result-trx "$out/$name.trx" > "$out/$name.log" 2>&1 &
+    if [[ ${runners[$index]} == true ]]; then
+        "${executables[$index]}" --no-banner --no-ansi --no-progress --results-directory "$out" \
+            --report-trx --report-trx-filename "$name.trx" > "$out/$name.log" 2>&1 &
+    else
+        "${executables[$index]}" -noLogo -noColor -result-trx "$out/$name.trx" > "$out/$name.log" 2>&1 &
+    fi
     pids+=("$!")
 done
 

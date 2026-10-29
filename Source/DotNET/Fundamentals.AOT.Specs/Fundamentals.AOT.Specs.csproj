@@ -2,7 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <IsTestProject>true</IsTestProject>
-        <!-- xUnit v3 test projects are executables -->
+        <UseCratisSpecificationsRunner>true</UseCratisSpecificationsRunner>
+        <PublishAot>true</PublishAot>
+        <!-- Cratis Specifications runner projects are executables -->
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
         <AssemblyName>Cratis.Fundamentals.AOT.Specs</AssemblyName>
