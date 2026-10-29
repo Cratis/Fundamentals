@@ -78,6 +78,7 @@ Source/DotNET/Fundamentals.Specs/bin/Release/net10.0/Cratis.Fundamentals.Specs -
 
 `dotnet test -c Release --no-build` and IDE test explorers continue to use the VSTest adapter.
 They do not require Microsoft.Testing.Platform configuration. For Debug, build with `dotnet build` and run `dotnet test --no-build`.
+AOT.Specs is skipped by `dotnet test`; run it as an executable through `bash .github/scripts/run-specifications.sh Release` (also covered by the native-aot CI job).
 
 ### Central Package Management
 

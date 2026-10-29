@@ -28,6 +28,8 @@ on:
       - ".github/scripts/run-native-aot-smoke.sh"
       - ".github/scripts/run-specifications.sh"
       - ".github/scripts/run-specifications.test.mjs"
+      - ".github/scripts/verify-native-specifications.mjs"
+      - ".github/scripts/verify-native-specifications.test.mjs"
       - ".github/workflows/dotnet-build.yml"
       - "Directory.Build.props"
       - "Directory.Packages*.props"
@@ -85,7 +87,10 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Run native type-discovery sample
+      - name: Verify native specification checks
+        run: bash .github/scripts/run-native-aot-smoke.sh --self-test
+
+      - name: Run native type-discovery sample and AOT specifications
         run: bash .github/scripts/run-native-aot-smoke.sh linux-x64
 
       - name: Upload failed native smoke results

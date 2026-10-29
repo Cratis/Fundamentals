@@ -52,7 +52,7 @@
         <Compile Include="$(MSBuildThisFileDirectory)/GlobalAssemblyInfo.cs" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(IsTestProject)'=='true'">
+    <ItemGroup Condition="'$(IsTestProject)'=='true' and '$(UseCratisSpecificationsRunner)'!='true'">
         <PackageReference Include="Cratis.Specifications.XUnit.v3" />
         <PackageReference Include="Moq" />
         <PackageReference Include="xunit.v3.mtp-off" />
@@ -61,17 +61,29 @@
         <Compile Include="$(MSBuildThisFileDirectory)/GlobalUsings.Specs.cs" />
     </ItemGroup>
 
+    <ItemGroup Condition="'$(UseCratisSpecificationsRunner)'=='true'">
+        <PackageReference Include="Cratis.Specifications.Runner" />
+        <Compile Include="$(MSBuildThisFileDirectory)/GlobalUsings.Runner.Specs.cs" />
+    </ItemGroup>
+
     <!--
         An xUnit v3 test project is also an executable, but still needs the VSTest adapter for IDEs.
         A test project without the VSTest adapter beside it is not a failing test project - it is an
         invisible one. `dotnet test` reports "No test is available", skips it, and exits 0, so its specs
         simply stop counting and nothing says so. Three projects in this repo were in that state.
         Assert the adapter landed rather than trusting that referencing the package was enough.
+        Standalone runner projects use Microsoft.Testing.Platform generation instead; assert it is enabled.
     -->
     <Target Name="EnsureTestProjectIsDiscoverable"
             AfterTargets="Build"
-            Condition="'$(IsTestProject)'=='true' and '$(TargetFramework)'!=''">
+            Condition="'$(IsTestProject)'=='true' and '$(UseCratisSpecificationsRunner)'!='true' and '$(TargetFramework)'!=''">
         <Error Condition="!Exists('$(OutputPath)xunit.runner.visualstudio.testadapter.dll')"
                Text="$(MSBuildProjectName) is a test project but its output has no VSTest adapter, so `dotnet test` will silently skip it. This happens when the project sets the singular &lt;TargetFramework&gt; while Directory.Build.props sets &lt;TargetFrameworks&gt; - use the plural form." />
+    </Target>
+    <Target Name="EnsureSpecificationRunnerIsApplied"
+            AfterTargets="Build"
+            Condition="'$(UseCratisSpecificationsRunner)'=='true' and '$(TargetFramework)'!=''">
+        <Error Condition="'$(GenerateTestingPlatformEntryPoint)'!='true' or '$(GenerateSelfRegisteredExtensions)'!='true'"
+               Text="$(MSBuildProjectName) uses the Cratis Specifications runner but its Microsoft.Testing.Platform entry point or extension generation is disabled." />
     </Target>
 </Project>

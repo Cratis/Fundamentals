@@ -4,8 +4,12 @@
 
 set -euo pipefail
 
+root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+if [[ ${1:-} == --self-test ]]; then
+    exec node --test "$root/.github/scripts/verify-native-specifications.test.mjs"
+fi
 if [[ $# -ne 1 ]]; then
-    echo "Usage: $0 <rid>" >&2
+    echo "Usage: $0 <rid>|--self-test" >&2
     exit 2
 fi
 case "$1" in
@@ -13,7 +17,6 @@ case "$1" in
     *) echo "Unsupported native smoke RID: $1" >&2; exit 2 ;;
 esac
 
-root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$root"
 output="$root/TestResults/native-aot"
 mkdir -p "$output"
@@ -36,6 +39,10 @@ for expected in 'Convention binding resolved:' 'Self binding resolved:' \
     fi
 done
 
-# Native AOT.Specs is blocked on the current xUnit stack's trim/AOT analysis errors.
-# Keep this gate sample-only until that runner can publish without suppressions.
-echo "Native type-discovery sample passed ($rid). Native AOT.Specs remains blocked on xUnit."
+dotnet build Source/DotNET/Fundamentals.AOT.Specs/Fundamentals.AOT.Specs.csproj -c Release -f net10.0
+dotnet publish Source/DotNET/Fundamentals.AOT.Specs/Fundamentals.AOT.Specs.csproj \
+    -c Release -f net10.0 -r "$rid" -p:TreatWarningsAsErrors=true -o "$output/specs-native"
+node "$root/.github/scripts/verify-native-specifications.mjs" \
+    --jit Source/DotNET/Fundamentals.AOT.Specs/bin/Release/net10.0/Cratis.Fundamentals.AOT.Specs \
+    --native "$output/specs-native/Cratis.Fundamentals.AOT.Specs" --results "$output/specs" --label "$rid"
+echo "Native type-discovery sample and AOT.Specs both passed ($rid)."

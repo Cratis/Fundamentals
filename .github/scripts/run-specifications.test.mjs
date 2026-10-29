@@ -20,8 +20,17 @@ function pathWithoutPython(directory) {
     return tools;
 }
 
+function reportArguments(runner, index) {
+    if (!runner) return `[[ "$1" == -noLogo && "$2" == -noColor && "$3" == -result-trx ]]
+report="$4"`;
+    return `[[ "$1" == --no-banner && "$2" == --no-ansi && "$3" == --no-progress ]]
+[[ "$4" == --results-directory && "$6" == --report-trx && "$7" == --report-trx-filename ]]
+[[ "$8" == Project${index}.Specs.trx ]]
+report="$5/$8"`;
+}
+
 function fixture(t, options = {}) {
-    const { count = 5, missing = -1, exits = {}, totals = {}, documents = {}, noTrx = -1, windows = false, missingPython = false } = options;
+    const { count = 5, missing = -1, exits = {}, totals = {}, documents = {}, noTrx = -1, runner = [], windows = false, missingPython = false } = options;
     mkdirSync(join(root, '.ai-work'), { recursive: true });
     const directory = mkdtempSync(join(root, '.ai-work/run-specifications-test-'));
     t.after(() => rmSync(directory, { recursive: true }));
@@ -32,14 +41,14 @@ function fixture(t, options = {}) {
         const project = join(directory, `Source/DotNET/Project${index}.Specs`);
         const output = join(project, 'bin/Release/net10.0');
         mkdirSync(output, { recursive: true });
-        writeFileSync(join(project, `Project${index}.Specs.csproj`), `<Project><AssemblyName>Assembly${index}</AssemblyName></Project>`);
+        writeFileSync(join(project, `Project${index}.Specs.csproj`), `<Project><AssemblyName>Assembly${index}</AssemblyName>${runner.includes(index) ? '<UseCratisSpecificationsRunner>true</UseCratisSpecificationsRunner>' : ''}</Project>`);
         if (index === missing) continue;
         const document = documents[index] ?? `<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"><ResultSummary><Counters total="${totals[index] ?? 1}" /></ResultSummary></TestRun>`;
         writeFileSync(join(output, `Assembly${index}${windows ? '.exe' : ''}`), `#!/usr/bin/env bash
 set -eu
-[[ "$1" == -noLogo && "$2" == -noColor && "$3" == -result-trx ]]
+${reportArguments(runner.includes(index), index)}
 echo 'Project${index} executed'
-${index === noTrx ? ':' : `printf '%s' '${document.replaceAll("'", "'\\''")}' > "$4"`}
+${index === noTrx ? ':' : `printf '%s' '${document.replaceAll("'", "'\\''")}' > "$report"`}
 exit ${exits[index] ?? 0}
 `, { mode: 0o755 });
     }
@@ -66,6 +75,24 @@ test('runs all five executables and reports their logs and totals', t => {
     const files = readdirSync(join(runs, readdirSync(runs)[0]));
     assert.equal(files.filter(name => name.endsWith('.trx')).length, 5);
     assert.equal(files.filter(name => name.endsWith('.log')).length, 5);
+});
+
+test('runs mixed xUnit and runner projects with their respective arguments', t => {
+    const result = fixture(t, { runner: [0, 2] });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal((result.stdout.match(/executed/g) ?? []).length, 5);
+});
+
+test('rejects a runner that produces no TRX', t => {
+    const result = fixture(t, { runner: [0], noTrx: 0 });
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stdout, /Project0.Specs produced no nonzero TRX test total/);
+});
+
+test('preserves a nonzero runner exit', t => {
+    const result = fixture(t, { runner: [0], exits: { 0: 8 } });
+    assert.equal(result.status, 8, result.stdout + result.stderr);
+    assert.match(result.stdout, /Project0.Specs exited with 8/);
 });
 
 test('requires Python before starting any project', t => {
