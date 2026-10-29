@@ -19,6 +19,7 @@ function trx(names = facts, outcome = 'Passed') {
 }
 
 function fixture(t, options = {}) {
+    mkdirSync(join(root, '.ai-work'), { recursive: true });
     const directory = mkdtempSync(join(root, '.ai-work/verify-native-specifications-test-'));
     t.after(() => rmSync(directory, { recursive: true }));
     const results = join(directory, 'results');
