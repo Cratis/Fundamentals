@@ -7,6 +7,7 @@
         <PackageId>Cratis.Metrics.Roslyn</PackageId>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <IncludeSymbols>false</IncludeSymbols>
+        <IncludeSource>false</IncludeSource>
         <Description>Deprecated: renamed to Cratis.Observability.SourceGenerators. This package only depends on Cratis.Observability.SourceGenerators so existing references keep working; reference Cratis.Observability.SourceGenerators directly.</Description>
     </PropertyGroup>
 
