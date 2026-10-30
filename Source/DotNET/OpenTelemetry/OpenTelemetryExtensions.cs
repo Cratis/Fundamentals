@@ -77,7 +77,8 @@ public static class OpenTelemetryExtensions
     {
         var options = new CratisOpenTelemetryOptions();
         configure?.Invoke(options);
-        MetricViews.Validate(options);
+        var metricSettings = new MetricViews(options);
+        var configureMetrics = options.ConfigureMetrics;
         ConfigureResourceDefaults(builder.Services, options);
         builder.WithLogging(_ => { }, logging =>
         {
@@ -119,7 +120,7 @@ public static class OpenTelemetryExtensions
             ValidateEndpoints(configuration);
             metrics.ConfigureResource(resource => ConfigureResource(resource, configuration));
             metrics.AddCratisInstrumentation();
-            metrics.AddView(instrument => MetricViews.Configure(instrument, options));
+            metricSettings.AddTo(metrics);
             if (ShouldExport(configuration, "METRICS"))
             {
                 var reader = provider.GetRequiredService<IOptions<PeriodicExportingMetricReaderOptions>>().Value;
@@ -137,7 +138,7 @@ public static class OpenTelemetryExtensions
         }).WithMetrics(metrics =>
         {
             metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation().AddRuntimeInstrumentation();
-            options.ConfigureMetrics?.Invoke(metrics);
+            configureMetrics?.Invoke(metrics);
         });
         builder.Services.ConfigureOpenTelemetryTracerProvider((provider, tracing) => ConfigureTracePolicy(tracing, resolveConfiguration(provider)));
 

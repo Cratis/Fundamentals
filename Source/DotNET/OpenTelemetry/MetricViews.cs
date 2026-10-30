@@ -9,68 +9,46 @@ namespace Cratis.OpenTelemetry;
 /// <summary>
 /// Composes metric shaping into a single SDK view.
 /// </summary>
-internal static class MetricViews
+internal sealed class MetricViews
 {
+    readonly bool _enabled;
+    readonly int _cardinalityLimit;
+    readonly double[]? _secondsHistogramBoundaries;
+    readonly Dictionary<string, MetricPolicy> _policies = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
-    /// Validates metric settings before registering providers.
+    /// Initializes a new instance of the <see cref="MetricViews"/> class.
+    /// Copies all metric settings before validating them, even when shaping is disabled.
     /// </summary>
-    /// <param name="options">The shared telemetry options.</param>
+    /// <param name="options">The caller-owned telemetry options.</param>
     /// <exception cref="InvalidMetricPolicy">A metric setting is invalid.</exception>
-    internal static void Validate(CratisOpenTelemetryOptions options)
+    internal MetricViews(CratisOpenTelemetryOptions options)
     {
-        ValidateLimit(options.MetricCardinalityLimit, nameof(options.MetricCardinalityLimit));
-        ValidateBoundaries(options.SecondsHistogramBoundaries, nameof(options.SecondsHistogramBoundaries));
+        _enabled = options.EnableMetricViews;
+        _cardinalityLimit = options.MetricCardinalityLimit;
+        _secondsHistogramBoundaries = options.SecondsHistogramBoundaries is { } boundaries ? [.. boundaries] : null;
         foreach (var (name, policy) in options.MetricPolicies)
         {
-            var setting = $"MetricPolicies[\"{name}\"]";
-            ValidateLimit(policy.CardinalityLimit, $"{setting}.CardinalityLimit");
-            ValidateBoundaries(policy.Boundaries, $"{setting}.Boundaries");
-            if (policy.TagKeys?.Any(string.IsNullOrWhiteSpace) == true)
+            _policies[name] = new()
             {
-                throw new InvalidMetricPolicy($"{setting}.TagKeys", "must not contain null or whitespace keys.");
-            }
+                CardinalityLimit = policy.CardinalityLimit,
+                Boundaries = policy.Boundaries is { } policyBoundaries ? [.. policyBoundaries] : null,
+                TagKeys = policy.TagKeys is { } tagKeys ? [.. tagKeys] : null
+            };
         }
+        Validate();
     }
 
     /// <summary>
-    /// Configures a stream only when the shared setup changes its shaping.
+    /// Registers the owned view only when explicitly enabled at registration.
     /// </summary>
-    /// <param name="instrument">The instrument being subscribed to.</param>
-    /// <param name="options">The shared telemetry options.</param>
-    /// <returns>The composed configuration, or null for an unchanged stream.</returns>
-    internal static MetricStreamConfiguration? Configure(Instrument instrument, CratisOpenTelemetryOptions options)
+    /// <param name="builder">The metrics builder.</param>
+    internal void AddTo(MeterProviderBuilder builder)
     {
-        options.MetricPolicies.TryGetValue(instrument.Name, out var policy);
-        var limit = policy?.CardinalityLimit ?? options.MetricCardinalityLimit;
-        var boundaries = HistogramBoundaries(instrument, policy, options);
-        if (IsUnchanged(policy, boundaries, limit))
+        if (_enabled)
         {
-            return null;
+            builder.AddView(Configure);
         }
-
-        var configuration = boundaries is null
-            ? new MetricStreamConfiguration()
-            : new ExplicitBucketHistogramConfiguration { Boundaries = boundaries };
-        configuration.TagKeys = policy?.TagKeys;
-        configuration.CardinalityLimit = limit;
-        return configuration;
-    }
-
-    static double[]? HistogramBoundaries(Instrument instrument, MetricPolicy? policy, CratisOpenTelemetryOptions options)
-    {
-        if (!IsHistogram(instrument))
-        {
-            return null;
-        }
-        if (policy?.Boundaries is not null)
-        {
-            return policy.Boundaries;
-        }
-        if (HasAdvisedBoundaries(instrument))
-        {
-            return null;
-        }
-        return UsesSecondsBuckets(instrument) ? options.SecondsHistogramBoundaries : null;
     }
 
     static bool IsHistogram(Instrument instrument) => instrument.GetType().IsGenericType && instrument.GetType().GetGenericTypeDefinition() == typeof(Histogram<>);
@@ -119,5 +97,61 @@ internal static class MetricViews
         {
             throw new InvalidMetricPolicy(setting, "must contain finite, strictly ascending boundaries.");
         }
+    }
+
+    void Validate()
+    {
+        ValidateLimit(_cardinalityLimit, nameof(CratisOpenTelemetryOptions.MetricCardinalityLimit));
+        ValidateBoundaries(_secondsHistogramBoundaries, nameof(CratisOpenTelemetryOptions.SecondsHistogramBoundaries));
+        foreach (var (name, policy) in _policies)
+        {
+            var setting = $"MetricPolicies[\"{name}\"]";
+            ValidateLimit(policy.CardinalityLimit, $"{setting}.CardinalityLimit");
+            ValidateBoundaries(policy.Boundaries, $"{setting}.Boundaries");
+            if (policy.TagKeys?.Any(string.IsNullOrWhiteSpace) == true)
+            {
+                throw new InvalidMetricPolicy($"{setting}.TagKeys", "must not contain null or whitespace keys.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Configures a stream only when the shared setup changes its shaping.
+    /// </summary>
+    /// <param name="instrument">The instrument being subscribed to.</param>
+    /// <returns>The composed configuration, or null for an unchanged stream.</returns>
+    MetricStreamConfiguration? Configure(Instrument instrument)
+    {
+        _policies.TryGetValue(instrument.Name, out var policy);
+        var limit = policy?.CardinalityLimit ?? _cardinalityLimit;
+        var boundaries = HistogramBoundaries(instrument, policy);
+        if (IsUnchanged(policy, boundaries, limit))
+        {
+            return null;
+        }
+
+        var configuration = boundaries is null
+            ? new MetricStreamConfiguration()
+            : new ExplicitBucketHistogramConfiguration { Boundaries = [.. boundaries] };
+        configuration.TagKeys = policy?.TagKeys is { } tagKeys ? [.. tagKeys] : null;
+        configuration.CardinalityLimit = limit;
+        return configuration;
+    }
+
+    double[]? HistogramBoundaries(Instrument instrument, MetricPolicy? policy)
+    {
+        if (!IsHistogram(instrument))
+        {
+            return null;
+        }
+        if (policy?.Boundaries is not null)
+        {
+            return policy.Boundaries;
+        }
+        if (HasAdvisedBoundaries(instrument))
+        {
+            return null;
+        }
+        return UsesSecondsBuckets(instrument) ? _secondsHistogramBoundaries : null;
     }
 }

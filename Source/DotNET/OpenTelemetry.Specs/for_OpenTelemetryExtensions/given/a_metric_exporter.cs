@@ -18,6 +18,7 @@ public class a_metric_exporter : a_clean_environment
         var services = new ServiceCollection();
         services.AddOpenTelemetry().WithCratis(options =>
         {
+            options.EnableMetricViews = true;
             configure(options);
             options.ConfigureMetrics = metrics =>
             {
@@ -31,7 +32,7 @@ public class a_metric_exporter : a_clean_environment
         metrics.ForceFlush(5_000).ShouldBeTrue();
     }
 
-    protected recorded_metric Metric(string name) => _exporter.Metrics.First(metric => metric.Name == name);
+    protected recorded_metric Metric(string name) => _exporter.Metrics.Single(metric => metric.Name == name);
 
     protected record recorded_point(Dictionary<string, object?> Tags, double Sum, IReadOnlyList<double> Boundaries);
 
