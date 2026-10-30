@@ -73,6 +73,53 @@ builder.AddCratisOpenTelemetry(options =>
 
 This excerpt also requires the `OpenTelemetry.Trace` namespace. Standard `OTEL_TRACES_SAMPLER*` settings still take precedence over samplers selected in application callbacks.
 
+## Metric views and cardinality
+
+The shared setup installs one composed metric view. `MetricCardinalityLimit` defaults to **2000** distinct tag sets per stream, the SDK's existing default; upgrading does not lower the cardinality budget. A per-instrument `MetricPolicies` entry can override the limit, allowed tags and histogram boundaries. Keys are exact, case-insensitive instrument names, without wildcards or meter qualifiers.
+
+Histograms from `Cratis.*` meters with unit `s` and no instrument advice get second-based boundaries:
+
+```text
+0, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10
+```
+
+Other units and third-party instruments retain their buckets. Boundary precedence is policy boundaries, then instrument advice, then Cratis seconds buckets, then SDK defaults. Policy boundaries are ignored for non-histograms. Set `SecondsHistogramBoundaries = null` to opt out of automatic seconds buckets and retain advice or SDK defaults; explicit policy boundaries still apply. You can also supply a different ascending, finite bucket array.
+
+This complete worker `Program.cs` chooses a smaller budget and shapes one instrument:
+
+```csharp
+using Cratis.OpenTelemetry;
+using Microsoft.Extensions.Hosting;
+
+var builder = Host.CreateApplicationBuilder(args);
+builder.AddCratisOpenTelemetry(options =>
+{
+    options.MetricCardinalityLimit = 500;
+    options.MetricPolicies["cratis.my_app.request.duration"] = new()
+    {
+        TagKeys = ["outcome"],
+        Boundaries = [0, 0.01, 0.05, 0.1, 0.5, 1, 5],
+        CardinalityLimit = 100
+    };
+});
+await builder.Build().RunAsync();
+```
+
+A policy limit takes precedence over `MetricCardinalityLimit`. Limits must be positive; boundaries must be finite and strictly ascending; tag keys must not be null or whitespace. Invalid settings throw `InvalidMetricPolicy` at registration. Null policy properties keep the defaults; `TagKeys = []` removes all tags, while null keeps all tags.
+
+Choose bounded dimensions such as `outcome`, HTTP method or a route template. Do not use user, tenant, request or entity identifiers as metric tags, even in scopes. Use traces or logs for per-request context instead.
+
+When a stream exceeds its budget, the SDK aggregates excess tag sets into a point with `otel.metric.overflow=true`. Alert when that point has measurements (for a cumulative counter, alert on its increase/rate; for a histogram, its observation count), then inspect the dimensions or deliberately adjust the budget. The overflow point and the zero-tag point do not count against the limit.
+
+Configure shaping through `MetricPolicies`, rather than adding another matching `AddView` in `ConfigureMetrics`: every matching view creates a stream, so a second view for a shaped instrument can produce duplicate streams with the same name. Instruments without a policy, automatic seconds buckets or a changed limit remain unshaped, preserving existing application views.
+
+### Migrating dashboards
+
+- The `le` bucket labels change for Cratis seconds histograms without advice. Quantile panels can shift; do not compare old buckets with new buckets across the upgrade. Use the seconds-bucket opt-out above if you need to defer migration.
+- `TagKeys` merges series that differ only in dropped tags. Update dashboard filters and grouping accordingly.
+- Lowering a cardinality limit can add an overflow series. Include an overflow alert rather than silently excluding it.
+- Move product-specific views targeting shaped instruments into `MetricPolicies` to avoid a second stream.
+
 ## Exception logs
 
 By default, exception logs export `exception.type`, but not the exception object, message, or stack trace. Formatted exception messages are omitted. Log templates, structured attributes, and scopes can still contain sensitive data; do not put secrets or personal identifiers in them.

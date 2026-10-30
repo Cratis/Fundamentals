@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -13,6 +14,31 @@ namespace Cratis.OpenTelemetry;
 /// </summary>
 public class CratisOpenTelemetryOptions
 {
+    /// <summary>
+    /// The SDK's default cardinality limit per metric stream.
+    /// </summary>
+    public const int DefaultMetricCardinalityLimit = 2000;
+
+    /// <summary>
+    /// Gets or sets the positive cardinality limit per stream, unless overridden by a metric policy.
+    /// Defaults to the SDK's existing limit of 2000.
+    /// </summary>
+    public int MetricCardinalityLimit { get; set; } = DefaultMetricCardinalityLimit;
+
+    /// <summary>
+    /// Gets or sets second-based buckets for Cratis.* histograms with unit s and no instrument advice.
+    /// Metric policy boundaries take precedence over advice, which takes precedence over these buckets.
+    /// Null retains instrument advice or SDK defaults instead of automatically supplying seconds buckets.
+    /// </summary>
+    [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "Mutable configuration mirrors the SDK histogram boundaries.")]
+    public double[]? SecondsHistogramBoundaries { get; set; } = [0, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10];
+
+    /// <summary>
+    /// Gets policies keyed by exact, case-insensitive instrument name, without wildcards or meter qualifiers.
+    /// Policy boundaries override advice and default buckets; policy limits override the default limit.
+    /// </summary>
+    public IDictionary<string, MetricPolicy> MetricPolicies { get; } = new Dictionary<string, MetricPolicy>(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
     /// Gets or sets the fallback service name when standard configuration does not name the service.
     /// </summary>
