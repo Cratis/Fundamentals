@@ -73,6 +73,58 @@ builder.AddCratisOpenTelemetry(options =>
 
 This excerpt also requires the `OpenTelemetry.Trace` namespace. Standard `OTEL_TRACES_SAMPLER*` settings still take precedence over samplers selected in application callbacks.
 
+## Metric views and cardinality
+
+Metric shaping is **off by default** (`EnableMetricViews = false`). The shared setup leaves SDK boundaries, cardinality and consumer `AddView` registrations unchanged, including views registered before or after `WithCratis` or through `ConfigureMetrics`. Metric policy fields alone do not enable shaping and are not applied while it is off; settings are still validated at registration.
+
+Set `EnableMetricViews = true` to give Cratis explicit ownership of matching metric shaping through one composed view. `MetricCardinalityLimit` defaults to **2000** distinct tag sets per stream, the SDK's existing default. A per-instrument `MetricPolicies` entry can override the limit, allowed tags and histogram boundaries. Keys are exact, case-insensitive instrument names, without wildcards or meter qualifiers.
+
+When enabled, histograms from `Cratis.*` meters with unit `s` and no instrument advice get second-based boundaries:
+
+```text
+0, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10
+```
+
+Other units and third-party instruments retain their buckets. Boundary precedence is policy boundaries, then instrument advice, then Cratis seconds buckets, then SDK defaults. Policy boundaries are ignored for non-histograms. Set `SecondsHistogramBoundaries = null` to opt out of automatic seconds buckets and retain advice or SDK defaults; explicit policy boundaries still apply. You can also supply a different ascending, finite bucket array.
+
+This complete worker `Program.cs` opts into owned shaping, chooses a smaller budget and shapes one instrument:
+
+```csharp
+using Cratis.OpenTelemetry;
+using Microsoft.Extensions.Hosting;
+
+var builder = Host.CreateApplicationBuilder(args);
+builder.AddCratisOpenTelemetry(options =>
+{
+    options.EnableMetricViews = true;
+    options.MetricCardinalityLimit = 500;
+    options.MetricPolicies["cratis.my_app.request.duration"] = new()
+    {
+        TagKeys = ["outcome"],
+        Boundaries = [0, 0.01, 0.05, 0.1, 0.5, 1, 5],
+        CardinalityLimit = 100
+    };
+});
+await builder.Build().RunAsync();
+```
+
+A policy limit takes precedence over `MetricCardinalityLimit`. Whether shaping is enabled or disabled, limits must be positive; boundaries must be finite and strictly ascending; tag keys must not be null or whitespace. Invalid settings throw `InvalidMetricPolicy` at registration. Null policy properties keep the defaults; `TagKeys = []` removes all tags, while null keeps all tags.
+
+Registration deep-copies metric settings before validating them: the ownership flag, global limit, seconds boundaries, policy dictionary, policy objects and their tag/boundary arrays are fixed for that registration. Later mutations to retained options, entries or arrays do not reconfigure existing or late-discovered instruments, even before provider resolution. `ConfigureMetrics` is captured once at registration as well. Configure everything inside the registration callback, not by mutating retained references.
+
+Choose bounded dimensions such as `outcome`, HTTP method or a route template. Do not use user, tenant, request or entity identifiers as metric tags, even in scopes. Use traces or logs for per-request context instead.
+
+When a stream exceeds its budget, the SDK aggregates excess tag sets into a point with `otel.metric.overflow=true`. Alert when that point has measurements (for a cumulative counter, alert on its increase/rate; for a histogram, its observation count), then inspect the dimensions or deliberately adjust the budget. The overflow point and the zero-tag point do not count against the limit.
+
+When opting in, move matching consumer views into `MetricPolicies`, or leave shaping off and keep consumer ownership. The SDK provides no public matching-view inspection: Cratis does not detect, merge, suppress or deduplicate arbitrary consumer views. Every matching SDK view creates a stream regardless of registration order, so another matching `AddView` before, after or inside `ConfigureMetrics` can produce duplicate streams. Cratis composes only its own boundaries, tag filtering and cardinality into one owned view; it returns no configuration for instruments without a policy, automatic seconds buckets or a changed limit.
+
+### Migrating dashboards
+
+- Upgrading alone does not change shaping. Opting into `EnableMetricViews` changes the `le` bucket labels for Cratis seconds histograms without advice. Quantile panels can shift; do not compare old buckets with new buckets across that change. Leave shaping off, or use the seconds-bucket opt-out above, to defer migration.
+- `TagKeys` merges series that differ only in dropped tags. Update dashboard filters and grouping accordingly.
+- Lowering a cardinality limit can add an overflow series. Include an overflow alert rather than silently excluding it.
+- Before opting in, move product-specific views targeting shaped instruments into `MetricPolicies` to avoid a second stream; opt-in does not merge external views.
+
 ## Exception logs
 
 By default, exception logs export `exception.type`, but not the exception object, message, or stack trace. Formatted exception messages are omitted. Log templates, structured attributes, and scopes can still contain sensitive data; do not put secrets or personal identifiers in them.

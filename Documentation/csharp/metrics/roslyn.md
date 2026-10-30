@@ -72,7 +72,7 @@ Add partial method declarations with the appropriate attributes:
 public partial class UserMetrics
 {
     [Counter<int>("user_registrations", "Number of user registrations")]
-    static partial void CountUserRegistration(IMeter<UserService> meter, string source, string country);
+    internal static partial void CountUserRegistration(IMeter<UserService> meter, string source, string country);
 
     [Gauge<double>("active_sessions", "Current number of active sessions")]
     static partial void RecordActiveSessions(IMeter<UserService> meter, double value, string region);
@@ -162,13 +162,15 @@ static partial void CountScopedOperation(IMeterScope<ProcessingService> scope, s
 
 ## Generated Code
 
+Choose bounded dimensions such as result or authentication method rather than identifiers. Tags from scopes also consume the budget. See [metric views and cardinality](../opentelemetry.md#metric-views-and-cardinality) for shaping and overflow handling. These excerpts assume the illustrated service and domain types, with bounded vocabularies for dimension values.
+
 The source generator creates efficient implementations. Here's what gets generated for a counter:
 
 ### Your Declaration
 
 ```csharp
 [Counter<int>("user_logins", "User login attempts")]
-static partial void CountUserLogin(IMeter<AuthService> meter, string result, string userId);
+static partial void CountUserLogin(IMeter<AuthService> meter, string result, string method);
 ```
 
 ### Generated Implementation
@@ -177,12 +179,12 @@ static partial void CountUserLogin(IMeter<AuthService> meter, string result, str
 static readonly global::System.Runtime.CompilerServices.ConditionalWeakTable<Meter, Counter<int>> CountUserLoginMetric = new();
 
 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")]
-static partial void CountUserLogin(IMeter<AuthService> meter, string result, string userId)
+static partial void CountUserLogin(IMeter<AuthService> meter, string result, string method)
 {
     var tags = new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(new KeyValuePair<string, object?>[]
     {
         new("result", result),
-        new("userId", userId)
+        new("method", method)
     }));
 
     if (meter.ActualMeter is { } actualMeter)
@@ -270,7 +272,7 @@ When using `IMeterScope<T>`, the generator automatically includes scope tags:
 public partial class OrderMetrics
 {
     [Counter<int>("order_steps", "Steps in order processing")]
-    static partial void CountOrderStep(IMeterScope<OrderService> scope, string step);
+    internal static partial void CountOrderStep(IMeterScope<OrderService> scope, string step);
 }
 
 // Usage
@@ -279,11 +281,11 @@ public async Task ProcessOrderAsync(Order order)
     // Using anonymous type for cleaner syntax
     using var scope = _meter.BeginScope(new
     {
-        order_id = order.Id,
+        operation = "process",
         customer_type = order.CustomerType
     });
 
-    // This will include both the scope tags (order_id, customer_type) 
+    // This will include both the scope tags (operation, customer_type)
     // and the method tag (step)
     OrderMetrics.CountOrderStep(scope, "validation");
     await ValidateOrder(order);
@@ -301,9 +303,8 @@ public async Task ProcessOrderAsync(Order order)
     // Property names are inferred from the source
     using var scope = _meter.BeginScope(new
     {
-        order.Id,
-        order.CustomerId,
-        CustomerType = order.CustomerType
+        order.CustomerType,
+        Operation = "process"
     });
 
     OrderMetrics.CountOrderStep(scope, "processing");
@@ -317,7 +318,7 @@ public partial class ApiMetrics
 {
     // Multiple tags with different types
     [Counter<long>("api_request_size", "Size of API requests")]
-    static partial void CountRequestSize(
+    internal static partial void CountRequestSize(
         IMeter<ApiService> meter,
         long bytes,
         string endpoint,

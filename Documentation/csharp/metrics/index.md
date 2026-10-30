@@ -73,14 +73,14 @@ Use scopes to add context to your metrics. You can use either a dictionary or an
 // Using a dictionary
 using var scope = meter.BeginScope(new Dictionary<string, object> 
 { 
-    ["user_id"] = userId,
+    ["result"] = "success",
     ["operation"] = "login"
 });
 
 // Using an anonymous type (recommended for cleaner syntax)
 using var scope = meter.BeginScope(new 
 { 
-    user_id = userId,
+    result = "success",
     operation = "login"
 });
 ```
@@ -91,10 +91,8 @@ The anonymous type approach provides a more concise syntax and supports property
 // Property names are inferred from the source properties
 using var scope = meter.BeginScope(new 
 { 
-    eventSequenceKey.EventStore,
-    eventSequenceKey.Namespace,
-    eventSequenceKey.EventSequenceId,
-    QueueId = queueId
+    request.Method,
+    Result = "success"
 });
 ```
 
@@ -105,6 +103,8 @@ Tags allow you to add dimensions to your metrics for better filtering and analys
 - Added at the scope level (applied to all metrics within the scope)
 - Added at the individual metric level through method parameters
 
+Choose bounded tags such as result, HTTP method or a route template, not user, tenant, request or entity IDs. Scope tags have the same cardinality cost as method tags. See [metric views and cardinality](../opentelemetry.md#metric-views-and-cardinality) for budgets, allowed tags and overflow handling. The excerpts below assume the illustrated service and domain types; use bounded vocabularies for their dimension values.
+
 ## Available Metrics
 
 ### Counters
@@ -113,7 +113,7 @@ Counters track cumulative values that only increase. Use for counting events, re
 
 ```csharp
 [Counter<int>("user_logins", "Number of user login attempts")]
-static partial void LogUserLogin(IMeter<AuthService> meter, string userId, string result);
+static partial void LogUserLogin(IMeter<AuthService> meter, string method, string result);
 ```
 
 ### Gauges
@@ -166,7 +166,7 @@ public partial class UserMetrics
     static partial void CountUserOperation(
         IMeter<UserService> meter, 
         string operationType, 
-        string userId, 
+        string result,
         int count = 1);
 
     [Gauge<double>("active_sessions", "Number of active user sessions")]
@@ -207,18 +207,18 @@ public class AuthService
             // Count successful logins
             if (success)
             {
-                AuthMetrics.CountLogin(_meter, "success", username);
+                AuthMetrics.CountLogin(_meter, "success", "password");
             }
             else
             {
-                AuthMetrics.CountLogin(_meter, "failure", username);
+                AuthMetrics.CountLogin(_meter, "failure", "password");
             }
             
             return success;
         }
         catch (Exception ex)
         {
-            AuthMetrics.CountLogin(_meter, "error", username);
+            AuthMetrics.CountLogin(_meter, "error", "password");
             throw;
         }
     }
@@ -227,7 +227,7 @@ public class AuthService
 public partial class AuthMetrics
 {
     [Counter<int>("auth_attempts", "Authentication attempts by result")]
-    static partial void CountLogin(IMeter<AuthService> meter, string result, string username);
+    internal static partial void CountLogin(IMeter<AuthService> meter, string result, string method);
 }
 ```
 
@@ -248,11 +248,11 @@ public class OrderService
         // Using anonymous type for cleaner syntax
         using var scope = _meter.BeginScope(new
         {
-            customer_id = order.CustomerId,
+            operation = "process",
             order_type = order.Type
         });
 
-        // All metrics within this scope will include the customer_id and order_type tags
+        // All metrics within this scope will include the operation and order_type tags
         OrderMetrics.StartProcessing(scope);
         
         try
@@ -281,16 +281,16 @@ public class OrderService
 public partial class OrderMetrics
 {
     [Counter<int>("order_processing_started", "Orders that started processing")]
-    static partial void StartProcessing(IMeterScope<OrderService> scope);
+    internal static partial void StartProcessing(IMeterScope<OrderService> scope);
 
     [Counter<int>("order_processing_completed", "Orders that completed processing")]
-    static partial void CompleteProcessing(IMeterScope<OrderService> scope);
+    internal static partial void CompleteProcessing(IMeterScope<OrderService> scope);
 
     [Counter<int>("order_validation", "Order validation attempts")]
-    static partial void CountValidation(IMeterScope<OrderService> scope, string result);
+    internal static partial void CountValidation(IMeterScope<OrderService> scope, string result);
 
     [Counter<int>("order_save", "Order save attempts")]
-    static partial void CountSave(IMeterScope<OrderService> scope, string result);
+    internal static partial void CountSave(IMeterScope<OrderService> scope, string result);
 }
 ```
 
@@ -322,10 +322,10 @@ public class MemoryMonitorService
 public partial class SystemMetrics
 {
     [Gauge<long>("memory_working_set", "Current working set memory in bytes")]
-    static partial void RecordWorkingSet(IMeter<MemoryMonitorService> meter, long bytes);
+    internal static partial void RecordWorkingSet(IMeter<MemoryMonitorService> meter, long bytes);
 
     [Gauge<long>("memory_private", "Current private memory in bytes")]
-    static partial void RecordPrivateMemory(IMeter<MemoryMonitorService> meter, long bytes);
+    internal static partial void RecordPrivateMemory(IMeter<MemoryMonitorService> meter, long bytes);
 }
 ```
 
