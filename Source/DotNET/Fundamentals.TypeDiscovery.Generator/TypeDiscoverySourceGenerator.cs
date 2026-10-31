@@ -16,8 +16,11 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var references = context.MetadataReferencesProvider.WithComparer(new MetadataReferenceComparer());
-        var referenceTypes = references.Combine(references.Collect())
-            .Select(static (input, cancellationToken) => ReferenceDiscovery.Create(input.Left, input.Right, cancellationToken))
+        var metadata = references.Select(static (reference, cancellationToken) => ReferenceMetadata.Create(reference, cancellationToken))
+            .WithTrackingName("ReferenceMetadata");
+        var referenceTypes = metadata.Collect()
+            .SelectMany(static (headers, _) => ReferenceInput.CreateAll(headers))
+            .Select(static (input, cancellationToken) => ReferenceDiscovery.Create(input.Reference, input.References, cancellationToken))
             .WithTrackingName("ReferenceDiscovery");
         var currentTypes = context.SyntaxProvider.CreateSyntaxProvider(
                 static (node, _) => node is BaseTypeDeclarationSyntax or DelegateDeclarationSyntax,

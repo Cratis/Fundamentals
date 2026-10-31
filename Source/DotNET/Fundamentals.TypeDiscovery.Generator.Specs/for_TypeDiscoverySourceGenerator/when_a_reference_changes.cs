@@ -18,7 +18,8 @@ public class when_a_reference_changes : Specification
     {
         _compilation = CompatibilityInputs.Create(CompatibilityScenario.Empty);
         _reference = CompatibilityInputs.Reference(_compilation, "Cratis.Changing", "namespace Services; public class Before {}", "/lib/Cratis.Changing.dll");
-        _compilation = _compilation.AddReferences(_reference);
+        var stable = CompatibilityInputs.Reference(_compilation, "Cratis.Stable", "namespace Services; public class Stable {}", "/lib/Cratis.Stable.dll");
+        _compilation = _compilation.AddReferences(_reference, stable);
         _driver = CSharpGeneratorDriver.Create(
             generators: [new TypeDiscoverySourceGenerator().AsSourceGenerator()],
             driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
@@ -39,6 +40,15 @@ public class when_a_reference_changes : Specification
 
     [Fact]
     void should_not_retain_the_previous_types() => _result.GeneratedTrees.Single().GetText(TestContext.Current.CancellationToken).ToString().ShouldNotContain("typeof(global::Services.Before)");
+
+    [Fact]
+    void should_keep_every_unrelated_reference_cached()
+    {
+        var unchanged = _result.Results.Single().TrackedSteps["ReferenceDiscovery"].SelectMany(step => step.Outputs)
+            .Where(output => !((ReferenceDiscovery)output.Value).Identity.StartsWith("Cratis.Changing,", StringComparison.Ordinal)).ToArray();
+        unchanged.Length.ShouldEqual(4);
+        unchanged.ShouldEachConformTo(output => output.Reason == IncrementalStepRunReason.Cached);
+    }
 
     [Fact]
     void should_invalidate_the_changed_module() => _result.Results.Single().TrackedSteps["ReferenceDiscovery"]
