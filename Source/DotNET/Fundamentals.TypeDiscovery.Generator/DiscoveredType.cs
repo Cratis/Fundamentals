@@ -38,7 +38,7 @@ internal sealed class DiscoveredType(INamedTypeSymbol symbol, IAssemblySymbol as
     /// <summary>Gets interface identities and convention-matching facts.</summary>
     public EquatableArray<(string Key, string Expression, string Assembly, bool Accessible, bool Matches)> Interfaces { get; } = new([.. symbol.AllInterfaces
         .Select(contract => (
-            $"{contract.ContainingAssembly.Identity}:{contract.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}",
+            TypeIdentity.Create(contract),
             contract.GetTypeOfExpression(),
             ExternalIdentity(contract, assembly),
             contract.IsAccessibleFromAssembly(assembly),
