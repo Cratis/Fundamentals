@@ -11,11 +11,11 @@ namespace Cratis.Types;
 /// </summary>
 public class ContractToImplementorsMap : IContractToImplementorsMap
 {
-    readonly ConcurrentDictionary<Type, ConcurrentBag<Type>> _contractsAndImplementors = new();
+    readonly ConcurrentDictionary<Type, Implementors> _contractsAndImplementors = new();
     readonly ConcurrentDictionary<Type, Type> _allTypes = new();
 
     /// <inheritdoc/>
-    public IDictionary<Type, IEnumerable<Type>> ContractsAndImplementors => _contractsAndImplementors.ToDictionary(_ => _.Key, _ => _.Value.AsEnumerable());
+    public IDictionary<Type, IEnumerable<Type>> ContractsAndImplementors => _contractsAndImplementors.ToDictionary(_ => _.Key, _ => _.Value.GetSnapshot());
 
     /// <inheritdoc/>
     public IEnumerable<Type> All => _allTypes.Keys;
@@ -56,7 +56,7 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
     /// <inheritdoc/>
     public IEnumerable<Type> GetImplementorsFor(Type contract)
     {
-        return GetImplementingTypesFor(contract);
+        return GetImplementingTypesFor(contract).GetSnapshot();
     }
 
     void AddTypesToAllTypes(IEnumerable<Type> types)
@@ -74,7 +74,7 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
                 foreach (var contract in implementor.AllBaseAndImplementingTypes())
                 {
                     var implementingTypes = GetImplementingTypesFor(contract);
-                    if (!implementingTypes.Contains(implementor)) implementingTypes.Add(implementor);
+                    implementingTypes.Add(implementor);
                 }
             }
             catch (TypeLoadException)
@@ -92,7 +92,7 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
         foreach (var (contract, implementors) in contractsAndImplementors)
         {
             var implementingTypes = GetImplementingTypesFor(contract);
-            foreach (var implementor in implementors.Where(i => IsImplementation(i) && !implementingTypes.Contains(i)))
+            foreach (var implementor in implementors.Where(IsImplementation))
             {
                 implementingTypes.Add(implementor);
             }
@@ -111,8 +111,41 @@ public class ContractToImplementorsMap : IContractToImplementorsMap
         }
     }
 
-    ConcurrentBag<Type> GetImplementingTypesFor(Type contract)
+    Implementors GetImplementingTypesFor(Type contract)
     {
-        return _contractsAndImplementors.GetOrAdd(contract, _ => []);
+        return _contractsAndImplementors.GetOrAdd(contract, _ => new());
+    }
+
+    sealed class Implementors
+    {
+        readonly ConcurrentDictionary<Type, byte> _types = new();
+        int _version;
+        Snapshot? _snapshot;
+
+        public void Add(Type type)
+        {
+            if (_types.TryAdd(type, 0))
+            {
+                Interlocked.Increment(ref _version);
+            }
+        }
+
+        public IEnumerable<Type> GetSnapshot()
+        {
+            var version = Volatile.Read(ref _version);
+            var snapshot = Volatile.Read(ref _snapshot);
+            if (snapshot is not null && snapshot.Version == version)
+            {
+                return snapshot.Types;
+            }
+
+            // Keys is a read-only snapshot. Capture the version first so a concurrent addition
+            // cannot leave a stale snapshot cached under the newer version.
+            snapshot = new(version, _types.Keys);
+            Volatile.Write(ref _snapshot, snapshot);
+            return snapshot.Types;
+        }
+
+        sealed record Snapshot(int Version, IEnumerable<Type> Types);
     }
 }
