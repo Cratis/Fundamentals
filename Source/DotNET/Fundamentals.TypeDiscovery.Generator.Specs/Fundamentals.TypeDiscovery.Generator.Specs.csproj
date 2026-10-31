@@ -20,6 +20,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="for_TypeDiscoverySourceGenerator/when_preserving_generated_output/*.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="../Fundamentals.TypeDiscovery.Generator/Fundamentals.TypeDiscovery.Generator.csproj" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
