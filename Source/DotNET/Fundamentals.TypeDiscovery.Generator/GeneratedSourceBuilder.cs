@@ -28,6 +28,32 @@ internal static class GeneratedSourceBuilder
         ImmutableArray<(string ImplementationExpression, string LifetimeExpression)> conventionSelfBindings,
         IEnumerable<INamedTypeSymbol> implementationSymbols,
         ImmutableArray<string> experimentalDiagnosticIds = default)
+        => BuildFromNames(
+            namedTypes,
+            contractsAndImplementors,
+            conventionServiceBindings,
+            conventionSelfBindings,
+            ConstructorPreservation.GetImplementationTypes(
+                implementationSymbols,
+                conventionServiceBindings.Select(static binding => binding.ImplementationExpression)
+                    .Concat(conventionSelfBindings.Select(static binding => binding.ImplementationExpression))),
+            experimentalDiagnosticIds);
+
+    /// <summary>Builds provider text from symbol-free discovery results.</summary>
+    /// <param name="namedTypes">Discovered type expressions.</param>
+    /// <param name="contractsAndImplementors">Contract-to-implementation mappings.</param>
+    /// <param name="conventionServiceBindings">Convention service bindings.</param>
+    /// <param name="conventionSelfBindings">Convention self bindings.</param>
+    /// <param name="implementationsWithPublicConstructors">Types whose constructors are preserved.</param>
+    /// <param name="experimentalDiagnosticIds">Experimental diagnostic identifiers.</param>
+    /// <returns>The complete provider source text.</returns>
+    public static string BuildFromNames(
+        ImmutableArray<string> namedTypes,
+        ImmutableArray<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> contractsAndImplementors,
+        ImmutableArray<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> conventionServiceBindings,
+        ImmutableArray<(string ImplementationExpression, string LifetimeExpression)> conventionSelfBindings,
+        IEnumerable<string> implementationsWithPublicConstructors,
+        ImmutableArray<string> experimentalDiagnosticIds)
     {
         var experimentalIds = experimentalDiagnosticIds.IsDefault ? [] : experimentalDiagnosticIds;
         var suppressedDiagnostics = string.Join(", ", ["CS0612", "CS0618", .. experimentalIds]);
@@ -42,11 +68,6 @@ internal static class GeneratedSourceBuilder
             ",\n",
             conventionSelfBindings.Select(static b =>
                 $"        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof({b.ImplementationExpression}), {b.LifetimeExpression})"));
-
-        var implementationsWithPublicConstructors = ConstructorPreservation.GetImplementationTypes(
-            implementationSymbols,
-            conventionServiceBindings.Select(static binding => binding.ImplementationExpression)
-                .Concat(conventionSelfBindings.Select(static binding => binding.ImplementationExpression)));
 
         return string.Join(
             "\n",
