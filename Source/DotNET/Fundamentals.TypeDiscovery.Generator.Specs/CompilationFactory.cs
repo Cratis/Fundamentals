@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 using System.Reflection;
+using Cratis.Specifications.Resources;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -13,13 +14,6 @@ namespace Cratis.Fundamentals.TypeDiscovery.Generator.Specs;
 /// </summary>
 static class CompilationFactory
 {
-    static readonly Assembly[] _defaultAssemblies =
-    [
-        typeof(object).Assembly,
-        Assembly.Load("System.Runtime"),
-        Assembly.Load("netstandard"),
-    ];
-
     /// <summary>
     /// Compiles the given C# source text and returns all named type symbols from the resulting assembly.
     /// </summary>
@@ -40,20 +34,19 @@ static class CompilationFactory
     /// <returns>A <see cref="CSharpCompilation"/> for the given source.</returns>
     public static CSharpCompilation CreateCompilation(string source, params Assembly[] additionalAssemblies)
     {
-        var syntaxTree = CSharpSyntaxTree.ParseText(source);
-        SyntaxTree[] syntaxTrees = [syntaxTree];
-        MetadataReference[] references =
-        [
-            .. _defaultAssemblies
-                .Concat(additionalAssemblies)
-                .Distinct()
-                .Select(static asm => (MetadataReference)MetadataReference.CreateFromFile(asm.Location))
-        ];
+        var inputs = Inputs();
+        var syntaxTree = CSharpSyntaxTree.ParseText(source, inputs.ParseOptions);
 
         return CSharpCompilation.Create(
             "TestAssembly",
-            syntaxTrees,
-            references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
+            [syntaxTree],
+            inputs.References(additionalAssemblies),
+            inputs.Options);
+    }
+
+    static CompilationInputs Inputs()
+    {
+        var inputs = SpecificationResources.Get<CompilationInputs>();
+        return inputs.IsCompletedSuccessfully ? inputs.Result : inputs.AsTask().GetAwaiter().GetResult();
     }
 }
