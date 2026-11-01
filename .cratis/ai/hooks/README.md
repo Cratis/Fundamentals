@@ -12,7 +12,7 @@ Three layers:
 | Pattern pass | `PostToolUse` on a write | `scripts/cratis-pattern-scan.sh` | zero tokens until a match | appends a one-line reminder to context, never blocks |
 | Hard block | `PreToolUse` on a write | `scripts/cratis-guard-writes.sh` | zero | exits **2** — the write does not happen |
 | Hard block | `PreToolUse` on `Bash` | `scripts/cratis-guard-store-mutations.sh` | zero; parses only commands that mention `cratis` | exits **2** — the store-changing `cratis chronicle` command does not run |
-| Hard block | `PreToolUse` on `Bash` | `scripts/cratis-guard-secrets.sh` | zero; parses only commands that mention a credential-bearing tool or file | exits **2** — a command that prints credentials (full `kubectl` specs and secrets, `env`/`printenv`, `docker inspect`, secret-manager reads, `.env`/kubeconfig/key files; also behind `/usr/bin/env`, `command`, attached options such as `-ePATTERN`, a bare `{.}` projection) does not run unless it projects a field; piped shells and recursive searches with no named file stay uncovered; see [`secrets.md`](../rules/secrets.md) |
+| Hard block | `PreToolUse` on `Bash` | `scripts/cratis-guard-secrets.sh` | zero; parses only commands that mention a credential-bearing tool or file | exits **2** — a command that prints credentials (full `kubectl` specs and secrets, `env`/`printenv`, `docker inspect`, secret-manager reads, `cratis config get --show-secret`, `.env`/kubeconfig/key files; also behind `/usr/bin/env`, `command`, attached options such as `-ePATTERN`, a bare `{.}` projection) does not run unless it projects a field; piped shells and recursive searches with no named file stay uncovered; see [`secrets.md`](../rules/secrets.md) |
 | Hard block | `PreToolUse` on `Bash` | `scripts/cratis-guard-pr-body.sh` | fetches shared rules only for `gh pr create/edit` | exits **2** for inline bodies, invalid notes or conflicting release labels; warns and allows when offline with no cache |
 | Cleanup of delivered work | `PostToolUse` on `Bash` (`gh pr merge`, `git pull/merge/worktree`) and `SessionStart` (Pi: `tool_result` and `session_start`) | `scripts/cratis-cleanup-worktrees.sh --hook` | zero when the command is unrelated | never blocks; removes delivered worktrees and branches, reports what it kept |
 | Quality gate (Claude) | `Stop` | `scripts/cratis-quality-gate.sh` | one build/test run, only when relevant files changed | exits **2** — the turn does not end |
@@ -129,6 +129,22 @@ ignored records. Other ignored files (`node_modules`, build output) go with a de
   `--include-work-records` only after preserving any records you still need: it permits deleting
   `.ai-work/` content, but never overrides locks or other safety checks. Hook mode ignores this flag;
   automatic hooks never opt in.
+- **GitHub lookups.** The complete worktree and branch sweep is planned before any removal. Git
+  ancestry is checked first; only a plan needing more evidence triggers the single REST batch. It
+  reads the latest 100 closed pull requests, so older merged branches absent from that page are simply
+  kept. Only merged entries with the exact branch and head commit qualify. Hook runs share an atomic
+  stamp and cache under the Git common directory, with at most one request per repository every
+  15 minutes, including failed attempts. A fresh successful cache is reused. A failed request, invalid
+  response, or unavailable lock without a fresh successful cache aborts **all** removals in that sweep,
+  including ancestry-proven worktrees and branches, with a one-line notice. Failed attempts are marked
+  for the full window: later plans needing GitHub also abort all removals without retrying, while plans
+  needing only ancestry evidence proceed without GitHub. Locks older than 15 minutes can be reclaimed.
+  Manual runs are not throttled, but also use at most one request per run and abort all removals if
+  that request fails.
+- **Disable GitHub only.** Set `CRATIS_CLEANUP_NO_GH=1` to avoid all GitHub lookups while keeping
+  cleanup based on Git ancestry enabled. Missing `gh` or `jq`, a non-GitHub origin, or an invalid
+  repository slug also select ancestry-only cleanup before planning: unproven items are kept, with
+  no GitHub call, abort, or failed-attempt marker.
 - **Pin a long-lived worktree.** Use `git worktree lock <path>` to keep it out of cleanup; release the
   pin with `git worktree unlock <path>` when ready.
 - **Self-test.** `--self-test` plants delivered, dirty, unmerged, brand-new, work-record and locked cases
