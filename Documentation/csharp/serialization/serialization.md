@@ -26,6 +26,12 @@ The options use acronym-friendly **camelCase** property names and set `DefaultIg
 Naming applies to both serialization and deserialization, but does not enable case-insensitive input: the options leave `PropertyNameCaseInsensitive` at its default, `false`.
 Custom converters can have their own naming and null-handling behavior.
 
+## Enums under NativeAOT
+
+The type-discovery generator emits enum converter factories for enums declared in each participating assembly. `Cratis.Json.EnumConverterFactory` uses these factories under NativeAOT, avoiding runtime generic converter construction. Keep using `new EnumConverterFactory()` in your serializer options and use a source-generated `JsonSerializerContext` for the types you serialize, as required by System.Text.Json under NativeAOT.
+
+Enums must be accessible to generated code, including every containing type. Private, protected-only, private-protected, file-local, and generic containing types cannot be used. For enums in an assembly without generated discovery output, explicitly register `new EnumConverter<MyEnum>()` in your serializer options before the factory. Dynamic-code runtimes retain the existing reflection path and behavior.
+
 ## Polymorphism and Type Discriminators
 
 When working with polymorphism and serialization, serializers don't generally know the concrete type that should be used for serializing from and

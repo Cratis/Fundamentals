@@ -20,6 +20,7 @@ internal static class GeneratedSourceBuilder
     /// <param name="conventionSelfBindings">The self-binding type entries.</param>
     /// <param name="implementationSymbols">The discovered symbols used to select constructors to preserve.</param>
     /// <param name="experimentalDiagnosticIds">Diagnostic ids of [Experimental] types referenced by the generated code, to suppress.</param>
+    /// <param name="enumTypes">Enum type expressions declared in the current assembly.</param>
     /// <returns>The complete C# source text.</returns>
     public static string Build(
         ImmutableArray<string> namedTypes,
@@ -27,7 +28,8 @@ internal static class GeneratedSourceBuilder
         ImmutableArray<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> conventionServiceBindings,
         ImmutableArray<(string ImplementationExpression, string LifetimeExpression)> conventionSelfBindings,
         IEnumerable<INamedTypeSymbol> implementationSymbols,
-        ImmutableArray<string> experimentalDiagnosticIds = default)
+        ImmutableArray<string> experimentalDiagnosticIds = default,
+        ImmutableArray<string> enumTypes = default)
         => BuildFromNames(
             namedTypes,
             contractsAndImplementors,
@@ -37,7 +39,8 @@ internal static class GeneratedSourceBuilder
                 implementationSymbols,
                 conventionServiceBindings.Select(static binding => binding.ImplementationExpression)
                     .Concat(conventionSelfBindings.Select(static binding => binding.ImplementationExpression))),
-            experimentalDiagnosticIds);
+            experimentalDiagnosticIds,
+            enumTypes);
 
     /// <summary>Builds provider text from symbol-free discovery results.</summary>
     /// <param name="namedTypes">Discovered type expressions.</param>
@@ -46,6 +49,7 @@ internal static class GeneratedSourceBuilder
     /// <param name="conventionSelfBindings">Convention self bindings.</param>
     /// <param name="implementationsWithPublicConstructors">Types whose constructors are preserved.</param>
     /// <param name="experimentalDiagnosticIds">Experimental diagnostic identifiers.</param>
+    /// <param name="enumTypes">Enum type expressions declared in the current assembly.</param>
     /// <returns>The complete provider source text.</returns>
     public static string BuildFromNames(
         ImmutableArray<string> namedTypes,
@@ -53,8 +57,21 @@ internal static class GeneratedSourceBuilder
         ImmutableArray<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> conventionServiceBindings,
         ImmutableArray<(string ImplementationExpression, string LifetimeExpression)> conventionSelfBindings,
         IEnumerable<string> implementationsWithPublicConstructors,
-        ImmutableArray<string> experimentalDiagnosticIds)
+        ImmutableArray<string> experimentalDiagnosticIds,
+        ImmutableArray<string> enumTypes = default)
     {
+        var hasEnums = !enumTypes.IsDefaultOrEmpty;
+        var enumInterface = hasEnums ? ", global::Cratis.Json.ICanCreateEnumConverters" : string.Empty;
+        string[] enumConverterMethod = hasEnums
+            ? [
+                string.Empty,
+                "    public global::System.Text.Json.Serialization.JsonConverter CreateEnumConverter(Type enumType)",
+                "    {",
+                .. enumTypes.Select(static name => $"        if (enumType == typeof({name})) return new global::Cratis.Json.EnumConverter<{name}>();"),
+                "        return null;",
+                "    }"
+            ]
+            : [];
         var experimentalIds = experimentalDiagnosticIds.IsDefault ? [] : experimentalDiagnosticIds;
         var suppressedDiagnostics = string.Join(", ", ["CS0612", "CS0618", .. experimentalIds]);
         var definedTypes = string.Join(",\n", namedTypes.Select(static name => $"        typeof({name})"));
@@ -89,7 +106,7 @@ internal static class GeneratedSourceBuilder
                 "using System.Reflection;",
                 "using System.Runtime.CompilerServices;",
                 string.Empty,
-                "file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProvideAssembliesForDiscovery, global::Cratis.Types.ICanProvideContractToImplementorsForDiscovery, global::Cratis.DependencyInjection.ICanProvideConventionsForDependencyInjection",
+                $"file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProvideAssembliesForDiscovery, global::Cratis.Types.ICanProvideContractToImplementorsForDiscovery, global::Cratis.DependencyInjection.ICanProvideConventionsForDependencyInjection{enumInterface}",
                 "{",
                 "    public IEnumerable<Assembly> Assemblies => [typeof(GeneratedTypeDiscoveryProvider).Assembly];",
                 string.Empty,
@@ -116,6 +133,7 @@ internal static class GeneratedSourceBuilder
                 "    public void Initialize()",
                 "    {",
                 "    }",
+                ..enumConverterMethod,
                 "}",
                 string.Empty,
                 "file static class GeneratedTypeDiscoveryProviderRegistration",

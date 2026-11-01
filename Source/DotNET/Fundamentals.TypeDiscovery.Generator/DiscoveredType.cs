@@ -15,6 +15,12 @@ internal sealed class DiscoveredType(INamedTypeSymbol symbol, IAssemblySymbol as
     /// <summary>Gets the emitted typeof expression.</summary>
     public string Expression { get; } = symbol.GetTypeOfExpression();
 
+    /// <summary>Gets whether this type is an enum.</summary>
+    public bool IsEnum { get; } = symbol.TypeKind == TypeKind.Enum;
+
+    /// <summary>Gets whether an enum and its containing types can be referenced.</summary>
+    public bool CanReferenceEnum { get; } = CanReferenceEnumType(symbol);
+
     /// <summary>Gets the service lifetime expression.</summary>
     public string Lifetime { get; } = symbol.GetServiceLifetimeExpression();
 
@@ -50,8 +56,8 @@ internal sealed class DiscoveredType(INamedTypeSymbol symbol, IAssemblySymbol as
 
     /// <inheritdoc/>
     public bool Equals(DiscoveredType? other) => other is not null &&
-        (Expression, Lifetime, IsImplementation, IgnoreConvention, IsSelfBinding, PreserveConstructors).Equals(
-            (other.Expression, other.Lifetime, other.IsImplementation, other.IgnoreConvention, other.IsSelfBinding, other.PreserveConstructors)) &&
+        (Expression, Lifetime, IsImplementation, IgnoreConvention, IsSelfBinding, PreserveConstructors, IsEnum, CanReferenceEnum).Equals(
+            (other.Expression, other.Lifetime, other.IsImplementation, other.IgnoreConvention, other.IsSelfBinding, other.PreserveConstructors, other.IsEnum, other.CanReferenceEnum)) &&
         Contracts.Equals(other.Contracts) && Interfaces.Equals(other.Interfaces) && ExperimentalIds.Equals(other.ExperimentalIds);
 
     /// <inheritdoc/>
@@ -59,6 +65,20 @@ internal sealed class DiscoveredType(INamedTypeSymbol symbol, IAssemblySymbol as
 
     /// <inheritdoc/>
     public override int GetHashCode() => Expression.GetHashCode();
+
+    static bool CanReferenceEnumType(INamedTypeSymbol symbol)
+    {
+        for (var current = symbol; current is not null; current = current.ContainingType)
+        {
+            if (current.IsFileLocal || current.IsGenericType ||
+                current.DeclaredAccessibility is Accessibility.Private or Accessibility.Protected or Accessibility.ProtectedAndInternal)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     static string ExternalIdentity(INamedTypeSymbol symbol, IAssemblySymbol assembly) =>
         SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, assembly) ? string.Empty : symbol.ContainingAssembly.Identity.ToString();

@@ -127,6 +127,10 @@ trimmed away. Generated registration does not root its own assembly. Root such a
 with `TrimmerRootAssembly` or `DynamicDependency`; no reference walk could recover an assembly removed
 by trimming. The type-discovery sample demonstrates discovery in a native executable.
 
+The generated provider also creates the enum JSON converters for the enums its assembly declares, so
+`EnumConverterFactory` works under NativeAOT. Assemblies built with an older generator version must be
+rebuilt to get these converters.
+
 Generated convention and self bindings preserve public instance constructors of bound, non-static,
 non-abstract classes and structs through `DynamicDependency` attributes on the generated module
 initializer, including open generic definitions. A type must have at least one public instance
