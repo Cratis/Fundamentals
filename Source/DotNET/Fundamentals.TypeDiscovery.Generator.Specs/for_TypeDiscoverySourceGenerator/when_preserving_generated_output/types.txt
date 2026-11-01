@@ -10,7 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProvideAssembliesForDiscovery, global::Cratis.Types.ICanProvideContractToImplementorsForDiscovery, global::Cratis.DependencyInjection.ICanProvideConventionsForDependencyInjection
+file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProvideAssembliesForDiscovery, global::Cratis.Types.ICanProvideContractToImplementorsForDiscovery, global::Cratis.DependencyInjection.ICanProvideConventionsForDependencyInjection, global::Cratis.Json.ICanCreateEnumConverters
 {
     public IEnumerable<Assembly> Assemblies => [typeof(GeneratedTypeDiscoveryProvider).Assembly];
 
@@ -70,6 +70,12 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
 
     public void Initialize()
     {
+    }
+
+    public global::System.Text.Json.Serialization.JsonConverter CreateEnumConverter(Type enumType)
+    {
+        if (enumType == typeof(global::App.Choice)) return new global::Cratis.Json.EnumConverter<global::App.Choice>();
+        return null;
     }
 }
 

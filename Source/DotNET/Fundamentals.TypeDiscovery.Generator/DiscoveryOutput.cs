@@ -24,7 +24,7 @@ internal static class DiscoveryOutput
             .GroupBy(static type => type.Expression).Where(static group => group.Select(static type => type.Assembly).Distinct().Count() > 1)
             .Select(static group => group.Key),
             StringComparer.Ordinal);
-        var types = currentTypes.Where(type => !referencedNames.Contains(type.Expression))
+        var types = currentTypes.Where(type => (!type.IsEnum || type.CanReferenceEnum) && !referencedNames.Contains(type.Expression))
             .GroupBy(static type => type.Expression).Select(static group => group.First()).ToArray();
         var packageTypes = referenceArray.SelectMany(static reference => reference.PackageTypes).Where(type => !ambiguousNames.Contains(type.Expression)).ToArray();
         var symbols = types.Concat(packageTypes).ToArray();
@@ -43,7 +43,8 @@ internal static class DiscoveryOutput
             bindings,
             selfBindings,
             preserved,
-            experimentalIds);
+            experimentalIds,
+            [.. types.Where(static type => type.IsEnum).Select(static type => type.Expression).OrderBy(static name => name, StringComparer.Ordinal)]);
     }
 
     static ImmutableArray<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> GetContracts(

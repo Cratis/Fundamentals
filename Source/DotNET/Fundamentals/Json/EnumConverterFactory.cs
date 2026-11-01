@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -9,6 +10,7 @@ namespace Cratis.Json;
 
 /// <summary>
 /// Represents a <see cref="JsonConverterFactory"/> for converting enums.
+/// Under NativeAOT, converters from generated discovery providers are used when available.
 /// </summary>
 public class EnumConverterFactory : JsonConverterFactory
 {
@@ -24,6 +26,11 @@ public class EnumConverterFactory : JsonConverterFactory
     [UnconditionalSuppressMessage("Trimming", "IL2071", Justification = "EnumConverter<T> has a public parameterless constructor that is always preserved.")]
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
+        if (!RuntimeFeature.IsDynamicCodeSupported && GeneratedEnumConverters.TryCreate(typeToConvert) is { } generated)
+        {
+            return generated;
+        }
+
         // Create the appropriate converter for the enum type.
         var converterType = typeof(EnumConverter<>).MakeGenericType(typeToConvert);
         return (JsonConverter)Activator.CreateInstance(converterType)!;
