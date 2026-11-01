@@ -12,7 +12,8 @@ namespace Cratis.Reactive;
 /// <typeparam name="TResult">Result value type.</typeparam>
 internal sealed class EagerTransformingSubject<TSource, TResult> : ISubject<TResult>, IDisposable
 {
-    readonly TransformingSubjectReplay<TResult> _result = new(new object());
+    readonly ISubject<TSource> _source;
+    readonly ReplaySubject<TResult> _result = new(1);
     readonly SingleAssignmentDisposable _transformation = new();
     readonly SingleAssignmentDisposable _completion = new();
     int _disposed;
@@ -22,27 +23,19 @@ internal sealed class EagerTransformingSubject<TSource, TResult> : ISubject<TRes
     /// <param name="transform">Transformation.</param>
     internal EagerTransformingSubject(ISubject<TSource> source, Func<TSource, TResult> transform)
     {
-        try
-        {
-            // Keep the existing ordering: transformation first, completion monitor second.
-            _transformation.Disposable = source.Select(transform).Subscribe(_result.PublishSource, _result.Fail, _result.Complete);
-            _completion.Disposable = source.Subscribe(_ => { }, _ => { }, Dispose);
-        }
-        catch
-        {
-            Dispose();
-            throw;
-        }
+        _source = source;
+        _transformation.Disposable = source.Select(transform).Subscribe(_result);
+        _completion.Disposable = source.Subscribe(_ => { }, _ => { }, Dispose);
     }
 
     /// <inheritdoc/>
     public void OnNext(TResult value) => _result.OnNext(value);
 
     /// <inheritdoc/>
-    public void OnError(Exception error) => _result.OnError(error);
+    public void OnError(Exception error) => _source.OnError(error);
 
     /// <inheritdoc/>
-    public void OnCompleted() => _result.OnCompleted();
+    public void OnCompleted() => _source.OnCompleted();
 
     /// <inheritdoc/>
     public IDisposable Subscribe(IObserver<TResult> observer) => _result.Subscribe(observer);

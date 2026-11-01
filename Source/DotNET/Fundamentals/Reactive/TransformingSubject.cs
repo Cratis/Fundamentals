@@ -6,20 +6,26 @@ using System.Reactive.Subjects;
 namespace Cratis.Reactive;
 
 /// <summary>
-/// Represents an <see cref="ISubject{T}"/> that transforms the source observable to a different type.
+/// Represents a subject that transforms the input before passing it on to the observers.
 /// </summary>
 /// <typeparam name="TSource">Type of source.</typeparam>
-/// <typeparam name="TResult">Type of result.</typeparam>
+/// <typeparam name="TResult">Type of converted result.</typeparam>
+/// <remarks>
+/// The transformed result replays its most recent value to whoever subscribes. The source is subscribed to during
+/// construction, before any consumer can have attached, so a source emitting synchronously on subscribe - a
+/// <see cref="BehaviorSubject{T}"/> seed, a <see cref="ReplaySubject{T}"/> buffer - would otherwise have that first
+/// value dropped on the floor.
+/// </remarks>
 public class TransformingSubject<TSource, TResult> : ISubject<TResult>, IDisposable
 {
     readonly ISubject<TResult> _subject;
     readonly IDisposable _lifetime;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TransformingSubject{TSource, TResult}"/> class.
+    /// Initializes a new instance of <see cref="TransformingSubject{TSource, TResult}"/>.
     /// </summary>
-    /// <param name="sourceSubject">Source subject.</param>
-    /// <param name="transform">Transform function.</param>
+    /// <param name="sourceSubject">Subject to observe.</param>
+    /// <param name="transform">Callback for doing transformation.</param>
     public TransformingSubject(ISubject<TSource> sourceSubject, Func<TSource, TResult> transform)
         : this(new EagerTransformingSubject<TSource, TResult>(sourceSubject, transform))
     {
