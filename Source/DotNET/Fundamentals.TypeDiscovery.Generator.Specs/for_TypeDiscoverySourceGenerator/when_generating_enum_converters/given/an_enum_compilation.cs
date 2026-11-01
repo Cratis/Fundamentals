@@ -23,7 +23,8 @@ public class an_enum_compilation : Specification
         errors = withGenerated.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
     }
 
-    static MetadataReference CreateContractsReference()
+#pragma warning disable MA0136 // Compiled C# source: line endings do not matter
+    static PortableExecutableReference CreateContractsReference()
     {
         // Keep the generator specs independent of the runtime project while compiling the entire output.
         var contracts = CompilationFactory.CreateCompilation("""
@@ -68,7 +69,7 @@ public class an_enum_compilation : Specification
             """).WithAssemblyName("DiscoveryContracts");
         using var stream = new MemoryStream();
         var result = contracts.Emit(stream);
-        Assert.True(result.Success, string.Join("\n", result.Diagnostics));
+        Assert.True(result.Success, string.Join('\n', result.Diagnostics));
         return MetadataReference.CreateFromImage(stream.ToArray());
     }
 }

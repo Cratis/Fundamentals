@@ -1,6 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable MA0136 // Compiled C# source: line endings do not matter
+
 namespace Cratis.Fundamentals.TypeDiscovery.Generator.for_TypeDiscoverySourceGenerator.when_generating_enum_converters;
 
 public class and_an_enum_is_nested_in_a_private_class : given.an_enum_compilation
