@@ -1,134 +1,87 @@
 ---
-description: Represent a value that may be absent with the .NET Option monad instead of null, so callers must handle both cases.
+title: Option
+description: Return an optional configuration setting with Option<T>, then handle a present value or choose a default without unchecked access.
 ---
-# Option
 
-The `Option<TValue>` monad represents an optional value that may or may not be present. It provides a type-safe alternative to null references, making the optionality explicit in the type system.
+A missing retry-count setting can mean “use the default.” Throwing an exception for that case makes an ordinary lookup look like a failure. Returning `Option<string>` lets your method say that the text may be absent while leaving the default to its caller.
 
-## Purpose
+## Look up a setting
 
-`Option<T>` eliminates null reference exceptions by forcing explicit handling of the absence of a value. Instead of returning `null` and hoping consumers remember to check, `Option<T>` makes the optionality part of the method signature.
+Use a .NET 10 SDK. In a new directory, create the console app and add the package:
 
-## Usage
+```bash
+dotnet new console --framework net10.0 --name OptionDemo
+cd OptionDemo
+dotnet add package Cratis.Fundamentals --version 7.32.0
+```
 
-### Producer Perspective
-
-Return `Option<T>` from methods that may not always have a value:
+Replace `Program.cs` with this complete program:
 
 ```csharp
-public class UserRepository
+using System;
+using System.Collections.Generic;
+using Cratis.Monads;
+
+public static class OptionalSetting
 {
-    public Option<User> FindById(UserId id)
+    public static void Main()
     {
-        var user = _database.Users.FirstOrDefault(u => u.Id == id);
-        
-        // Implicit conversion from TValue to Option<TValue>
-        if (user is not null)
-            return user;
-        
-        // Return None when value is absent
-        return Option<User>.None();
+        var settings = new Dictionary<string, string>
+        {
+            ["timeoutSeconds"] = "30"
+        };
+
+        foreach (var key in new[] { "timeoutSeconds", "retryCount" })
+        {
+            var setting = FindSetting(settings, key);
+            if (setting.TryGetValue(out var value))
+            {
+                Console.WriteLine($"{key}: {value}");
+            }
+            else
+            {
+                Console.WriteLine($"{key}: absent");
+            }
+        }
+
+        var missing = FindSetting(settings, "retryCount");
+        Console.WriteLine(missing.Match(value => value, _ => "Default: 3"));
+        missing.Switch(value => Console.WriteLine(value), _ => Console.WriteLine("No retry setting"));
     }
-    
-    public Option<string> GetEmailAddress(UserId userId)
+
+    static Option<string> FindSetting(Dictionary<string, string> settings, string key)
     {
-        var user = FindById(userId);
-        if (!user.HasValue)
-            return Option<string>.None();
-        
-        if (user.TryGetValue(out var userValue) && !string.IsNullOrEmpty(userValue.Email))
-            return userValue.Email;
-        
+        if (settings.TryGetValue(key, out var value)) return value;
         return Option<string>.None();
     }
 }
 ```
 
-### Consumer Perspective
+`FindSetting` returns the stored string through an implicit conversion to `Option<string>`. It creates absence explicitly with `None()`. `TryGetValue` gives the caller both the case check and the value; only use its `out` value inside the successful branch.
 
-Explicitly handle the presence or absence of values:
+The last two calls show alternatives to an `if`. `Match` produces a value, while `Switch` runs an action for the selected case. Both take the value branch first and the none branch second. The `_` parameter ignores the none-case marker.
 
-```csharp
-public class UserService
-{
-    readonly UserRepository _repository;
-    
-    public void ProcessUser(UserId id)
-    {
-        var userOption = _repository.FindById(id);
-        
-        // Check if value is present
-        if (userOption.HasValue)
-        {
-            // TryGetValue provides safe access
-            if (userOption.TryGetValue(out var user))
-            {
-                Console.WriteLine($"Processing user: {user.Name}");
-            }
-        }
-        else
-        {
-            Console.WriteLine("User not found");
-        }
-    }
-    
-    public void DisplayUserEmail(UserId id)
-    {
-        var emailOption = _repository.GetEmailAddress(id);
-        
-        // TryGetValue approach
-        if (emailOption.TryGetValue(out var email))
-        {
-            Console.WriteLine($"Email: {email}");
-        }
-        else
-        {
-            Console.WriteLine("No email available");
-        }
-    }
-    
-    public string GetUserDisplayName(UserId id)
-    {
-        var userOption = _repository.FindById(id);
-        
-        // Using Match() for functional composition
-        return userOption.Match(
-            value => value.Name,
-            none => "Unknown User");
-    }
-    
-    public void ProcessUserWithMatch(UserId id)
-    {
-        var userOption = _repository.FindById(id);
-        
-        // Switch() for side effects (Match returns a value; Switch is for actions)
-        userOption.Switch(
-            value => Console.WriteLine($"Processing user: {value.Name}"),
-            none => Console.WriteLine("User not found"));
-    }
-    
-    public void DisplayUserWithPatternMatching(UserId id)
-    {
-        var userOption = _repository.FindById(id);
-        
-        // Pattern matching with switch expression
-        var message = userOption switch
-        {
-            { IsT0: true } => $"Found user: {userOption.AsT0.Name}",
-            _ => "User not found"
-        };
-        
-        Console.WriteLine(message);
-    }
-}
+Run it:
+
+```bash
+dotnet run
 ```
 
-## Key Points
+Expected output:
 
-- Use `Option<T>` instead of returning `null` for optional values
-- The `HasValue` property indicates if a value is present
-- `TryGetValue` provides safe value extraction similar to Dictionary's TryGetValue pattern
-- Use `Match()` for functional composition and transforming values
-- Pattern matching with `switch` expressions enables concise conditional logic
-- Implicit conversion from `TValue` to `Option<TValue>` simplifies creation
-- Makes API contracts explicit - callers know they must handle absence
+```text
+timeoutSeconds: 30
+retryCount: absent
+Default: 3
+No retry setting
+```
+
+The lookup has not parsed either setting. It only answered whether text exists. The default of three retries belongs to this caller; another caller can choose a different default without changing the lookup.
+
+## Avoid turning absence into an access error
+
+`HasValue` reports whether the value case is active. `AsT0` accesses that case directly and throws if the option is none. Prefer `TryGetValue` or `Match` when the value may be absent.
+
+`Option<T>` does not validate the contents of `T`. An empty string can be a present value, and the wrapper does not make the contents of an arbitrary reference type non-null. Use `Option<T>.None()` for absence instead of assigning `null` or relying on `default(Option<T>)`; the option itself is a reference type.
+
+If a caller needs to know *why* a required setting is missing or invalid, absence is no longer enough information. Continue with [Result: reject an invalid setting](result.md). For a small private lookup whose nullable return value is already unambiguous, adding an option may not improve the contract.
