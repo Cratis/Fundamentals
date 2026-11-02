@@ -17,10 +17,10 @@ Start with a timeout stored as text. At each step, ask what the caller needs to 
 
 These are decisions you make in your methods. An `Option` does not validate a setting, a `Result` does not run an operation, and a `Catch` does not install an exception handler around your code.
 
-| The caller needs to know | Return type | Cases, in `Match` / `Switch` order |
+| The caller needs to know | Return type | Cases, in `Match` / `Switch` order where supported |
 | --- | --- | --- |
 | Is there a value? | `Option<T>` | Value, none |
-| Did it succeed, without a value or reason? | `Result` | Success, failure |
+| Did it succeed, without a value or reason? | `Result` | Success, failure; inspect `IsSuccess` |
 | Did it succeed, or which typed error occurred? | `Result<TError>` | Success without a value, error |
 | Is there a value, or a typed error? | `Result<TResult, TError>` | Value, error |
 | Did it complete, or which exception was captured? | `Catch` | Success without a value, exception |
