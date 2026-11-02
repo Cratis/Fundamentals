@@ -9,8 +9,8 @@
         <RootNamespace>Cratis.Fundamentals.TypeDiscovery.Generator.Specs</RootNamespace>
         <TargetFrameworks>net10.0</TargetFrameworks>
         <LangVersion>13</LangVersion>
-        <!-- Leases for the #1210 infrastructure probe. -->
-        <CratisSpecificationsSharedResources>true</CratisSpecificationsSharedResources>
+        <!-- Leases for the #1210 infrastructure probe. Only compiled in when FUNDAMENTALS_SPECS_PROBE is set at build time, so default builds keep the unobserved fast path. -->
+        <CratisSpecificationsSharedResources Condition="'$(FUNDAMENTALS_SPECS_PROBE)' != ''">true</CratisSpecificationsSharedResources>
         <!-- Trials the experimental Cratis.Specifications shared resources (Cratis/Fundamentals#1210). -->
         <NoWarn>$(NoWarn);SA1600;CRSPECEXP01</NoWarn>
     </PropertyGroup>

@@ -8,13 +8,11 @@ namespace Cratis.Fundamentals.TypeDiscovery.Generator.Specs.for_TrialResource.gi
 
 public abstract class a_leased_connection : Specification
 {
-    private protected TcpProbeServer _server;
     private protected TcpProbeConnection _connection;
 
     async Task Establish()
     {
         if (!ProbeGate.IsOn) return;
-        _server = await SpecificationResources.Get<TcpProbeServer>().AsTask().WaitAsync(TimeSpan.FromSeconds(10));
         _connection = await SpecificationResources.Lease<TcpProbeServer, TcpProbeConnection>().AsTask().WaitAsync(TimeSpan.FromSeconds(10));
     }
 }

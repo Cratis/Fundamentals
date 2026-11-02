@@ -39,25 +39,31 @@ abstract class TcpProbeServerBase(string group) : ISpecificationResource<TcpProb
 
     public async ValueTask DisposeAsync()
     {
-        await _stopping.CancelAsync();
-        _listener.Stop();
         try
         {
-            await _accepting.WaitAsync(TimeSpan.FromSeconds(10));
-        }
-        catch (OperationCanceledException)
-        {
-            // Cancellation ends the accept loop.
-        }
-        catch (ObjectDisposedException)
-        {
-            // Stopping the listener ends the accept loop.
-        }
+            await _stopping.CancelAsync();
+            _listener.Stop();
+            try
+            {
+                await _accepting.WaitAsync(TimeSpan.FromSeconds(10));
+            }
+            catch (OperationCanceledException)
+            {
+                // Cancellation ends the accept loop.
+            }
+            catch (ObjectDisposedException)
+            {
+                // Stopping the listener ends the accept loop.
+            }
 
-        await Task.WhenAll(_echoes).WaitAsync(TimeSpan.FromSeconds(10));
-        foreach (var client in _clients) client.Dispose();
-        _listener.Dispose();
-        _stopping.Dispose();
+            await Task.WhenAll(_echoes).WaitAsync(TimeSpan.FromSeconds(10));
+        }
+        finally
+        {
+            foreach (var client in _clients) client.Dispose();
+            _listener.Dispose();
+            _stopping.Dispose();
+        }
     }
 
     protected void StartListener()
@@ -68,20 +74,27 @@ abstract class TcpProbeServerBase(string group) : ISpecificationResource<TcpProb
 
     async Task AcceptConnections()
     {
-        while (!_stopping.IsCancellationRequested)
+        try
         {
-            var client = await _listener.AcceptTcpClientAsync(_stopping.Token);
-            _clients.Add(client);
-            _echoes.Add(Echo(client));
+            while (!_stopping.IsCancellationRequested)
+            {
+                var client = await _listener.AcceptTcpClientAsync(_stopping.Token);
+                _clients.Add(client);
+                _echoes.Add(Echo(client));
+            }
+        }
+        catch (Exception ex) when (ex is SocketException or ObjectDisposedException && _stopping.IsCancellationRequested)
+        {
+            // Stopping the listener aborts the pending accept.
         }
     }
 
     async Task Echo(TcpClient client)
     {
-        using var reader = new StreamReader(client.GetStream(), leaveOpen: true);
-        await using var writer = new StreamWriter(client.GetStream(), leaveOpen: true) { AutoFlush = true };
         try
         {
+            using var reader = new StreamReader(client.GetStream(), leaveOpen: true);
+            await using var writer = new StreamWriter(client.GetStream(), leaveOpen: true) { AutoFlush = true };
             while (await reader.ReadLineAsync(_stopping.Token) is { } line)
             {
                 await writer.WriteLineAsync(line.AsMemory(), _stopping.Token);
@@ -90,6 +103,10 @@ abstract class TcpProbeServerBase(string group) : ISpecificationResource<TcpProb
         catch (OperationCanceledException) when (_stopping.IsCancellationRequested)
         {
             // Shutdown cancels pending reads.
+        }
+        catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException)
+        {
+            // A reset or closed connection ends the echo; it must not fail the teardown.
         }
     }
 }
