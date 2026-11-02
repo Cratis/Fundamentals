@@ -8,6 +8,9 @@ namespace Cratis.Fundamentals.TypeDiscovery.Generator.Specs.for_TrialResource;
 
 public sealed class when_every_fact_is_skipped : Specification
 {
+    /// <summary>
+    /// Gets a value indicating whether to skip every fact; Establish still runs (Cratis/Specifications#99).
+    /// </summary>
     public static bool IsAlwaysSkipped => true;
 
     async Task Establish()
