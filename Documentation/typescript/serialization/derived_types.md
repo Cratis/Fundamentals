@@ -5,7 +5,7 @@ description: Deserialize polymorphic JSON into the correct TypeScript classes wi
 
 The DerivedTypes serialization system in the TypeScript frontend provides seamless polymorphic serialization that works hand-in-hand with the backend .NET implementation. This system allows you to deserialize JSON objects into their correct TypeScript class instances based on type identifiers.
 
-> **Note**: This documentation focuses on derived types and polymorphic serialization. For comprehensive information about the `@field` decorator, including runtime type safety benefits and detailed usage patterns, see [Field Decorator Documentation](field_decorator.md).
+> **Note**: This documentation focuses on derived types and polymorphic serialization. For comprehensive information about the `@field` decorator, including its modes, field types and runtime inspection of field metadata, see [Field Decorator Documentation](field_decorator.md).
 
 ## Overview
 
@@ -122,11 +122,11 @@ export class Order {
     @field(Object, true, [CreditCard, PayPal])
     alternativePayments!: IPaymentMethod[];
 }
+```
 
 If `paymentMethod` is typed as a concrete base class (instead of interface-only shape), runtime
 registration from `@derivedType` can often resolve the correct subtype without an explicit derivatives list.
 Keeping the list is still valid and can be useful for clarity.
-```
 
 ## Serialization and Deserialization
 
@@ -139,7 +139,7 @@ When working with polymorphic types, the `JsonSerializer` automatically handles:
 
 ## Field Decorator Integration
 
-The `@field` decorator is essential for defining serializable properties. For comprehensive documentation on the `@field` decorator including all parameters, usage patterns, and runtime type safety benefits, see [Field Decorator Documentation](field_decorator.md).
+The `@field` decorator is essential for defining serializable properties. For comprehensive documentation on the `@field` decorator including all parameters, usage patterns and runtime inspection of field metadata, see [Field Decorator Documentation](field_decorator.md).
 
 ## Serialization Format
 
@@ -313,11 +313,6 @@ export interface IPaymentMethod {
 
 ### 6. Testing
 
-Test serialization round-trips:
-
-```typescript
-## Testing
-
 For testing serialization round-trips with derived types, create tests that verify:
 
 1. Polymorphic types deserialize to the correct class
@@ -325,7 +320,6 @@ For testing serialization round-trips with derived types, create tests that veri
 3. Frontend IDs match backend IDs exactly
 
 Refer to the [JsonSerializer Documentation](./json_serializer.md) for comprehensive testing examples.
-```
 
 ## Type System Integration
 
@@ -365,7 +359,7 @@ const creditCards = deserializePayments(json, CreditCard);
 
 ## Runtime Type Safety
 
-The `@field` decorator system provides significant runtime type safety benefits beyond TypeScript's compile-time checking. For detailed information about runtime type safety, including comprehensive examples and comparisons, see the [Field Decorator Documentation](field_decorator.md#runtime-type-safety-benefits).
+The `@field` decorator records field metadata that `JsonSerializer` uses at runtime, beyond TypeScript's compile-time checking. To inspect that metadata, see [Runtime Inspection](field_decorator.md#runtime-inspection) in the Field Decorator Documentation.
 
 With derived types, you benefit from:
 

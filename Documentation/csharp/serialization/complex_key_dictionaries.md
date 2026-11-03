@@ -22,8 +22,7 @@ The converter is included in `Cratis.Json.Globals.Configure(...)` and therefore 
 ## Example
 
 ```csharp
-public record AccountKey(Guid Id, string Tenant);
-public record AccountSummary(int Balance);
+using System.Text.Json;
 
 var options = Cratis.Json.Globals.JsonSerializerOptions;
 
@@ -35,6 +34,9 @@ IDictionary<AccountKey, AccountSummary> source =
 
 var json = JsonSerializer.Serialize(source, options);
 var roundTrip = JsonSerializer.Deserialize<IDictionary<AccountKey, AccountSummary>>(json, options);
+
+public record AccountKey(Guid Id, string Tenant);
+public record AccountSummary(int Balance);
 ```
 
 ## Frontend Interop

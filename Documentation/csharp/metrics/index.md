@@ -34,9 +34,14 @@ To start using the metrics system in your project:
 4. Use dependency injection to get access to your metrics
 
 ```csharp
+using Cratis.Metrics;
+using Microsoft.Extensions.DependencyInjection;
+
 // Add to your service registration
-services.AddSingleton<IMeter<MyService>>();
+services.AddSingleton<IMeter<MyService>, UnkeyedMeter<MyService>>();
 ```
+
+`IMeter<T>` is an interface, so registering it alone cannot be resolved; pair it with the `UnkeyedMeter<T>` implementation. If you already call `AddBindingsByConvention()` or `AddSelfBindings()` (both from `Cratis.DependencyInjection`), the open generic pair `IMeter<>` to `UnkeyedMeter<>` is registered for you and you do not need the explicit registration.
 
 For keyed named meter configuration, see [Named Registration](named-registration.md).
 
@@ -140,7 +145,7 @@ Use `IMeterScope<T>` to include scope tags. Omitting the unit leaves the instrum
 
 The `Cratis.Observability.SourceGenerators` source generator automatically implements your metrics methods. To use it:
 
-1. Create a partial class
+1. Create a static partial class
 2. Define partial methods with appropriate attributes
 3. The source generator will implement the methods
 
@@ -152,6 +157,7 @@ All metrics methods must follow these rules:
 2. **Value parameter** (required for gauges and histograms) must match the generic type in the attribute
 3. **Additional parameters** become tags automatically
 4. Methods must be `static partial`
+5. The containing class must be declared `static partial`. The generator skips classes that are not both `static` and `partial`.
 
 ### Example Implementation
 
@@ -160,7 +166,7 @@ using Cratis.Metrics;
 
 namespace MyApplication.Services;
 
-public partial class UserMetrics
+public static partial class UserMetrics
 {
     [Counter<int>("user_operations", "Track user operations")]
     static partial void CountUserOperation(
@@ -224,7 +230,7 @@ public class AuthService
     }
 }
 
-public partial class AuthMetrics
+public static partial class AuthMetrics
 {
     [Counter<int>("auth_attempts", "Authentication attempts by result")]
     internal static partial void CountLogin(IMeter<AuthService> meter, string result, string method);
@@ -278,7 +284,7 @@ public class OrderService
     }
 }
 
-public partial class OrderMetrics
+public static partial class OrderMetrics
 {
     [Counter<int>("order_processing_started", "Orders that started processing")]
     internal static partial void StartProcessing(IMeterScope<OrderService> scope);
@@ -319,7 +325,7 @@ public class MemoryMonitorService
     }
 }
 
-public partial class SystemMetrics
+public static partial class SystemMetrics
 {
     [Gauge<long>("memory_working_set", "Current working set memory in bytes")]
     internal static partial void RecordWorkingSet(IMeter<MemoryMonitorService> meter, long bytes);
@@ -335,7 +341,7 @@ public partial class SystemMetrics
 2. **Declare UCUM units** with the optional third attribute argument (e.g., `"By"` for bytes or `"s"` for seconds), rather than putting units only in descriptions
 3. **Keep tag cardinality low** to avoid performance issues
 4. **Use scopes** for contextual metrics to reduce tag duplication
-5. **Group related metrics** in the same partial class for organization
+5. **Group related metrics** in the same static partial class for organization
 6. **Use appropriate metric types** - counters for cumulative values, gauges for current state, histograms for distributions
 
 ## See Also

@@ -36,21 +36,17 @@ var serialized = JsonSerializer.Serialize(account, options);
 The output would be:
 
 ```json
-{
-    "registeredDate": "2022-08-19",
-    "registeredTime": "13:37:00.1200720"
-}
+{"RegisteredDate":"2022-08-19","RegisteredTime":"13:37:00.0000000"}
 ```
 
-The converter handles deserializing it correctly. Just pass in the converter factory:
+These options only add the two converters, so property names keep their C# casing (`RegisteredDate`). Camel-case naming is a separate setting, for example the global options in `Cratis.Json.Globals`, which also register these converters.
+
+The same two converters deserialize the values correctly. Use options with both converters, and match the property names to those options:
 
 ```csharp
 using System.Text.Json;
 using Cratis.Json;
 
-var options = new JsonSerializerOptions
-{
-    Converters =
 var options = new JsonSerializerOptions
 {
     Converters =
@@ -60,7 +56,7 @@ var options = new JsonSerializerOptions
     }
 };
 
-var json = "{ \"registeredDate\": \"2022-08-19\", \"registeredTime\": \"13:37:00.1200720\" }";
+var json = "{ \"RegisteredDate\": \"2022-08-19\", \"RegisteredTime\": \"13:37:00.0000000\" }";
 var account = JsonSerializer.Deserialize<Account>(json, options);
 ```
 
@@ -82,7 +78,7 @@ TypeDescriptor.AddAttributes(typeof(DateOnly), new TypeConverterAttribute(typeof
 TypeDescriptor.AddAttributes(typeof(TimeOnly), new TypeConverterAttribute(typeof(TimeOnlyTypeConverter)));
 ```
 
-There is a convenience method for registering these and other converters in **Fundamentals**:
+There is a convenience method for registering these two type converters in **Fundamentals**:
 
 ```csharp
 using Cratis.Conversion;

@@ -31,10 +31,10 @@ const json = JsonSerializer.serialize(point);
 const deserialized = JsonSerializer.deserialize(Point, json);
 ```
 
-**Validation:**
+**GeoJSON format and implemented checks:**
 
-- `type` must be "Point"
-- `coordinates` must be an array with exactly two numbers [longitude, latitude]
+- GeoJSON requires `type` "Point" and `coordinates` as two numbers [longitude, latitude]
+- The reader checks the `type` value, that `coordinates` is present, and that its length is two. It does not check that the elements are numbers
 
 ## LineString Serialization
 
@@ -52,11 +52,11 @@ const json = JsonSerializer.serialize(lineString);
 const deserialized = JsonSerializer.deserialize(LineString, json);
 ```
 
-**Validation:**
+**GeoJSON format and implemented checks:**
 
-- `type` must be "LineString"
-- `coordinates` must be an array with at least two coordinate pairs
-- Each pair must be an array of two numbers [longitude, latitude]
+- GeoJSON requires `type` "LineString" and `coordinates` as an array of at least two [longitude, latitude] pairs
+- The reader checks the `type` value, that `coordinates` is present, and that it has at least two points
+- It does not check the array type, that each pair is an array of two numbers, or each pair's length
 
 ## Polygon Serialization
 
@@ -91,23 +91,23 @@ With holes:
 }
 ```
 
-**Validation:**
+**GeoJSON format and implemented checks:**
 
-- `type` must be "Polygon"
-- `coordinates` must be an array with at least one ring (the shell)
-- Each ring must have coordinate pairs
-- Each coordinate must be an array of two numbers [longitude, latitude]
+- GeoJSON requires `type` "Polygon" and `coordinates` as one or more closed rings of [longitude, latitude] pairs
+- The reader checks the `type` value and that `coordinates` is present and non-empty
+- Each `LinearRing` requires at least four points; ring closure is not checked
+- It does not check that each coordinate is an array of two numbers or each pair's length
 
 ## Validation Errors
 
-If deserialization fails validation, an error is thrown:
+If a reader check above fails, an error is thrown. The example below fails the Point length check:
 
 ```typescript
 try {
     const json = '{"type":"Point","coordinates":[10.5]}'; // Missing latitude
     const point = JsonSerializer.deserialize(Point, json);
 } catch (error) {
-    console.log(error.message); // Validation failed
+    console.log(error.message); // Cannot deserialize Point: invalid GeoJSON format
 }
 ```
 

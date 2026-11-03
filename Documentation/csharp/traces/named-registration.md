@@ -15,6 +15,8 @@ var services = new ServiceCollection();
 services.AddNamedActivitySource("orders");
 ```
 
+This snippet registers only named (keyed) services. Unkeyed `IActivitySource<T>` requires an existing `AddBindingsByConvention()` or `AddSelfBindings()` setup, or an equivalent explicit unkeyed registration.
+
 This registers:
 
 - keyed `System.Diagnostics.ActivitySource` with the name `orders`
@@ -41,7 +43,7 @@ public class OrderService([FromKeyedServices("orders")] IActivitySource<OrderSer
 }
 ```
 
-`IActivitySource<T>` remains available as a non-keyed service as well, where the underlying source name defaults to `typeof(T).FullName`. Per-type sources are not subscribed by default; explicitly subscribe the source name in your telemetry provider, or use a named source that your provider subscribes to.
+Unkeyed `IActivitySource<T>` is available only when your application also uses `AddBindingsByConvention()` or `AddSelfBindings()` (or registers the unkeyed `IActivitySource<>` to `UnkeyedActivitySource<>` pair explicitly); `AddNamedActivitySource` adds only the keyed services. Where unkeyed registration exists, the underlying source name defaults to `typeof(T).FullName`. Per-type sources are not subscribed by `Cratis.*` unless the source name matches that configured wildcard. Explicitly subscribe the source name in your telemetry provider, or use a named source under a `Cratis.<Product>` scope that your provider subscribes to. Registration alone does not configure a provider; see [Set up OpenTelemetry](../opentelemetry.md).
 
 ## Registration boundaries
 

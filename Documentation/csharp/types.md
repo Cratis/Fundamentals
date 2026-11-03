@@ -13,9 +13,10 @@ If you want to bypass any automatic hookup of the system, you can manually creat
 ## Assembly Prefixes
 
 `Types` discovers project-referenced assemblies automatically. For **package**-referenced
-assemblies, discovery is opt-in by assembly-name prefix — by default only assemblies whose
-name starts with `Cratis` are included. To include additional packages, add their prefixes to
-the shared `PackageReferencedAssemblies.Instance` before discovery runs:
+assemblies, the reflection fallback (or any `PackageReferencedAssemblies` provider you supply
+explicitly) opts in by assembly-name prefix — by default only assemblies whose
+name starts with `Cratis` are included. To include additional packages with that provider, add their prefixes to
+the shared `PackageReferencedAssemblies.Instance` before its first initialization:
 
 ```csharp
 using Cratis.Types;
@@ -28,6 +29,11 @@ name starts with it — for example, `Microsoft` matches all `Microsoft.*` packa
 
 > Note: Use the shared `PackageReferencedAssemblies.Instance` singleton rather than constructing
 > your own — scanning all assemblies in the application has a performance cost.
+>
+> Note: This runtime setting configures only the reflection provider. It does not configure generated discovery:
+> default selection prefers registered generated providers, and the generator applies its own `Cratis` prefix check.
+> Changing the singleton does not refresh a type universe that has already been built. To use a provider you configured,
+> pass it explicitly to `new Types(...)` or `AddTypeDiscovery(providers)`.
 
 ## Type Discovery
 
@@ -188,7 +194,7 @@ It reads names and loads nothing, so a library that legitimately contributes no 
 ## As Instances
 
 A common scenario is to discover types where the implementation has dependencies themselves and instances need to be resolved using
-the IoC container. The `IImplementationsOf<>` interface provides this mechanism in a convenient way.
+the IoC container. The `IInstancesOf<>` interface provides this mechanism in a convenient way.
 
 ```csharp
 using Cratis.Types;

@@ -33,14 +33,14 @@ Points work as properties in domain models and records:
 ```csharp
 using Cratis.Geospatial;
 
-public record Location(
-    string Name,
-    Point Position
-);
-
 var office = new Location(
     "Headquarters",
     new Point(10.7522, 59.9139) // Oslo, Norway
+);
+
+public record Location(
+    string Name,
+    Point Position
 );
 ```
 
