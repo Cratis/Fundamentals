@@ -25,6 +25,8 @@ update the other and pin the source commit, as this README does for the pattern 
 `sha-256.json` is authored here. Its sources are FIPS 180-2 Appendix B and values cross-computed with
 Python `hashlib` and Node `crypto`. Every digest is 64 lowercase hexadecimal characters.
 
+Vectors are append-only: never edit or remove an entry, because stored verifiers depend on these digests.
+
 Text uses UTF-8 without BOM insertion, Unicode normalization or case folding. A literal leading U+FEFF is preserved.
 Unpaired UTF-16 surrogates are rejected. Invalid inputs are UTF-16 code-unit arrays so readers can reconstruct them
 without JSON string decoding replacing or rejecting lone surrogates.

@@ -21,6 +21,6 @@ public class with_shared_vectors : Specification
         return string.Equals(actual, expected, StringComparison.Ordinal) ? null : $"{text}: expected {expected}, got {actual}";
     }).OfType<string>()];
 
-    [Fact] void should_exercise_every_vector() => _vectors.Length.ShouldEqual(21);
+    [Fact] void should_exercise_every_vector() => _vectors.Length.ShouldEqual(23);
     [Fact] void should_hash_every_vector_to_the_expected_digest() => _disagreements.ShouldBeEmpty();
 }
