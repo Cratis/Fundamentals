@@ -28,7 +28,8 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     public const string DerivedTypeIdProperty = "_derivedTypeId";
 
     readonly IDerivedTypes _derivedTypes = derivedTypes;
-    readonly ConcurrentDictionary<Type, IncludedProperty[]> _includedProperties = new();
+    [SuppressMessage("Style", "IDE0028:Simplify collection initialization", Justification = "ConditionalWeakTable has no collection expression support.")]
+    readonly ConditionalWeakTable<JsonSerializerOptions, ConcurrentDictionary<Type, IncludedProperty[]>> _includedProperties = new();
 
     /// <inheritdoc/>
     /// <remarks>
@@ -115,7 +116,7 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
         // A type with a custom converter has no property metadata; keep all public properties as before.
         if (typeInfo is not null && typeInfo.Kind != JsonTypeInfoKind.Object)
         {
-            return [.. clrProperties.Select(_ => new IncludedProperty(_, null, JsonIgnoreCondition.Never, false))];
+            return [.. clrProperties.Select(_ => CreateIncludedProperty(_, null, options)).OfType<IncludedProperty>()];
         }
 
         return [.. clrProperties.Select(_ => CreateIncludedProperty(_, typeInfo, options)).OfType<IncludedProperty>()];
@@ -131,7 +132,7 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     static IncludedProperty? CreateIncludedProperty(PropertyInfo property, JsonTypeInfo? typeInfo, JsonSerializerOptions options)
     {
         var ignoreAttribute = property.GetCustomAttribute<JsonIgnoreAttribute>();
-        var jsonProperty = typeInfo?.Properties.FirstOrDefault(_ => _.AttributeProvider is PropertyInfo info && info.Equals(property));
+        var jsonProperty = typeInfo?.Properties.FirstOrDefault(_ => _.AttributeProvider is PropertyInfo info && info.Name == property.Name && info.DeclaringType == property.DeclaringType);
         var isIncluded = typeInfo is null ? ignoreAttribute?.Condition != JsonIgnoreCondition.Always : jsonProperty is not null;
         if (!isIncluded)
         {
@@ -139,12 +140,27 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
         }
 
         var isWritable = jsonProperty is null ? property.SetMethod?.IsPublic == true : jsonProperty.Set is not null;
+        var ignoredAsReadOnly = !isWritable && IgnoredAsReadOnly(property, ignoreAttribute, options);
         return new IncludedProperty(
             property,
             jsonProperty?.ShouldSerialize,
             ignoreAttribute?.Condition ?? options.DefaultIgnoreCondition,
-            options.IgnoreReadOnlyProperties && !isWritable);
+            ignoredAsReadOnly);
     }
+
+    static bool IgnoredAsReadOnly(PropertyInfo property, JsonIgnoreAttribute? ignoreAttribute, JsonSerializerOptions options) =>
+        options.IgnoreReadOnlyProperties &&
+        ignoreAttribute?.Condition != JsonIgnoreCondition.Never &&
+        !IsCollection(property.PropertyType, options);
+
+    /// <summary>
+    /// System.Text.Json keeps read-only collection properties even when IgnoreReadOnlyProperties is set.
+    /// </summary>
+    /// <param name="type">The property type.</param>
+    /// <param name="options">The serializer options.</param>
+    /// <returns>True if the type is serialized as a collection.</returns>
+    static bool IsCollection(Type type, JsonSerializerOptions options) =>
+        TryGetTypeInfo(type, options)?.Kind is JsonTypeInfoKind.Enumerable or JsonTypeInfoKind.Dictionary;
 
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON serialization uses types registered at startup that are preserved.")]
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON serialization uses types registered at startup that are safe for AOT.")]
@@ -164,7 +180,9 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON serialization uses types registered at startup that are safe for AOT.")]
     [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Derived type JSON serialization accesses well-known type properties that are preserved.")]
     IncludedProperty[] GetIncludedProperties(Type type, JsonSerializerOptions options) =>
-        _includedProperties.GetOrAdd(type, ResolveIncludedProperties, options);
+        _includedProperties
+            .GetValue(options ?? JsonSerializerOptions.Default, _ => new ConcurrentDictionary<Type, IncludedProperty[]>())
+            .GetOrAdd(type, ResolveIncludedProperties, options);
 
     bool HasDeclaredFamily(Type type) => HasDeclaredFamily(type, [], 0);
 
@@ -210,6 +228,6 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
 
         [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "Only value types are instantiated, which never need constructors.")]
         [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Only value types are instantiated, which never need constructors.")]
-        static object? CreateDefault(Type type) => type.IsValueType ? RuntimeHelpers.GetUninitializedObject(type) : null;
+        static object? CreateDefault(Type type) => type.IsValueType && Nullable.GetUnderlyingType(type) is null ? RuntimeHelpers.GetUninitializedObject(type) : null;
     }
 }
