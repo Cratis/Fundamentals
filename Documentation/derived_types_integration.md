@@ -303,6 +303,8 @@ services.Configure<JsonSerializerOptions>(options =>
 services.AddSingleton<IDerivedTypes, DerivedTypes>();
 ```
 
+Derived type serialization honours `[JsonIgnore]` and `JsonIgnoreCondition` (including `options.DefaultIgnoreCondition`) like regular System.Text.Json serialization.
+
 ### Frontend Configuration
 
 ```typescript

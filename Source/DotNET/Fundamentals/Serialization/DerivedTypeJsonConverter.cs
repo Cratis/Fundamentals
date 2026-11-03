@@ -1,10 +1,13 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Cratis.Strings;
 
 namespace Cratis.Serialization;
@@ -25,6 +28,7 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
     public const string DerivedTypeIdProperty = "_derivedTypeId";
 
     readonly IDerivedTypes _derivedTypes = derivedTypes;
+    readonly ConcurrentDictionary<Type, IncludedProperty[]> _includedProperties = new();
 
     /// <inheritdoc/>
     /// <remarks>
@@ -67,9 +71,15 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
                 var type = value.GetType();
                 var properties = new Dictionary<string, (object? Value, Type SerializationType)>();
 
-                foreach (var property in type.GetProperties())
+                foreach (var included in GetIncludedProperties(type, options))
                 {
+                    var property = included.Property;
                     var propertyValue = property.GetValue(value);
+                    if (included.ShouldIgnore(value, propertyValue))
+                    {
+                        continue;
+                    }
+
                     var serializationType = HasDeclaredFamily(property.PropertyType)
                         ? property.PropertyType
                         : propertyValue?.GetType() ?? property.PropertyType;
@@ -92,6 +102,69 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
                 break;
         }
     }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Derived type JSON serialization accesses well-known type properties that are preserved.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON serialization uses types registered at startup that are preserved.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON serialization uses types registered at startup that are safe for AOT.")]
+    static IncludedProperty[] ResolveIncludedProperties(Type type, JsonSerializerOptions? options)
+    {
+        options ??= JsonSerializerOptions.Default;
+        var clrProperties = type.GetProperties();
+        var typeInfo = TryGetTypeInfo(type, options);
+
+        // A type with a custom converter has no property metadata; keep all public properties as before.
+        if (typeInfo is not null && typeInfo.Kind != JsonTypeInfoKind.Object)
+        {
+            return [.. clrProperties.Select(_ => new IncludedProperty(_, null, JsonIgnoreCondition.Never, false))];
+        }
+
+        return [.. clrProperties.Select(_ => CreateIncludedProperty(_, typeInfo, options)).OfType<IncludedProperty>()];
+    }
+
+    /// <summary>
+    /// Without metadata (e.g. property names that collide under the options naming policy) falls back to the attributes.
+    /// </summary>
+    /// <param name="property">The CLR property.</param>
+    /// <param name="typeInfo">The JSON metadata, if available.</param>
+    /// <param name="options">The serializer options.</param>
+    /// <returns>The included property, or null when it is ignored.</returns>
+    static IncludedProperty? CreateIncludedProperty(PropertyInfo property, JsonTypeInfo? typeInfo, JsonSerializerOptions options)
+    {
+        var ignoreAttribute = property.GetCustomAttribute<JsonIgnoreAttribute>();
+        var jsonProperty = typeInfo?.Properties.FirstOrDefault(_ => _.AttributeProvider is PropertyInfo info && info.Equals(property));
+        var isIncluded = typeInfo is null ? ignoreAttribute?.Condition != JsonIgnoreCondition.Always : jsonProperty is not null;
+        if (!isIncluded)
+        {
+            return null;
+        }
+
+        var isWritable = jsonProperty is null ? property.SetMethod?.IsPublic == true : jsonProperty.Set is not null;
+        return new IncludedProperty(
+            property,
+            jsonProperty?.ShouldSerialize,
+            ignoreAttribute?.Condition ?? options.DefaultIgnoreCondition,
+            options.IgnoreReadOnlyProperties && !isWritable);
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON serialization uses types registered at startup that are preserved.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON serialization uses types registered at startup that are safe for AOT.")]
+    static JsonTypeInfo? TryGetTypeInfo(Type type, JsonSerializerOptions options)
+    {
+        try
+        {
+            return options.GetTypeInfo(type);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Derived type JSON serialization uses types registered at startup that are preserved.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Derived type JSON serialization uses types registered at startup that are safe for AOT.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Derived type JSON serialization accesses well-known type properties that are preserved.")]
+    IncludedProperty[] GetIncludedProperties(Type type, JsonSerializerOptions options) =>
+        _includedProperties.GetOrAdd(type, ResolveIncludedProperties, options);
 
     bool HasDeclaredFamily(Type type) => HasDeclaredFamily(type, [], 0);
 
@@ -117,5 +190,26 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
             candidate.IsGenericType &&
             ((candidate.GetGenericTypeDefinition() == typeof(IEnumerable<>) && HasDeclaredFamily(candidate.GetGenericArguments()[0], visitedTypes, depth + 1)) ||
              ((candidate.GetGenericTypeDefinition() == typeof(IDictionary<,>) || candidate.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>)) && HasDeclaredFamily(candidate.GetGenericArguments()[1], visitedTypes, depth + 1))));
+    }
+
+    sealed record IncludedProperty(PropertyInfo Property, Func<object, object?, bool>? ShouldSerialize, JsonIgnoreCondition Condition, bool IsReadOnly)
+    {
+        readonly object? _defaultValue = CreateDefault(Property.PropertyType);
+
+        public bool ShouldIgnore(object instance, object? propertyValue) =>
+            IsReadOnly ||
+            (ShouldSerialize is not null && !ShouldSerialize(instance, propertyValue)) ||
+            IgnoredByCondition(propertyValue);
+
+        bool IgnoredByCondition(object? propertyValue) => Condition switch
+        {
+            JsonIgnoreCondition.WhenWritingNull => propertyValue is null,
+            JsonIgnoreCondition.WhenWritingDefault => propertyValue?.Equals(_defaultValue) ?? true,
+            _ => false
+        };
+
+        [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "Only value types are instantiated, which never need constructors.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Only value types are instantiated, which never need constructors.")]
+        static object? CreateDefault(Type type) => type.IsValueType ? RuntimeHelpers.GetUninitializedObject(type) : null;
     }
 }

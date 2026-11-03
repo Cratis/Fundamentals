@@ -11,11 +11,12 @@ public class when_serializing_a_property_with_json_ignore : given.a_set_of_deriv
     IParent input;
     string result;
 
-    void Establish() => input = new ParentWithIgnoredValue("included");
+    void Establish() => input = new ParentWithIgnoredValue("ignored-value-text");
 
     void Because() => result = JsonSerializer.Serialize(input, options);
 
-    [Fact] void should_still_write_the_property() => result.ShouldEqual("{\"someValue\":\"included\",\"_derivedTypeId\":\"parent\"}");
+    [Fact] void should_only_write_the_derived_type_id() => result.ShouldEqual("{\"_derivedTypeId\":\"parent\"}");
+    [Fact] void should_not_contain_the_ignored_value() => result.ShouldNotContain("ignored-value-text");
 
     [DerivedType("parent")]
     record ParentWithIgnoredValue([property: JsonIgnore] string SomeValue) : IParent;
