@@ -1,0 +1,243 @@
+# Throwaway harness for Cratis/Fundamentals#1250. Never merge. Publishes and pushes nothing.
+name: f1250-harness
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".github/workflows/f1250-harness.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checkout:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout head SHA without persisted credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Assert head SHA and no persisted credentials
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          [ "$(git rev-parse HEAD)" = "$HEAD_SHA" ]
+          if git config --list --show-origin | grep -iE 'extraheader|includeif'; then
+            echo "persisted credentials found"
+            exit 1
+          fi
+
+      - name: Checkout with defaults
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: default
+
+      - name: Assert checkout defaults
+        run: |
+          set -eu
+          [ "$(git -C default rev-list --count HEAD)" = "1" ]
+          [ "$(git -C default tag | wc -l | tr -d ' ')" = "0" ]
+          git -C default ls-remote origin HEAD
+          git -C default reset --hard
+
+  dotnet:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup .Net
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Assert SDK version
+        run: |
+          set -eu
+          dotnet --version
+          case "$(dotnet --version)" in 10.0.*) ;; *) echo "unexpected SDK"; exit 1 ;; esac
+
+      - name: Build
+        run: dotnet build --configuration Debug
+
+      - name: Pack locally (never pushed)
+        run: dotnet pack --no-build --configuration Debug -o ./Artifacts/NuGet -p:PackageVersion=0.0.0-f1250.${{ github.run_number }}
+
+      - name: Assert packages exist
+        run: ls ./Artifacts/NuGet/*.nupkg
+
+  node-auth-cache:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Assert no dummy NODE_AUTH_TOKEN and registry npmrc
+        run: |
+          set -eu
+          [ -z "${NODE_AUTH_TOKEN+x}" ]
+          # shellcheck disable=SC2016 # literal placeholder is intended
+          grep -q '_authToken=${NODE_AUTH_TOKEN}' "$NPM_CONFIG_USERCONFIG"
+
+      - name: Configure npm for OIDC-based publishing
+        run: |
+          # Remove token-based registry configuration so npm uses trusted publishing
+          # through OIDC, independent of token placeholders or inherited credentials.
+          sed -i '/_authToken/d' "$NPM_CONFIG_USERCONFIG"
+          echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
+          echo "--- .npmrc after stripping placeholder ---"
+          cat "$NPM_CONFIG_USERCONFIG"
+
+      - name: Assert no _authToken remains
+        run: |
+          if grep -q '_authToken' "$NPM_CONFIG_USERCONFIG"; then
+            echo "_authToken still present"
+            exit 1
+          fi
+
+      - name: Setup Corepack
+        run: |
+          npm install --global corepack@latest
+          corepack enable yarn
+          corepack install
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: yarn-cache
+        with:
+          path: |
+            .yarn/cache
+            **/node_modules
+            **/.eslintcache
+            **/yarn.lock
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/package.json') }}
+
+      - name: Yarn install
+        run: yarn
+
+      - name: Report yarn cache result
+        run: echo "yarn cache-hit=${{ steps.yarn-cache.outputs.cache-hit }}"
+
+      - name: Cache miss case
+        id: miss-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .f1250-miss
+          key: ${{ runner.os }}-f1250-miss-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Assert cache miss
+        run: |
+          [ "${{ steps.miss-cache.outputs.cache-hit }}" != "true" ]
+
+  artifact-upload:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Create test results
+        run: |
+          mkdir -p TestResults
+          echo "<TestRun/>" > TestResults/a.trx
+          echo "hidden" > TestResults/.hidden
+
+      - name: Upload specification results
+        id: upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: specification-results
+          path: TestResults/
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Assert artifact id
+        run: '[ -n "${{ steps.upload.outputs.artifact-id }}" ]'
+
+      - name: Upload nothing (must succeed)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: empty-results
+          path: does-not-exist/
+          if-no-files-found: ignore
+
+  artifact-download:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    needs: artifact-upload
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Download specification results
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: specification-results
+          path: got
+
+      - name: Assert downloaded files
+        run: |
+          set -eu
+          [ -f got/a.trx ]
+          [ ! -e got/.hidden ]
+
+      - name: Assert artifact list and retention
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts > artifacts.json
+          cat artifacts.json
+          node -e "
+            const a = require('./artifacts.json').artifacts;
+            if (a.some(x => x.name === 'empty-results')) { console.error('empty-results artifact exists'); process.exit(1); }
+            const s = a.find(x => x.name === 'specification-results');
+            if (!s) { console.error('specification-results missing'); process.exit(1); }
+            const days = (new Date(s.expires_at) - Date.now()) / 86400000;
+            console.log('days to expiry', days);
+            if (days < 2 || days > 3.1) { console.error('unexpected retention'); process.exit(1); }
+          "
+
+  comment:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Add comment for NuGet packages
+        id: c
+        uses: mshick/add-pr-comment@ec328af66588ab8f77cdeb2c264f14aba45bbf59 # v3.12.0
+        with:
+          message: |
+            NuGet packages for this PR, e.g. Cratis:
+            https://github.com/cratis/Fundamentals/packages/1655206?version=0.0.0-f1250.${{ github.event.pull_request.head.sha }}
+          message-id: nuget-0.0.0-f1250.${{ github.event.pull_request.head.sha }}
+          allow-repeats: false
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report comment result
+        run: |
+          echo "comment-created=${{ steps.c.outputs.comment-created }}"
+          echo "comment-updated=${{ steps.c.outputs.comment-updated }}"
+          echo "comment-id=${{ steps.c.outputs.comment-id }}"
