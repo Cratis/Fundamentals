@@ -216,13 +216,13 @@ class PaymentService {
     }
 
     async getAvailablePaymentMethods(): Promise<IPaymentMethod[]> {
-        // The API returns { "methods": [ ... ] }. The array is a field of a wrapper model,
-        // so the serializer knows the candidate derivatives.
+        // The API returns a bare array. Wrap it locally in a model whose field declares
+        // the candidate derivatives, so the serializer knows which types to create.
         const response = await fetch('/api/payment/methods');
-        const json = await response.text();
+        const methods = await response.json();
 
         // Each item is created as CreditCard or PayPal
-        return JsonSerializer.deserialize(PaymentMethodList, json).methods;
+        return JsonSerializer.deserializeFromInstance(PaymentMethodList, { methods }).methods;
     }
 }
 
