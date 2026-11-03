@@ -9,17 +9,15 @@ namespace Cratis.Json.for_DateOnlyJsonConverter;
 public class when_converting_to_date_only_from_iso_string_from_datetimeoffset : Specification
 {
     DateOnlyJsonConverter converter;
-    DateTimeOffset now;
-    DateOnly input;
     string inputAsISOString;
     DateOnly result;
 
     void Establish()
     {
-        now = DateTimeOffset.Now;
         converter = new();
-        input = DateOnly.FromDateTime(now.UtcDateTime);
-        inputAsISOString = now.ToString("O");
+
+        // Just after midnight at +01:00, so the written date (November 3rd) is a day after the UTC date (November 2nd).
+        inputAsISOString = new DateTimeOffset(2026, 11, 3, 0, 30, 0, TimeSpan.FromHours(1)).ToString("O");
     }
 
     void Because()
@@ -29,5 +27,5 @@ public class when_converting_to_date_only_from_iso_string_from_datetimeoffset : 
         result = converter.Read(ref reader, typeof(DateOnly), default);
     }
 
-    [Fact] void should_convert_to_correct_date_only() => result.ShouldEqual(input);
+    [Fact] void should_convert_to_the_written_date() => result.ShouldEqual(new DateOnly(2026, 11, 3));
 }
