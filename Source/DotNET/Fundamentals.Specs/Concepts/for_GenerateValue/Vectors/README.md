@@ -19,3 +19,16 @@ without JSON string decoding replacing or rejecting lone surrogates.
 Screenplay will copy this file verbatim to `Source/Screenplay/Compiler/Conformance/uuid-v5.json` when
 its `derive uuidv5(…)` lands (Cratis/Screenplay#308). After that, whichever repository changes it first must
 update the other and pin the source commit, as this README does for the pattern files.
+
+## SHA-256
+
+`sha-256.json` is authored here. Its sources are FIPS 180-2 Appendix B and values cross-computed with
+Python `hashlib` and Node `crypto`. Every digest is 64 lowercase hexadecimal characters.
+
+Text uses UTF-8 without BOM insertion, Unicode normalization or case folding. A literal leading U+FEFF is preserved.
+Unpaired UTF-16 surrogates are rejected. Invalid inputs are UTF-16 code-unit arrays so readers can reconstruct them
+without JSON string decoding replacing or rejecting lone surrogates.
+
+Screenplay will copy this file verbatim to `Source/Screenplay/Compiler/Conformance/sha-256.json` when
+its `derive … hash of …` lands (Cratis/Screenplay#308). After that, whichever repository changes it first must
+update the other and pin the source commit.
