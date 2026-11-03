@@ -33,26 +33,26 @@ Concepts using `ConceptAs<>` is meant as encapsulations of primitives, single va
 The encapsulation is however very inconvenient when used in data transport or saved in a data store, as it would by default become a container with
 a single property `Value` within it. To overcome this, there are serializers and converters provided that unwraps the inner value and also then
 knows how to create instances of a concept when getting it back into the code. These assume that the value is a single value, so if you were to
-add more values these would be completely ignored and lost.
+add more values these would be ignored and lost, because only the wrapped `Value` is written and read back.
 
 ## Creating a Concept
 
 Let's say we have in our domain an entity called `Person`. It is identified by its social security number:
 
 ```csharp
-public record Person(string SocialSecurityNumber)
+public record Person(string SocialSecurityNumber);
 ```
 
 Instead of using `string`, we want this to actually be a specific type of `SocialSecurityNumber`:
 
 ```csharp
-public record SocialSecurityNumber(string value) : ConceptAs<string>(value);
+public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value);
 ```
 
 Using it will then be:
 
 ```csharp
-public record Person(SocialSecurityNumber SocialSecurityNumber)
+public record Person(SocialSecurityNumber SocialSecurityNumber);
 ```
 
 When we use this new type, our APIs become much clearer based on their signature:
@@ -65,7 +65,7 @@ public interface IPersons
 ```
 
 > Note: It is important to note that anything that implements `ConceptAs<>` is assumed to be a wrapper for a primitive type only.
-> All serialization converters assume this and will fail if one puts more properties on it.
+> The serialization converters round-trip only the wrapped `Value`; additional properties are not preserved. Converting a value back into a concept requires a constructor that accepts the single wrapped value, and fails if there is none.
 > If one needs to represent complex types, you can do so without inheriting from `ConceptAs<>` and then have all its values be concepts instead.
 
 ## Generating new values
@@ -88,7 +88,7 @@ It might not be needed either, but if you typically have the value represented b
 convert it to the formalized type, you can easily add an implicit operator for this:
 
 ```csharp
-public record SocialSecurityNumber(string value) : ConceptAs<string>(value)
+public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value)
 {
     public static implicit operator SocialSecurityNumber(string value) => new(value);
 }
@@ -111,20 +111,20 @@ null is an allowed value for the concept.
 Imagine:
 
 ```csharp
-public record Person(SocialSecurityNumber SocialSecurityNumber)
+public record Person(SocialSecurityNumber SocialSecurityNumber);
 ```
 
 If null is valid and the `ConceptAs<>` didn't have this constraint, you would end up with an instance for `SocialSecurityNumber` with a null value within it.
 This would hide the intent and possibly create problems down the line. A clearer approach, if null is allowed, is to make it nullable and very clear:
 
 ```csharp
-public record Person(SocialSecurityNumber? SocialSecurityNumber)
+public record Person(SocialSecurityNumber? SocialSecurityNumber);
 ```
 
 You can now see clearly that this value can be null. If this is a common theme for the concept, you can make the implicit operator handle nullables as well.
 
 ```csharp
-public record SocialSecurityNumber(string value) : ConceptAs<string>(value)
+public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value)
 {
     public static implicit operator SocialSecurityNumber?(string value) => value == default ? default : new(value);
 }
@@ -208,8 +208,9 @@ Out of the box, **Fundamentals** provides a type converter for concepts. All you
 
 ```csharp
 using System.ComponentModel;
+using Cratis.Concepts;
 
-TypeDescriptor.AddAttributes(typeof(SocialSecurityNumber), new TypeConverterAttribute(typeof(ConceptAsTypeConverter<SocialSecurityNumber>)));
+TypeDescriptor.AddAttributes(typeof(SocialSecurityNumber), new TypeConverterAttribute(typeof(ConceptAsTypeConverter<SocialSecurityNumber, string>)));
 ```
 
 This can become a lot of registrations and a cognitive load of having to remember to do this.

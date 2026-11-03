@@ -61,7 +61,7 @@ services.AddSelfBindings();
 - Types not derived from `Exception`
 - Types without `[IgnoreConvention]` attribute
 - Types not in `System` or `Microsoft` namespaces
-- Types with resolvable constructor parameters
+- Types with no public constructor that has a primitive-typed or record-typed parameter (a type is excluded if any public constructor has a parameter of either kind)
 
 **Examples:**
 
@@ -164,15 +164,17 @@ public class MockUserService : IUserService { }
 
 ### 4. Avoid Primitive Dependencies
 
-Constructor parameters should use concepts or dependency injection:
+Avoid primitive-typed and record-typed public constructor parameters on types you want self-bound; inject services and configuration objects instead:
 
 ```csharp
 // ❌ Bad - primitive parameters prevent auto-registration
 public class EmailService(string smtpServer, int port) { }
 
-// ✅ Good - uses concepts and injection
+// ✅ Good - injects an eligible non-record configuration dependency and a logger
 public class EmailService(SmtpConfiguration config, ILogger<EmailService> logger) { }
 ```
+
+`SmtpConfiguration` here must be a non-record class, and its own shape must avoid the exclusions above. Being a concept is not enough: `ConceptAs<T>` is itself declared as a record. Eligibility for self-binding is not proof that activation succeeds; the configuration and logging services must be registered separately.
 
 ## Integration Example
 

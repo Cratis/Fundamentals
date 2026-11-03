@@ -54,7 +54,7 @@ public interface IActivitySource<T>
 }
 ```
 
-When you resolve unkeyed `IActivitySource<T>` from dependency injection, Fundamentals creates an `ActivitySource` named after `T`. Per-type sources are not subscribed by default; explicitly subscribe to the source name in your telemetry provider, or use a named source that your provider subscribes to.
+When you resolve unkeyed `IActivitySource<T>` from dependency injection, Fundamentals creates an `ActivitySource` named after `T`. Per-type sources are not subscribed by `Cratis.*` unless the source name matches that configured wildcard. Explicitly subscribe to the source name in your telemetry provider, or use a named source under a `Cratis.<Product>` scope that your provider subscribes to. Registering the source does not configure a provider; see [Set up OpenTelemetry](../opentelemetry.md).
 
 `AddNamedActivitySource("Cratis.MyProduct", version: "1.2.3")` and `AddNamedMeter("Cratis.MyProduct", version: "1.2.3")` set the instrumentation scope version. The existing overloads without a version remain supported.
 
@@ -88,7 +88,7 @@ using var validationScope = _activitySource.ValidateOrder(order.Id);
 
 The `Cratis.Observability.SourceGenerators` package can implement your span methods at compile time.
 
-1. Create a partial class
+1. Create a static partial class
 2. Add `static partial` methods that return `IActivityScope<T>`
 3. Decorate them with `[Span]`
 4. Use `this IActivitySource<T>` as the first parameter so the generated spans become extension methods
