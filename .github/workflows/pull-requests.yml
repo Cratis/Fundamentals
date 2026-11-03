@@ -84,14 +84,14 @@ jobs:
         run: dotnet nuget push '${{ env.NUGET_OUTPUT }}/*.nupkg' --skip-duplicate --timeout 900 --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
 
       - name: Add comment for NuGet packages
-        uses: mshick/add-pr-comment@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: mshick/add-pr-comment@ec328af66588ab8f77cdeb2c264f14aba45bbf59 # v3.12.0
         with:
           message: |
             NuGet packages for this PR, e.g. Cratis:
             https://github.com/cratis/Fundamentals/packages/1655206?version=${{ needs.release.outputs.version }}
+          message-id: nuget-${{ needs.release.outputs.version }}
           allow-repeats: false
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
   publish-npm-packages:
     if: needs.release.outputs.publish == 'true'
