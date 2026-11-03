@@ -68,7 +68,10 @@ personal data. The two markings are not interchangeable.
 
 1. **Show it once.** Return the plaintext to the caller at creation time and never again.
 2. **Store a hash of bearer tokens.** For tokens and API keys that the caller presents back to you, keep only a hash, in events and in
-   storage, and compare hashes on use, so a leak does not leak working keys. `GenerateValue` does not hash for you.
+   storage, and compare hashes on use, so a leak does not leak working keys. Use [`GenerateValue.Sha256(token)`](sha-256.md)
+   only for server-generated tokens with at least 128 bits of entropy, not passwords, PINs or short codes.
+   For direct comparison use `CryptographicOperations.FixedTimeEquals` over equal-length digest bytes; lookup by digest index
+   is not constant-time and is acceptable only for these high-entropy tokens.
    A TOTP secret or other key material is different: you need the original value later to compute codes or sign, so a hash is useless.
    Keep it in protected, recoverable storage, such as a secret store or encryption at rest, never in an event payload.
 3. **Never log it.** A concept prints its raw value from `ToString()`, so `Console.WriteLine(apiKey)` and `$"{apiKey}"` write the secret.
