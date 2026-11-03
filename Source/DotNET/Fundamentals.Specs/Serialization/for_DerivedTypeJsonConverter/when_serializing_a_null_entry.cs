@@ -14,5 +14,5 @@ public class when_serializing_a_null_entry : given.a_set_of_derived_type_familie
 
     void Because() => result = JsonSerializer.Serialize(input, options);
 
-    [Fact] void should_write_null_despite_the_ignore_condition() => result.ShouldEqual("{\"child\":null,\"_derivedTypeId\":\"parent\"}");
+    [Fact] void should_omit_null_when_the_ignore_condition_applies() => result.ShouldEqual("{\"_derivedTypeId\":\"parent\"}");
 }

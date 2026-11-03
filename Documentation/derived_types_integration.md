@@ -322,6 +322,8 @@ services.AddOptions<JsonSerializerOptions>()
     });
 ```
 
+Derived type serialization honours `[JsonIgnore]` and `JsonIgnoreCondition` (including `options.DefaultIgnoreCondition`) like regular System.Text.Json serialization.
+
 ### Frontend Configuration
 
 The decorators import their own bundled reflection support, which supplies the metadata APIs when they are missing. An external `import 'reflect-metadata';` is therefore optional for these examples and is not a Fundamentals prerequisite. If you already use that package, import it before your decorated classes.
