@@ -88,7 +88,7 @@ Cratis is an open community, and we are glad to help users, teams evaluating the
 
 ## Contributing
 
-If you want to jump into building this repository and possibly contributing, please refer to [contributing](./Documentation/contributing/index.md).
+If you want to jump into building this repository and possibly contributing, please refer to [contributing](https://www.cratis.io/contributing/contributing/).
 
 ### Prerequisites
 
