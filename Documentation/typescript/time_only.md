@@ -3,7 +3,7 @@ description: Represent a time of day without date or time zone in TypeScript wit
 ---
 # TimeOnly
 
-`TimeOnly` represents a time of day with no date and no time zone. It is the TypeScript counterpart of .NET's `System.TimeOnly`.
+An opening time such as 09:00 does not identify an instant until you also choose a date and time zone. `TimeOnly` keeps just the time of day. Use `parse()` for an incoming time string, compare it with `equals()`, and send it back as a string without inventing a date.
 
 ## Why not a Date
 
@@ -15,7 +15,7 @@ const wrong = new Date('14:30:45');
 console.log(wrong.toString()); // "Invalid Date"
 ```
 
-The value is destroyed outright rather than merely shifted, which makes this the starker of the two temporal cases. `TimeOnly` holds the parts the server sent, so there is nothing to convert.
+That string cannot construct a valid `Date`. `TimeOnly.parse()` accepts a time without a date, so you can work with the opening hour directly instead.
 
 ## Creating
 
@@ -29,7 +29,9 @@ const constructed = TimeOnly.from(14, 30, 45);
 const opening = TimeOnly.from(9, 0); // seconds and milliseconds default to 0
 ```
 
-`parse()` accepts `HH:mm`, `HH:mm:ss` and `HH:mm:ss.fffffff`, and throws an `Error` for anything else. The seconds and the fraction are both optional because the server omits them when they are zero.
+`parse()` accepts `HH:mm`, `HH:mm:ss`, or seconds followed by one to seven fractional digits. It checks hours 0–23 and minutes/seconds 0–59; invalid formats or out-of-range parts throw an `Error`. Accepted optional parts do not tell you which format a particular server will emit.
+
+Use `from()` for known parts. Seconds, milliseconds and the fifth argument, `subMillisecondTicks`, default to zero. Only that fifth argument is validated by `from()`: it must be an integer from 0 to 9999. The hour, minute, second and millisecond arguments are assigned without range checks.
 
 ## Available values
 
@@ -42,13 +44,16 @@ console.log(time.hour);        // 14
 console.log(time.minute);      // 30
 console.log(time.second);      // 45
 console.log(time.millisecond); // 250
+console.log(time.subMillisecondTicks); // 0
 ```
 
-.NET carries up to seven fractional digits where JavaScript holds three, so the fraction is truncated rather than rounded — which keeps a parse followed by a render from moving the value forward.
+Fractions are preserved to seven digits: `millisecond` holds the first three and `subMillisecondTicks` holds the remaining four, in 100-nanosecond units. The `.250` value above has no remainder below a millisecond; a longer fraction is not truncated to those three digits.
+
+The component fields, including `subMillisecondTicks`, are writable and have no validating setters. Direct assignment bypasses the parser and factory checks above. If an opening time changes, parse a new valid time string rather than editing its parts.
 
 ## Formatting
 
-`toString()` produces `HH:mm:ss`, or `HH:mm:ss.fff` when there is a fractional part.
+`toString()` always includes seconds. With no fraction it produces `HH:mm:ss`; with milliseconds but no smaller remainder it adds three digits. A nonzero `subMillisecondTicks` remainder makes it write all seven fractional digits:
 
 ```typescript
 import { TimeOnly } from '@cratis/fundamentals';
@@ -56,9 +61,12 @@ import { TimeOnly } from '@cratis/fundamentals';
 console.log(TimeOnly.from(14, 30, 45).toString());      // "14:30:45"
 console.log(TimeOnly.from(14, 30, 45, 250).toString()); // "14:30:45.250"
 console.log(TimeOnly.from(9, 0).toString());            // "09:00:00"
+console.log(TimeOnly.parse('14:30:45.2500001').toString()); // "14:30:45.2500001"
 ```
 
 ## Equality
+
+`equals()` compares every component, including the remainder below a millisecond. Two times can therefore differ even when their `millisecond` values match:
 
 ```typescript
 import { TimeOnly } from '@cratis/fundamentals';
@@ -69,11 +77,12 @@ const second = TimeOnly.from(14, 30, 45);
 console.log(first.equals(second));                    // true
 console.log(first.equals(TimeOnly.from(14, 30, 46))); // false
 console.log(first.equals(undefined));                 // false
+console.log(TimeOnly.parse('14:30:45.2500001').equals(TimeOnly.parse('14:30:45.2509999'))); // false
 ```
 
 ## JSON serialization
 
-`TimeOnlyJsonConverter` is registered with `JsonSerializer` out of the box, so a field declared as `TimeOnly` deserializes from the ISO-8601 string the server sends and serializes back to it.
+When a response contains a model of opening hours, `@field(TimeOnly)` tells `JsonSerializer.deserialize()` to restore its time fields as instances. The built-in `TimeOnlyJsonConverter` handles their strings, so `hours.opens.hour` below reads the opening hour:
 
 ```typescript
 import { field, JsonSerializer, TimeOnly } from '@cratis/fundamentals';
@@ -98,7 +107,7 @@ console.log(hours.opens.hour); // 9
 const json = JsonSerializer.serialize(hours);
 ```
 
-Serialization goes through `JsonSerializer`, not through `JSON.stringify` — `TimeOnly` has no `toJSON()`, so `JSON.stringify` writes the individual parts instead of the ISO-8601 string.
+To send an opening time in a request body, pass the `TimeOnly` value to `JSON.stringify`. Its `toJSON()` method writes the time as a string, so `JSON.stringify({ opens: TimeOnly.from(9, 0) })` produces `{"opens":"09:00:00"}`. Reading that JSON leaves `opens` as a string; use `TimeOnly.parse()` for the scalar, or [JsonSerializer](./serialization/json_serializer.md) with `@field(TimeOnly)` when you need an instance in a model.
 
 ## Related
 

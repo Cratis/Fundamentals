@@ -3,7 +3,7 @@ description: Parse, format and serialize time intervals in TypeScript using Time
 ---
 # TimeSpan
 
-`TimeSpan` represents a duration rather than a calendar date or time of day. Use it to exchange intervals with a .NET backend using `System.TimeSpan` string formatting.
+A timeout or elapsed interval is a duration, not a calendar date or an opening time. `TimeSpan.parse()` turns its string into components and aggregate values you can compare. Use `totalHours` when the whole interval matters, then `toString()` or JSON serialization when you need the duration string again.
 
 ## Parsing
 
@@ -35,14 +35,17 @@ console.log(span.toString()); // "00:05:30"
 
 ## JSON Serialization
 
-`TimeSpan.toJSON()` returns the same C#-compatible representation as `toString()`, so JSON payloads round-trip cleanly between frontend and backend.
+`TimeSpan.toJSON()` returns the same duration string as `toString()`. Native `JSON.stringify()` calls it automatically, so this request body contains a string rather than the component fields:
 
 ```typescript
 import { TimeSpan } from '@cratis/fundamentals';
 
 const span = TimeSpan.parse('00:00:01.5');
 const json = JSON.stringify({ duration: span });
+console.log(json); // {"duration":"00:00:01.5"}
 ```
+
+Plain `JSON.parse(json)` restores the JSON object but leaves `duration` as a string. Use `TimeSpan.parse(JSON.parse(json).duration)` when you need a duration instance again. For fields in a typed response model, see [JsonSerializer](serialization/json_serializer.md) rather than assuming JSON parsing restores classes.
 
 ## Available Values
 
@@ -54,7 +57,11 @@ A parsed `TimeSpan` provides component and aggregate values, including:
 - `totalDays`, `totalHours`, `totalMinutes`, `totalSeconds`
 - `totalMilliseconds`, `totalMicroseconds`, `totalNanoseconds`
 
-Use aggregate values for duration comparisons: `totalHours` includes whole days, while `hours` is only the remaining hour component. For a negative duration, `ticks` and the aggregate values carry the sign; the hour, minute, and second components remain magnitudes. Tick values use JavaScript numbers, so do not assume exact integer precision for very large intervals.
+Use aggregate values for duration comparisons: `totalHours` includes whole days, while `hours` is only the remaining hour component. In the parsing example, `span.hours` is 2 but `span.totalHours` is greater than 24. For a negative duration, `ticks` and the aggregate values carry the sign; the hour, minute, and second components remain magnitudes.
+
+These public fields are writable independently. Assigning a new `hours` value does not recalculate `ticks` or `totalHours`, and `toString()` formats from `ticks`. To represent a changed duration consistently, parse the new duration string rather than treating component assignment as arithmetic.
+
+Ticks and totals use JavaScript numbers, so very large intervals need not retain exact integer tick precision. Accepting seven fractional digits in the input does not remove that number-precision limit.
 
 ## See also
 

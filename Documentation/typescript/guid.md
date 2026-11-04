@@ -3,7 +3,7 @@ description: Create, parse, convert and compare GUIDs in TypeScript with the Gui
 ---
 # GUID
 
-The `Guid` class provides robust GUID (Globally Unique Identifier) creation and manipulation utilities for JavaScript/TypeScript applications.
+Use `Guid` when an identifier needs to move between a string, bytes and a value you can compare. For an incoming string, check its shape with `Guid.isGuid()` before calling `Guid.parse()`. For two separately created instances of the same identifier, use `equals()` rather than reference equality.
 
 ## Creating GUIDs
 
@@ -18,6 +18,8 @@ console.log(newId.toString()); // Example output: "550e8400-e29b-d441-a716-44665
 ```
 
 ### From String
+
+`Guid.parse()` converts the supplied string; it does not reject malformed GUIDs. Validate external input with `Guid.isGuid()` first. The known identifier below needs no random generation:
 
 ```typescript
 import { Guid } from '@cratis/fundamentals';
@@ -61,11 +63,13 @@ const str = guid.toString();
 const isValid = Guid.isGuid('550e8400-e29b-41d4-a716-446655440000'); // true
 ```
 
-`Guid.isGuid()` checks the hyphenated `8-4-4-4-12` hexadecimal format. `Guid.parse()` converts a string but does not validate that format; validate untrusted input before parsing it.
+`Guid.isGuid()` checks the hyphenated `8-4-4-4-12` hexadecimal format, not whether an identifier exists in your application. `Guid.as()` is useful at a boundary accepting either a string or a `Guid`: it parses a string and passes an existing instance through unchanged. It does not add validation.
+
+For a JSON request, `toJSON()` supplies the string automatically. For example, `JSON.stringify({ id: existingId })` produces `{"id":"550e8400-e29b-41d4-a716-446655440000"}` using the identifier from [From String](#from-string). Plain `JSON.parse()` reads that value back as a string, not a `Guid` instance.
 
 ## Equality
 
-The `Guid` class implements proper equality comparison:
+`equals()` compares the string representations, so independently parsed instances can match:
 
 ```typescript
 import { Guid } from '@cratis/fundamentals';
@@ -78,6 +82,8 @@ console.log(guid1.equals(guid2)); // true
 console.log(guid1.equals(guid3)); // false
 ```
 
+Check nullable inputs before calling `equals()`. Its argument is an `object`, not a nullable overload; for a non-`Guid` argument it calls `toString()`, so `null` or `undefined` is not a safe comparison input.
+
 ## Use Cases
 
 GUIDs are commonly used for:
@@ -87,4 +93,4 @@ GUIDs are commonly used for:
 
 `Guid.create()` uses `Math.random()`, not a cryptographically secure random source. Do not use it for session tokens, API keys, or other secrets.
 
-The GUID implementation ensures compatibility with .NET GUID formats, making it ideal for full-stack applications using both the frontend and backend Fundamentals packages.
+If an API response should restore an identifier as a `Guid` inside a model, declare its field with `@field(Guid)` and use [JsonSerializer](./serialization/json_serializer.md). That supplies a runtime constructor where plain JSON parsing only supplies a string.
