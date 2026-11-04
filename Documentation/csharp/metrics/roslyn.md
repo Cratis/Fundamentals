@@ -3,7 +3,7 @@ description: Generate metric method implementations from partial methods with th
 ---
 # Metrics Source Generator
 
-The `Cratis.Observability.SourceGenerators` package provides a powerful source generator that automatically implements metrics methods for you. This eliminates boilerplate code and ensures consistent, efficient metrics collection across your application.
+Use `Cratis.Observability.SourceGenerators` when you choose generated metric methods. Start with the [metrics overview](index.md) for registration, a counter call and provider subscription; return here for signatures, generated code, diagnostics and migration details.
 
 ## Table of Contents
 
@@ -48,6 +48,8 @@ For each qualifying method, it generates a complete implementation that:
 - Includes proper null checks and error handling
 
 ## Getting Started
+
+The following declarations and service excerpt show declaration and call-site shapes, not another registration sequence. They assume the typed meter is registered and its name is subscribed in the host; use the overview for that setup.
 
 ### 1. Create a Static Partial Class
 
@@ -164,7 +166,7 @@ static partial void CountScopedOperation(IMeterScope<ProcessingService> scope, s
 
 Choose bounded dimensions such as result or authentication method rather than identifiers. Tags from scopes also consume the budget. See [metric views and cardinality](../opentelemetry.md#metric-views-and-cardinality) for shaping and overflow handling. These excerpts assume the illustrated service and domain types, with bounded vocabularies for dimension values.
 
-The source generator creates efficient implementations. Here's what gets generated for a counter:
+Use this counter to compare the declaration with the generated implementation:
 
 ### Your Declaration
 
@@ -374,7 +376,7 @@ If metrics aren't showing up in your monitoring:
 
 1. **Verify meter registration** in dependency injection
 2. **Check your metrics collection** configuration
-3. **Ensure ActivitySource** is properly configured for your application
+3. **Subscribe the meter name** in your metrics provider; activity-source subscription is a separate tracing concern
 
 ### Build Errors
 
@@ -403,11 +405,11 @@ To see the generated code:
 
 ## Performance Considerations
 
-The generated code is optimized for performance:
+The following implementation notes are not application-wide allocation, thread-safety or throughput guarantees:
 
 - **Lazy initialization** prevents unnecessary metric creation
 - **Efficient tagging** uses `TagList` and `ReadOnlySpan`
 - **Minimal allocations** through careful memory management
 - **Null safety** prevents exceptions without performance overhead
 
-The source generator runs at compile time, so there's no runtime performance impact from the generation process itself.
+Generation happens at compile time; this does not remove runtime costs of recording, tagging, collection or export.
