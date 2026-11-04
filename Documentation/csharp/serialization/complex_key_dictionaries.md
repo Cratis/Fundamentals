@@ -39,6 +39,8 @@ public record AccountKey(Guid Id, string Tenant);
 public record AccountSummary(int Balance);
 ```
 
+In the example, each AccountKey becomes compact JSON inside a JSON property name; it is not a nested key object alongside the value. Reading `roundTrip` reconstructs an AccountKey from that property name and an AccountSummary from its value. Keep the same key-conversion settings on both sides: the converter copies the supplied options for keys and turns off indentation. If the payload instead uses a plain identifier as the property name, compare it with this key format before treating it as an AccountKey dictionary.
+
 ## Frontend Interop
 
 For frontend usage and typed key lookup, see [ValueMap](../../typescript/serialization/value_map.md).

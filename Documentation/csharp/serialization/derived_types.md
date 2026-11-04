@@ -3,7 +3,7 @@ description: Serialize and deserialize polymorphic .NET objects by runtime type 
 ---
 # DerivedTypes Serialization (Backend)
 
-The DerivedTypes serialization system in the .NET backend provides a powerful mechanism for polymorphic serialization, allowing you to serialize and deserialize objects where the exact type is determined at runtime. This is particularly useful when working with interfaces or base classes that can have multiple implementations.
+An Order can declare its payment method as IPaymentMethod while holding a CreditCard or PayPal value. To read that value back as the right concrete type, the JSON needs an identifier and the serializer needs a registry that can resolve it. This guide connects the payment types, registry and converter used for that round trip.
 
 ## Overview
 
@@ -62,6 +62,8 @@ public class PayPal : IPaymentMethod
 
 ### 3. Configure JSON Serialization
 
+If you pass `Cratis.Json.Globals.JsonSerializerOptions` to the serializer, those options already include the derived-type converter factory. The registration fragments below are for separately configured options on an existing service collection; they are alternatives, not complete standalone programs. Choose the registry that contains your application's discovered types. If a payment type is missing, inspect [what type discovery found](../types.md#knowing-what-was-discovered) before changing its identifier.
+
 `DerivedTypeJsonConverterFactory` has no parameterless constructor: it needs the `IDerivedTypes` registry that knows your `[DerivedType]` types. Pass the shared `DerivedTypes.Instance` for explicit registration:
 
 ```csharp
@@ -96,7 +98,7 @@ public class Order
 
 ## Serialization Format
 
-When serialized, derived types include a special `_derivedTypeId` property:
+When serialized, derived types include a special `_derivedTypeId` property. In the Order payload below, `credit-card` identifies the CreditCard value held by PaymentMethod; the registry uses that identifier together with the declared target type to resolve the concrete type when reading:
 
 ```json
 {
@@ -168,6 +170,8 @@ The system provides specific exceptions for common issues:
 - **`AmbiguousTargetTypeForDerivedType`**: Thrown when a derived type implements multiple interfaces without specifying the target
 - **`MissingDerivedTypeForTargetType`**: Thrown when trying to deserialize an unknown derived type identifier
 - **`AmbiguousDerivedTypeIdentifiers`**: Thrown when multiple types use the same identifier
+
+A missing `_derivedTypeId` is different from an unknown identifier: the converter returns the default value when the property is absent, but asks the registry to resolve an identifier when it is present. If a payment method comes back null, first inspect the payload for the discriminator; if lookup fails, compare the identifier and declared target with the types in the registry.
 
 ## Best Practices
 
@@ -267,9 +271,9 @@ public class PaymentService
 
 ## Performance Considerations
 
-- The `DerivedTypes` registry is built once at startup by scanning all assemblies
-- Use the static `DerivedTypes.Instance` for better performance in hot paths
-- Consider the impact of reflection during type scanning in large applications
+- The `DerivedTypes` registry builds its lookup maps from the supplied type-discovery result.
+- Reuse a registry rather than rebuilding its maps for each serialization call. The static `DerivedTypes.Instance` uses the global type-discovery instance; a dependency-injected registry uses its supplied type discovery.
+- Choose the registry for the types your application discovers, rather than switching to the static instance on the assumption that it makes serialization faster.
 
 ## Common Patterns
 

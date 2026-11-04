@@ -4,13 +4,13 @@ description: Serialize and bind DateOnly and TimeOnly in .NET with the System.Te
 # Date & Time Only
 
 In .NET 6, two new types were introduced: `DateOnly` and `TimeOnly`.
-These are unfortunately not fully supported in serializers and typically require type conversion for use with
-Web APIs. Fundamentals offers serializers and type converters for these types, which are automatically hooked up
-in the application model.
+Choose the conversion boundary first. For a JSON body, use the JSON options and converters below. For a controller parameter or another component-model conversion, use the type converters in the second section; registering them does not configure JSON serialization.
 
 ## System.Text.Json converters
 
 Within the **Fundamentals** package you'll find a namespace called `Json`. This holds converters for serializing and deserializing both `DateOnly` and `TimeOnly` types.
+
+The following serialization and deserialization examples are separate fragments. Both assume an application-defined Account with RegisteredDate and RegisteredTime properties of those types. Use the first fragment to compare the written values and property names, then the second to read that shape back; do not paste both fragments into one scope.
 
 ```csharp
 using System.Text.Json;

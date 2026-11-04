@@ -5,6 +5,8 @@ description: Serialize .NET Point, LineString and Polygon types to and from GeoJ
 
 Geospatial types (Point, LineString, Polygon) serialize to [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/) format — the standard representation for geographic data in JSON.
 
+Choose which options your serializer uses before copying a shape example: the global options already contain the converters, while separate options need the manual configuration below. Compare the resulting payload with the example for your geometry and read its implemented checks; these readers do not reject every malformed shape. For a rejected payload, use [Validation Errors](#validation-errors). For stored data that still uses Coordinate, start with [Migration from Coordinate](#migration-from-coordinate) rather than passing the old shape to the new converter.
+
 ## Automatic Registration
 
 The geospatial converters are registered in `Cratis.Json.Globals.JsonSerializerOptions`, so any code that uses these options gets them. The Cratis Application Model uses these options; a serializer configured separately must register the converters itself (see Manual Converter Configuration below):
