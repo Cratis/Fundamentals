@@ -3,17 +3,17 @@ description: Represent a value that may be absent with the .NET Option monad ins
 ---
 # Option
 
-The `Option<TValue>` monad represents an optional value that may or may not be present. It provides a type-safe alternative to null references, making the optionality explicit in the type system.
+`Option<TValue>` represents either a value or its absence. Returning it from a lookup makes a missing value part of the method's contract, rather than leaving the caller to infer whether `null` is possible.
 
 ## Purpose
 
-`Option<T>` eliminates null reference exceptions by forcing explicit handling of the absence of a value. Instead of returning `null` and hoping consumers remember to check, `Option<T>` makes the optionality part of the method signature.
+Use `Option<T>` when absence is enough information for the caller. In the repository below, a missing user and a missing email address both lead to `None`. If the caller needs a reason for failure, that is a different contract; `Option<T>` carries no error explanation.
 
 ## Usage
 
 ### Producer Perspective
 
-Return `Option<T>` from methods that may not always have a value:
+`UserRepository` first looks up an optional user, then uses that lookup to return an optional email address. This excerpt omits the database field and initialization, along with the application-specific `User` and `UserId` types.
 
 ```csharp
 public class UserRepository
@@ -44,9 +44,11 @@ public class UserRepository
 }
 ```
 
+`FindById` returns the found user through implicit conversion from `TValue` to `Option<TValue>`; otherwise it returns `Option<User>.None()`. `GetEmailAddress` has a narrower success condition: the user must exist and have a nonempty email address. Either kind of absence returns `Option<string>.None()`, so the caller cannot distinguish them from this result alone.
+
 ### Consumer Perspective
 
-Explicitly handle the presence or absence of values:
+The methods in `UserService` show alternative ways to consume those lookups, not a sequence to run for each user. Repository initialization is omitted.
 
 ```csharp
 public class UserService
@@ -123,12 +125,13 @@ public class UserService
 }
 ```
 
+`ProcessUser` checks `HasValue` before extracting the user, while `DisplayUserEmail` uses `TryGetValue` directly to choose between the email and an absence message. The latter pattern combines the presence check and extraction in one call.
+
+`GetUserDisplayName` needs a string, so its `Match()` returns either the user's name or `"Unknown User"`. `ProcessUserWithMatch`, despite its name, uses `Switch` for console output rather than a returned value. `DisplayUserWithPatternMatching` expresses the same presence decision with a `switch` expression; it accesses `AsT0` only in the value case.
+
 ## Key Points
 
-- Use `Option<T>` instead of returning `null` for optional values
-- The `HasValue` property indicates if a value is present
-- `TryGetValue` provides safe value extraction similar to Dictionary's TryGetValue pattern
-- Use `Match()` for functional composition and transforming values
-- Pattern matching with `switch` expressions enables concise conditional logic
-- Implicit conversion from `TValue` to `Option<TValue>` simplifies creation
-- Makes API contracts explicit - callers know they must handle absence
+- `HasValue` indicates whether the option contains a value.
+- `TryGetValue` checks and extracts the value, following the same pattern as Dictionary's TryGetValue.
+- `Option<T>.None()` represents absence; a `TValue` can be converted implicitly to `Option<TValue>`.
+- Use `Match()` to transform either case into a returned value, or `Switch` for actions.

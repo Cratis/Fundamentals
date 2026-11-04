@@ -3,29 +3,22 @@ description: Handle optional values, operation results and exceptions explicitly
 ---
 # Monads
 
-Monads provide a functional programming approach to handling common patterns like optional values, operation results, and exception handling. They enable explicit and type-safe handling of success and failure paths without relying on exceptions or null values.
+Cratis Fundamentals provides monads in the `Cratis.Fundamentals` package for returning optional values, expected failures and caught exceptions. Choose the return type according to what the caller needs to know: is a value absent, did an operation fail for a known reason, or did an exception-throwing API fail?
 
 ## Available Monads
 
-Cratis.Fundamentals provides the following monads:
-
-- **[Option](option.md)** - Represents optional values, eliminating the need for null checks
-- **[Result](result.md)** - Represents operation outcomes with typed success and error states
-- **[Catch](catch.md)** - Represents operations that may throw exceptions with type-safe exception handling
+- **[Option](option.md)** — Use `Option<T>` when a value may be absent. The user lookup example returns either a user or an explicit absence.
+- **[Result](result.md)** — Use `Result<TResult, TError>` when success produces a value and expected failures have a typed explanation. The order examples also show variants for pass/fail alone or a typed error without a success value.
+- **[Catch](catch.md)** — Use `Catch<TResult>` at an exception-throwing boundary. The file examples explicitly catch exceptions in the producer and return them for the caller to handle as values.
 
 ## Benefits
 
-- **Type Safety**: Explicit handling of success and failure cases at compile time
-- **Null Safety**: Eliminates null reference exceptions through explicit optional values
-- **Clear Intent**: Makes success and failure paths explicit in the code
-- **Functional Composition**: Enables chaining operations while maintaining error handling
-- **Better Error Handling**: Provides alternatives to exception-based control flow
+The method signature tells the caller which outcomes to consider before extracting a value. A missing user need not become a null dereference, and an expected order-validation failure need not become an exception. The examples show direct outcome checks as well as `Match` for returning another value and `Switch` for performing actions.
+
+The return type does not catch exceptions on its own. In particular, `Catch` holds the outcome supplied by the producer; the producer still needs an explicit exception boundary.
 
 ## When to Use
 
-Use monads when:
+Choose one of these contracts when designing a method's return type or adapting an existing API. They are alternatives, not a required three-step stack: a domain validation method can return `Result` while a separate file-access boundary returns `Catch`.
 
-- A value may or may not be present (use `Option<T>`)
-- An operation can succeed or fail with specific error types (use `Result<TResult, TError>`)
-- You want to handle exceptions as values rather than control flow (use `Catch<TResult>`)
-- You want to make optional or error states explicit in your API
+Follow the page for the outcome you need. Each page uses producer and consumer excerpts to connect the return type to the caller's choices. The excerpts omit application-specific setup and helpers; they are not standalone applications.

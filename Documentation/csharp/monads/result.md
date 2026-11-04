@@ -3,17 +3,23 @@ description: Return success or a typed error from .NET operations with the Resul
 ---
 # Result
 
-The `Result` monad represents the outcome of an operation that can either succeed or fail. It provides type-safe handling of both success and error states without relying on exceptions for control flow.
+`Result` represents success or an expected failure. Use it when the caller needs to act on an operation's outcome without treating a predictable rejection, such as an invalid order, as an exception.
 
 ## Purpose
 
-`Result` enables explicit error handling by encoding success and failure as types. This makes error cases visible in the type system and forces consumers to handle both paths explicitly.
+Choose the variant according to the information the caller needs:
+
+- `Result` reports only success or failure, as in `ValidateOrder`.
+- `Result<TError>` adds a typed failure reason, as in `Validate`, whose `ValidationError` names the invalid field.
+- `Result<TResult, TError>` returns either a success value or a typed error, as in `ConfirmOrder`, which returns an `OrderConfirmation` or an `OrderError`.
+
+These are alternative contracts, not stages of one operation. Returning a `Result` also does not catch exceptions thrown while performing the operation.
 
 ## Usage
 
 ### Producer Perspective
 
-Return `Result` to indicate operation outcomes:
+The order examples progress from a pass/fail check to a validation explanation and then a confirmation value. They omit the application-specific order types and repository setup; the classes illustrate the return contracts rather than a complete application.
 
 ```csharp
 // Simple Result
@@ -73,9 +79,11 @@ public class OrderService
 }
 ```
 
+`OrderProcessor.ValidateOrder` returns only whether the order passes its checks. `OrderValidator.Validate` checks the same conditions but supplies a field and message on failure. `OrderService.ConfirmOrder` needs a different contract: it can explain a missing order or an invalid state, and on success it saves the confirmed order and returns its ID and confirmation time.
+
 ### Consumer Perspective
 
-Handle success and failure paths explicitly:
+The controller methods illustrate separate handling choices for these outcomes. They are not a sequence of steps: several methods call `ConfirmOrder` themselves. Controller initialization and application helpers such as email delivery and error logging are omitted.
 
 ```csharp
 public class OrderController
@@ -85,8 +93,8 @@ public class OrderController
     
     public void ProcessOrder(Order order)
     {
-        // Simple Result
-        var validationResult = _validator.ValidateOrder(order);
+        // Result<TError>: check success without inspecting the error
+        var validationResult = _validator.Validate(order);
         if (!validationResult.IsSuccess)
         {
             Console.WriteLine("Order validation failed");
@@ -172,17 +180,13 @@ public class OrderController
 }
 ```
 
+`ProcessOrder` shows the pass/fail check with `IsSuccess`. `ValidateAndDisplay` can go further because its error contains `Field` and `Message`. `ConfirmOrder` extracts either the confirmation or the typed error, so it can display the confirmation time on success and the error code on failure.
+
+For the confirmation outcome, choose a handler according to what the caller needs next. `GetOrderStatus` uses `Match()` to return a string. `ProcessOrderWithMatch` uses `Switch` to perform actions instead: confirmation triggers email delivery, while failure triggers error logging. `HandleOrderWithPatternMatching` uses a `switch` expression and a guard to give `NOT_FOUND` its own message. Each method invokes confirmation again; none merely inspects the outcome of a previous controller call.
+
 ## Key Points
 
-- Use `Result` for operations that can fail in predictable ways
-- Choose the appropriate variant based on your needs:
-  - `Result` - Simple success/failure indication
-  - `Result<TError>` - When you need to communicate why it failed
-  - `Result<TResult, TError>` - When success produces a value
-- Use `Match()` for functional composition and transforming results
-- Pattern matching with `switch` expressions enables conditional logic based on success/error states
-- Access underlying exception types with pattern guards for specific error handling
-- Implicit conversions simplify creating results from values or errors
-- `IsSuccess` provides a quick check before extracting values
-- `TryGetResult` and `TryGetError` provide safe access to the underlying values
-- Avoid exceptions for expected failure cases - use `Result` instead
+- `IsSuccess` checks whether the operation succeeded.
+- `TryGetResult` and `TryGetError` check and extract the corresponding values.
+- `Result<TResult, TError>` supports implicit conversion from a success value or an error.
+- Use `Match()` for a returned value and `Switch` for actions; pattern guards can refine an error case when using a `switch` expression.

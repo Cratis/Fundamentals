@@ -1,19 +1,25 @@
 ---
-description: Turn exception-throwing .NET code into values with the Catch monad so failures compose without try-catch blocks.
+description: Return success, typed errors or caught exceptions from .NET code with Catch, keeping producer try-catch boundaries explicit.
 ---
 # Catch
 
-The `Catch` monad represents operations that may throw exceptions, converting exception-based error handling into value-based handling. It captures exceptions as values, enabling functional composition without try-catch blocks.
+`Catch` represents the outcome of an operation that can throw an exception. The producer catches the exception and returns it as a value; the consumer then handles that value alongside success. Constructing or returning a `Catch` does not automatically trap exceptions thrown by the operation or by a consumer callback.
 
 ## Purpose
 
-`Catch` provides a way to handle exceptions as values rather than control flow. This is particularly useful when working with third-party APIs or legacy code that uses exceptions, while keeping your application code functional and composable.
+Use `Catch` at a boundary with exception-throwing code, such as file I/O, network calls or a third-party API. Choose the variant before writing the producer:
+
+- `Catch` represents success without a return value, or an exception.
+- `Catch<TResult>` represents a result or an exception.
+- `Catch<TResult, TError>` represents a result, a typed error or a raw exception. The typed error does not replace the exception case.
+
+The file examples below keep the `try`/`catch` in the producer. That boundary lets the caller handle a returned outcome without repeating the file operation's exception-handling code.
 
 ## Usage
 
 ### Producer Perspective
 
-Wrap exception-throwing code to return `Catch`:
+`DeleteFile` wraps an operation with no success value; `LoadConfiguration` and `ReadConfigValue` return a value on success. `LoadSecureConfig` additionally translates selected exceptions into `ConfigError`. These excerpts omit `AppConfig`, the configuration provider and the application-specific `LoadAndValidate` implementation.
 
 ```csharp
 // Simple Catch
@@ -98,9 +104,13 @@ public class SecureConfigService
 }
 ```
 
+`LoadConfiguration` explicitly catches exceptions from reading or deserializing the file and returns them through implicit conversion to `Catch<AppConfig>`. `ReadConfigValue` uses the `Success` and `Failed` factory methods to construct the same two-case contract.
+
+`LoadSecureConfig` returns three possible outcomes. A successful load supplies `AppConfig`; a missing file or invalid JSON becomes a `ConfigError`; any other exception reaches the final catch block and remains a raw exception. A caller that handles only `AppConfig` and `ConfigError` would leave that last case unhandled.
+
 ### Consumer Perspective
 
-Handle exceptions as values without try-catch blocks:
+The methods below show alternative ways to handle returned outcomes. `LoadAndApplyConfig` consumes the two-case contract; `LoadSecureConfiguration` handles all three cases. Service initialization and application helpers such as `ApplyConfiguration`, `LogError` and `LogException` are omitted.
 
 ```csharp
 public class ConfigurationManager
@@ -142,6 +152,10 @@ public class ConfigurationManager
             {
                 Console.WriteLine($"Details: {error.Details}");
             }
+        }
+        else if (result.TryGetException(out var exception))
+        {
+            LogException(exception);
         }
     }
     
@@ -211,18 +225,15 @@ public class ConfigurationManager
 }
 ```
 
+`LoadSecureConfiguration` first extracts a configuration, then a `ConfigError`, then a raw exception. Its `TryGetException` branch covers the producer's final catch block rather than assuming every failure has been translated into an application error. `SafelyReadConfig` shows the shorter two-case extraction pattern for a configuration value.
+
+`LoadConfigWithMatch` needs a returned string, so `Match()` transforms either the loaded configuration or the exception into text. `ProcessConfigWithMatch` instead uses `Switch` for actions. Because it consumes `Catch<AppConfig, ConfigError>`, its callbacks are ordered as success, typed error and exception. These methods are alternatives, not additional steps after `LoadSecureConfiguration`.
+
+`HandleConfigWithPatternMatching` consumes the two-case `Catch<AppConfig>` and refines the exception case with type guards. Its `AsT1` is an exception; in the three-case contract, the typed error occupies that position instead.
+
 ## Key Points
 
-- Use `Catch` to convert exception-based APIs into value-based ones
-- Choose the appropriate variant:
-  - `Catch` - Simple exception capture without return value
-  - `Catch<TResult>` - Capture results or exceptions
-  - `Catch<TResult, TError>` - Custom error representation for specific exception types
-- Use `Match()` for functional composition of potentially failing operations
-- Pattern matching with `switch` expressions enables exception-type-specific handling
-- Access specific exception types with pattern guards (e.g., `when result.AsT1 is FileNotFoundException`)
-- Implicit conversions from `TResult` and `Exception` simplify creation
-- `IsSuccess` indicates whether the operation succeeded
-- `TryGetResult` and `TryGetException` provide safe access to values
-- Particularly useful for wrapping file I/O, network calls, and third-party libraries
-- Enables functional composition of potentially failing operations
+- `IsSuccess` indicates whether the operation succeeded.
+- `TryGetResult` checks and extracts a success value in the value-bearing variants. `TryGetError` extracts a typed error in the three-case variant; `TryGetException` extracts a raw exception.
+- `TResult` and `Exception` can be converted implicitly to a value-bearing `Catch`.
+- Use `Match()` for a returned value and `Switch` for actions. A `switch` expression can refine an exception case with guards such as `when result.AsT1 is FileNotFoundException`.
