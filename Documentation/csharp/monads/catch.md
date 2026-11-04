@@ -1,228 +1,119 @@
 ---
-description: Turn exception-throwing .NET code into values with the Catch monad so failures compose without try-catch blocks.
+title: Catch
+description: Wrap a throwing parser explicitly with Catch<TResult, TError>, handle its three cases, and rethrow only a captured exception.
 ---
-# Catch
 
-The `Catch` monad represents operations that may throw exceptions, converting exception-based error handling into value-based handling. It captures exceptions as values, enabling functional composition without try-catch blocks.
+Sometimes you cannot replace a throwing dependency with a `TryParse`-style API. You still need to distinguish “the timeout violates our rule” from “the parser threw.” `Catch<Configuration, ConfigurationError>` carries those outcomes separately from success.
 
-## Purpose
+For a parser you control, prefer the [Result lesson's `TryParse` implementation](result.md). The throwing parser here gives you a small boundary to adapt without a file, network service, or other setup.
 
-`Catch` provides a way to handle exceptions as values rather than control flow. This is particularly useful when working with third-party APIs or legacy code that uses exceptions, while keeping your application code functional and composable.
+## Adapt the throwing call
 
-## Usage
+Use a .NET 10 SDK and create a console app:
 
-### Producer Perspective
-
-Wrap exception-throwing code to return `Catch`:
-
-```csharp
-// Simple Catch
-public class FileOperations
-{
-    public Catch DeleteFile(string path)
-    {
-        try
-        {
-            File.Delete(path);
-            return Catch.Success();
-        }
-        catch (Exception ex)
-        {
-            return Catch.Failed(ex);
-        }
-    }
-}
-
-// Catch<TResult>
-public class ConfigurationService
-{
-    public Catch<AppConfig> LoadConfiguration(string filePath)
-    {
-        try
-        {
-            var json = File.ReadAllText(filePath);
-            var config = JsonSerializer.Deserialize<AppConfig>(json);
-            
-            // Implicit conversion from TResult to Catch<TResult>
-            return config!;
-        }
-        catch (Exception ex)
-        {
-            // Implicit conversion from Exception to Catch<TResult>
-            return ex;
-        }
-    }
-    
-    public Catch<string> ReadConfigValue(string key)
-    {
-        try
-        {
-            var value = _configProvider.GetValue(key);
-            return Catch<string>.Success(value);
-        }
-        catch (Exception ex)
-        {
-            return Catch<string>.Failed(ex);
-        }
-    }
-}
-
-// Catch<TResult, TError>
-public record ConfigError(string Code, string Message, string? Details);
-
-public class SecureConfigService
-{
-    public Catch<AppConfig, ConfigError> LoadSecureConfig(string filePath)
-    {
-        try
-        {
-            var config = LoadAndValidate(filePath);
-            return Catch<AppConfig, ConfigError>.Success(config);
-        }
-        catch (FileNotFoundException ex)
-        {
-            return Catch<AppConfig, ConfigError>.Failed(
-                new ConfigError("FILE_NOT_FOUND", "Configuration file not found", ex.Message));
-        }
-        catch (JsonException ex)
-        {
-            return Catch<AppConfig, ConfigError>.Failed(
-                new ConfigError("INVALID_JSON", "Invalid configuration format", ex.Message));
-        }
-        catch (Exception ex)
-        {
-            // Can also pass the raw exception
-            return Catch<AppConfig, ConfigError>.Failed(ex);
-        }
-    }
-}
+```bash
+dotnet new console --framework net10.0 --name CatchDemo
+cd CatchDemo
+dotnet add package Cratis.Fundamentals --version 7.32.0
 ```
 
-### Consumer Perspective
-
-Handle exceptions as values without try-catch blocks:
+Replace `Program.cs` with the complete program below. Its configuration record and error enum belong to the example.
 
 ```csharp
-public class ConfigurationManager
+using System;
+using System.Globalization;
+using Cratis.Monads;
+
+public static class ParserBoundary
 {
-    readonly ConfigurationService _configService;
-    readonly SecureConfigService _secureConfigService;
-    
-    public void LoadAndApplyConfig(string path)
+    public static void Main()
     {
-        // Catch<TResult>
-        var configResult = _configService.LoadConfiguration(path);
-        
-        if (configResult.IsSuccess && configResult.TryGetResult(out var config))
+        foreach (var input in new string?[] { "30", null, "0", "invalid" })
         {
-            Console.WriteLine($"Configuration loaded: {config.AppName}");
-            ApplyConfiguration(config);
-        }
-        else if (configResult.TryGetException(out var exception))
-        {
-            Console.WriteLine($"Failed to load configuration: {exception.Message}");
-            LogException(exception);
-        }
-    }
-    
-    public void LoadSecureConfiguration(string path)
-    {
-        // Catch<TResult, TError>
-        var result = _secureConfigService.LoadSecureConfig(path);
-        
-        if (result.TryGetResult(out var config))
-        {
-            Console.WriteLine("Secure configuration loaded successfully");
-            ApplyConfiguration(config);
-        }
-        else if (result.TryGetError(out var error))
-        {
-            Console.WriteLine($"Configuration error: [{error.Code}] {error.Message}");
-            if (error.Details is not null)
+            var result = ReadTimeout(input);
+            Console.WriteLine(result.Match(
+                configuration => $"Timeout: {configuration.TimeoutSeconds}",
+                error => $"Rejected: {error}",
+                exception => $"Parser exception: {exception.GetType().Name}"));
+
+            try
             {
-                Console.WriteLine($"Details: {error.Details}");
+                result.RethrowError();
+                Console.WriteLine("No exception to rethrow");
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Observed rethrown FormatException");
             }
         }
+
+        Catch completed = Catch.Success();
+        Catch<int> parsed = Catch<int>.Success(30);
+        Console.WriteLine($"Smaller forms: {completed.IsSuccess}, {parsed.IsSuccess}");
     }
-    
-    public void SafelyReadConfig(string key)
+
+    static Catch<Configuration, ConfigurationError> ReadTimeout(string? value)
     {
-        var result = _configService.ReadConfigValue(key);
-        
-        // Using TryGetResult/TryGetException
-        var message = result.TryGetResult(out var value) 
-            ? $"Config value: {value}" 
-            : result.TryGetException(out var ex) 
-                ? $"Error: {ex.Message}" 
-                : "Unknown state";
-        
-        Console.WriteLine(message);
-    }
-    
-    public string LoadConfigWithMatch(string path)
-    {
-        var result = _configService.LoadConfiguration(path);
-        
-        // Using Match() for functional composition
-        return result.Match(
-            config => $"Loaded: {config.AppName} v{config.Version}",
-            exception => $"Failed to load: {exception.Message}");
-    }
-    
-    public void ProcessConfigWithMatch(string path)
-    {
-        var result = _secureConfigService.LoadSecureConfig(path);
-        
-        // Switch() for side effects. Catch<T, TError> is a three-case union
-        // (success, error, exception), so Switch takes three actions.
-        result.Switch(
-            config => 
-            {
-                Console.WriteLine("Configuration loaded successfully");
-                ApplyConfiguration(config);
-            },
-            error => 
-            {
-                Console.WriteLine($"Configuration error: {error.Message}");
-                LogError(error);
-            },
-            exception => 
-            {
-                Console.WriteLine($"Unexpected failure: {exception.Message}");
-            });
-    }
-    
-    public void HandleConfigWithPatternMatching(string path)
-    {
-        var result = _configService.LoadConfiguration(path);
-        
-        // Pattern matching with switch expression
-        var status = result switch
+        if (value is null)
+            return Catch<Configuration, ConfigurationError>.Failed(ConfigurationError.MissingTimeout);
+        try
         {
-            { IsSuccess: true } => $"Config loaded: {result.AsT0.AppName}",
-            { IsSuccess: false } when result.AsT1 is FileNotFoundException => "Config file not found",
-            { IsSuccess: false } when result.AsT1 is JsonException => "Invalid config format",
-            { IsSuccess: false } => $"Error: {result.AsT1.Message}",
-            _ => "Unknown state"
-        };
-        
-        Console.WriteLine(status);
+            var seconds = int.Parse(value, NumberStyles.Integer, CultureInfo.InvariantCulture);
+            if (seconds is < 1 or > 300)
+                return Catch<Configuration, ConfigurationError>.Failed(ConfigurationError.InvalidTimeout);
+            return Catch<Configuration, ConfigurationError>.Success(new Configuration(seconds));
+        }
+        catch (FormatException exception)
+        {
+            return Catch<Configuration, ConfigurationError>.Failed(exception);
+        }
     }
+
+    public record Configuration(int TimeoutSeconds);
+    public enum ConfigurationError { MissingTimeout, InvalidTimeout }
 }
 ```
 
-## Key Points
+The `try` / `catch` around `int.Parse` does the actual exception handling. Returning `Failed(exception)` stores the caught exception in the third case. Missing text and an out-of-range integer use the second case, which contains a typed configuration error.
 
-- Use `Catch` to convert exception-based APIs into value-based ones
-- Choose the appropriate variant:
-  - `Catch` - Simple exception capture without return value
-  - `Catch<TResult>` - Capture results or exceptions
-  - `Catch<TResult, TError>` - Custom error representation for specific exception types
-- Use `Match()` for functional composition of potentially failing operations
-- Pattern matching with `switch` expressions enables exception-type-specific handling
-- Access specific exception types with pattern guards (e.g., `when result.AsT1 is FileNotFoundException`)
-- Implicit conversions from `TResult` and `Exception` simplify creation
-- `IsSuccess` indicates whether the operation succeeded
-- `TryGetResult` and `TryGetException` provide safe access to values
-- Particularly useful for wrapping file I/O, network calls, and third-party libraries
-- Enables functional composition of potentially failing operations
+The caller supplies **three** branches to `Match`, in this order: success value, typed error, exception. `Switch` takes three actions in the same order. Checking only `IsSuccess == false` cannot tell you which failure case is active.
+
+Run it:
+
+```bash
+dotnet run
+```
+
+Expected output:
+
+```text
+Timeout: 30
+No exception to rethrow
+Rejected: MissingTimeout
+No exception to rethrow
+Rejected: InvalidTimeout
+No exception to rethrow
+Parser exception: FormatException
+Observed rethrown FormatException
+Smaller forms: True, True
+```
+
+The second `try` / `catch`, in `Main`, demonstrates rethrowing after case handling. `RethrowError()` preserves the captured exception's stack trace. It does nothing for success or a typed error. Despite its name, it does not throw your `ConfigurationError` value.
+
+## Choose a smaller form when there is no domain error
+
+`Catch` represents completion without a value or an exception. Create its cases with `Catch.Success()` and `Catch.Failed(exception)`.
+
+`Catch<TResult>` represents a result value or an exception. Use `Catch<TResult>.Success(value)` and `Catch<TResult>.Failed(exception)`. Both of these forms have two branches in `Match` and `Switch`: success first, exception second. A no-value success branch receives a case marker that you can ignore.
+
+`Catch<TResult, TError>` adds the typed-error case. Its `Failed` factory is overloaded for `TError` and `Exception`, so choose distinct payload types. The generic forms also accept their payloads through implicit conversions; the factories make the case explicit at a boundary.
+
+All three forms expose `IsSuccess`, `TryGetException`, and `RethrowError`. The value-bearing forms add `TryGetResult`; the three-case form adds `TryGetError`. Check the boolean returned by a `TryGet…` call before using its output. Direct `AsT0` / `AsT1` / `AsT2` access throws for an inactive case; in the three-case form, `AsT1` is the typed error and **`AsT2` is the exception**.
+
+## Decide which exceptions cross the boundary
+
+This adapter captures only `FormatException`. For example, text representing a number larger than `Int32.MaxValue` makes `int.Parse` throw `OverflowException`, which escapes this method. `Catch` never intercepts it automatically. If oversized input should be a normal rejection in your application, use `TryParse` as in the Result lesson or deliberately extend the adapter's policy.
+
+The sample has no asynchronous operation or cancellation token. At a real asynchronous boundary, do not turn cancellation into an ordinary configuration failure by adding a blanket `catch (Exception)`. Keep cancellation observable to the caller. Likewise, do not catch programmer errors merely to force every outcome into a union.
+
+You now have three different contracts for the setting: [Option](option.md) for absence, [Result](result.md) for a known rejection, and `Catch` for a deliberately captured exception. Choose at the boundary where your caller can use the distinction.

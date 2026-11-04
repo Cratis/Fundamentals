@@ -1,64 +1,76 @@
 ---
-description: Cratis.Fundamentals is the .NET package for strongly-typed concepts, serialization, dependency injection and type discovery used across Cratis.
+title: C# (.NET)
+description: Use Cratis.Fundamentals on its own for strongly-typed concepts, serialization, dependency injection, type discovery, and explicit optional or failure outcomes.
 ---
-# C# (.NET)
 
-`Cratis.Fundamentals` is the [NuGet package](https://www.nuget.org/packages/Cratis.Fundamentals/) the
-rest of the stack stands on — strongly-typed domain values, robust serialization, convention-based
-dependency injection, and runtime type discovery. You meet it indirectly all the time when you use
-Chronicle or Arc, and you can pull it into any .NET project on its own.
+A method that accepts several strings cannot tell you that you passed a customer identifier where a person's social security number belongs. `Cratis.Fundamentals` gives those values distinct types, along with the serialization and type-conversion support to use them across your application.
 
-The piece you'll reach for first is **concepts**.
+You can use the [NuGet package](https://www.nuget.org/packages/Cratis.Fundamentals/) in an ordinary .NET project. Arc and Chronicle use it too, but neither is required for the examples on this page.
 
 ## Define your first concept
 
-A `Guid` is a `Guid` is a `Guid` — the compiler can't tell you that you passed an `AccountId` where a
-`CustomerId` was expected. Both compile; the bug hides until runtime. Concepts fix that by giving each
-domain value its own type.
+With a .NET 10 SDK, create a console app and add the package:
 
-Say a `Person` is identified by a social security number. Instead of a bare `string`:
-
-```csharp
-public record Person(string SocialSecurityNumber);
+```bash
+dotnet new console --framework net10.0 --name ConceptsDemo
+cd ConceptsDemo
+dotnet add package Cratis.Fundamentals --version 7.32.0
 ```
 
-wrap the value in a concept:
+Replace `Program.cs` with this complete program:
 
 ```csharp
-public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value)
+using System;
+using Cratis.Concepts;
+
+public static class ConceptExample
 {
-    public static implicit operator SocialSecurityNumber(string value) => new(value);
-}
+    public static void Main()
+    {
+        Person person = new(new SocialSecurityNumber("example-only"));
+        Console.WriteLine(person.SocialSecurityNumber.Value);
+    }
 
-public record Person(SocialSecurityNumber SocialSecurityNumber);
+    public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value)
+    {
+        public static implicit operator SocialSecurityNumber(string value) => new(value);
+    }
+
+    public record Person(SocialSecurityNumber SocialSecurityNumber);
+}
 ```
 
-Now your APIs document themselves and the compiler enforces them:
+`Person` now accepts a `SocialSecurityNumber`, so you cannot accidentally pass a different concept with a string underneath it. The implicit conversion is a convenience when you intentionally start from a string. Wrapping the string does not validate its contents; `example-only` is synthetic text, not a real identifier.
 
-```csharp
-public interface IPersons
-{
-    Person GetBy(SocialSecurityNumber socialSecurityNumber);   // can't pass a CustomerId here
-}
+Run the example:
+
+```bash
+dotnet run
 ```
 
-The implicit operator means you still write `SocialSecurityNumber id = "12345678901";` when it's
-convenient — you get type safety *and* ergonomics. And because Fundamentals ships the serializers and
-type converters for `ConceptAs<>`, a concept travels across JSON and HTTP as its plain underlying value,
-not as a `{ "Value": … }` wrapper. (If you're on the Cratis Application Model, that wiring is automatic.)
+Expected output:
 
-That's the whole idea: **never use raw primitives for domain values.** Read the full pattern — sentinels,
-nullability, serialization, and type converters — in [Concepts](./concepts.md).
+```text
+example-only
+```
+
+That first concept needs no service registration. For sentinels, validation considerations, JSON serialization, and type converters, continue with [Concepts](./concepts.md).
+
+## Make absence and rejection explicit
+
+A typed identifier tells you what a value means. A return type can also tell you whether a value exists or why an operation rejected it. The `Cratis.Monads` namespace provides `Option<T>` for presence or absence, `Result<TResult, TError>` for a value or typed error, and `Catch<TResult>` for a value or captured exception.
+
+[Start the monads chapter](./monads/index.md) to follow a text setting through lookup, validation, and a throwing parser. Each lesson runs in a standalone console app with the same package; there is no host, database, or Cratis service to configure.
 
 ## What else is in the box
 
 | Topic | What it gives you |
-| ------- | ----------- |
-| [Concepts](./concepts.md) | The `ConceptAs<>` pattern, serialization, and type converters for strongly-typed values. |
-| [Dependency Injection](./dependency_injection.md) | Convention-based service registration — artifacts are discovered, not hand-wired. |
-| [Types](./types.md) | The type-discovery mechanism that finds your implementations at runtime. |
+| --- | --- |
+| [Concepts](./concepts.md) | Distinct domain value types with `ConceptAs<T>`, plus serialization and type conversion. |
+| [Monads](./monads/index.md) | Explicit absence, typed operation errors, and captured exceptions with Option, Result, and Catch. |
+| [Dependency injection](./dependency_injection.md) | Convention-based service registration. |
+| [Types](./types.md) | Runtime discovery of types and implementations. |
 | [Serialization](./serialization/index.md) | JSON serialization, derived-type handling, and date/time converters. |
 | [Metrics](./metrics/index.md) | A source-generated metrics system for tracking application behavior. |
 
-Concepts and type discovery are exactly what let [Chronicle](/chronicle/) and [Arc](/arc/) find your
-events, commands, and read models by convention — see [Why developers choose Cratis](/why-cratis/) for the bigger picture.
+These building blocks also support artifact discovery in [Chronicle](/chronicle/) and [Arc](/arc/). [Why developers choose Cratis](/why-cratis/) explains how they fit into the wider stack.

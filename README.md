@@ -1,6 +1,6 @@
 # Fundamentals
 
-The shared building blocks beneath the Cratis stack — concepts, serialization, dependency injection, and type discovery for .NET and TypeScript.
+The shared building blocks beneath the Cratis stack — concepts, serialization, dependency injection, and type discovery for .NET and TypeScript, with typed concepts and codecs for Go.
 
 ## Packages
 
@@ -24,7 +24,57 @@ You should look at it as a convenience layer on top of the existing base environ
 
 Fundamentals underpins the rest of the Cratis stack: [Chronicle](https://github.com/Cratis/Chronicle) (the event-sourcing database and runtime), [Arc](https://github.com/Cratis/Arc) (the CQRS application framework for ASP.NET Core), and [Components](https://github.com/Cratis/Components) (the React component library) all build on it — and you can use it on its own.
 
-Read more about how to use it in the [Fundamentals documentation](https://www.cratis.io/fundamentals/).
+## Start with your platform
+
+* **[C# / .NET](https://www.cratis.io/fundamentals/csharp/)**: give domain values distinct types with `ConceptAs<T>`, discover services by convention, or represent absence and failure explicitly.
+* **[TypeScript](https://www.cratis.io/fundamentals/typescript/)**: use GUIDs, serialization, property-path helpers, and decorators.
+* **[Go](https://www.cratis.io/fundamentals/go/)**: use typed concepts and scalar codecs, correlation, naming, and optional dependency injection.
+
+The APIs differ by platform; a feature in the .NET package is not a promise of a TypeScript or Go equivalent. You can use Fundamentals without Arc or Chronicle.
+
+### Try the .NET package on its own
+
+With a .NET 10 SDK, create a console project and install the package:
+
+```bash
+dotnet new console --framework net10.0 --name FundamentalsDemo
+cd FundamentalsDemo
+dotnet add package Cratis.Fundamentals --version 7.32.0
+```
+
+Replace `Program.cs` with this complete example:
+
+```csharp
+using System;
+using Cratis.Monads;
+
+public static class QuickStart
+{
+    public static void Main()
+    {
+        Option<string> timeout = "30";
+        Console.WriteLine(timeout.Match(
+            value => $"Configured: {value}",
+            _ => "Use the default timeout"));
+    }
+}
+```
+
+`Option<string>` represents either text or an explicit absence. `Match` handles both cases and returns the selected message. Run it:
+
+```bash
+dotnet run
+```
+
+Expected output:
+
+```text
+Configured: 30
+```
+
+Continue with the [Option, Result, and Catch chapter](https://www.cratis.io/fundamentals/csharp/monads/) to look up an absent setting, reject invalid input with a typed error, and adapt a throwing parser. These APIs live in `Cratis.Monads` in the core package; they need no host or running service.
+
+Browse the [Fundamentals documentation](https://www.cratis.io/fundamentals/) for the other building blocks.
 
 ## Support
 
@@ -38,7 +88,7 @@ Cratis is an open community, and we are glad to help users, teams evaluating the
 
 ## Contributing
 
-If you want to jump into building this repository and possibly contributing, please refer to [contributing](./Documentation/contributing/index.md).
+If you want to jump into building this repository and possibly contributing, please refer to [contributing](https://www.cratis.io/contributing/contributing/).
 
 ### Prerequisites
 
