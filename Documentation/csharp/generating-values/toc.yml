@@ -10,6 +10,8 @@
   href: patterns.md
 - name: Secrets and tokens
   href: secrets-and-tokens.md
+- name: SHA-256 digests
+  href: sha-256.md
 - name: Testing generated values
   href: testing.md
 - name: Reference

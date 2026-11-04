@@ -36,7 +36,7 @@ dotnet add package Cratis.Observability.SourceGenerators
 
 The source generator analyzes your code at compile time and looks for:
 
-1. **Partial classes** containing partial methods
+1. **Static partial classes** (declared with both `static` and `partial`) containing static partial methods
 2. **Methods decorated** with `[Counter<T>]`, `[Gauge<T>]`, or `[Histogram<T>]` attributes
 3. **Proper method signatures** that follow the required pattern
 
@@ -49,16 +49,16 @@ For each qualifying method, it generates a complete implementation that:
 
 ## Getting Started
 
-### 1. Create a Partial Class
+### 1. Create a Static Partial Class
 
-Create a partial class to contain your metrics methods:
+Create a static partial class to contain your metrics methods. The generator only considers classes declared with both `static` and `partial`; a non-static class is skipped and its methods are not generated:
 
 ```csharp
 using Cratis.Metrics;
 
 namespace MyApplication.Metrics;
 
-public partial class UserMetrics
+public static partial class UserMetrics
 {
     // Metrics methods will be defined here
 }
@@ -69,7 +69,7 @@ public partial class UserMetrics
 Add partial method declarations with the appropriate attributes:
 
 ```csharp
-public partial class UserMetrics
+public static partial class UserMetrics
 {
     [Counter<int>("user_registrations", "Number of user registrations")]
     internal static partial void CountUserRegistration(IMeter<UserService> meter, string source, string country);
@@ -200,7 +200,7 @@ Each instrument is created once per `Meter` instance, so calling the method with
 
 Import `Cratis.Diagnostics` to use `[Tag("…")]` on a span or metric parameter. Untagged metric parameters keep their parameter names; untagged span parameters keep their snake_case names for compatibility. Prefer explicit keys for new instrumentation.
 
-This declaration excerpt requires a partial class and `Cratis.Observability.SourceGenerators`:
+This declaration excerpt requires a static partial class and `Cratis.Observability.SourceGenerators`:
 
 ```csharp
 [Histogram<double>("cratis.my_app.request.duration", "Request duration", "s")]
@@ -269,7 +269,7 @@ static partial void BadGauge(IMeter<Service> meter, string tag);
 When using `IMeterScope<T>`, the generator automatically includes scope tags:
 
 ```csharp
-public partial class OrderMetrics
+public static partial class OrderMetrics
 {
     [Counter<int>("order_steps", "Steps in order processing")]
     internal static partial void CountOrderStep(IMeterScope<OrderService> scope, string step);
@@ -314,7 +314,7 @@ public async Task ProcessOrderAsync(Order order)
 ### Complex Tag Scenarios
 
 ```csharp
-public partial class ApiMetrics
+public static partial class ApiMetrics
 {
     // Multiple tags with different types
     [Counter<long>("api_request_size", "Size of API requests")]
@@ -333,11 +333,11 @@ ApiMetrics.CountRequestSize(_meter, request.ContentLength, "/users", "POST", 201
 
 ### Organizing Metrics
 
-Group related metrics in focused partial classes:
+Group related metrics in focused static partial classes:
 
 ```csharp
 // Authentication metrics
-public partial class AuthMetrics
+public static partial class AuthMetrics
 {
     [Counter<int>("login_attempts", "Login attempts by result")]
     static partial void CountLogin(IMeter<AuthService> meter, string result);
@@ -347,7 +347,7 @@ public partial class AuthMetrics
 }
 
 // Database metrics
-public partial class DatabaseMetrics
+public static partial class DatabaseMetrics
 {
     [Counter<int>("queries", "Database queries executed")]
     static partial void CountQuery(IMeter<DatabaseService> meter, string operation, string table);
@@ -365,7 +365,7 @@ If methods aren't being generated:
 
 1. **Check build output** for any compilation errors
 2. **Verify package reference** includes `Cratis.Observability.SourceGenerators`
-3. **Ensure methods are partial** and in partial classes
+3. **Ensure methods are partial** and in `static partial` classes
 4. **Check method signatures** match the required pattern
 
 ### Metrics Not Appearing
@@ -396,7 +396,7 @@ To see the generated code:
 
 1. **Use descriptive names** for both metrics and method names
 2. **Keep tag cardinality low** to avoid performance issues  
-3. **Group related metrics** in focused partial classes
+3. **Group related metrics** in focused static partial classes
 4. **Use meaningful descriptions** that explain what the metric measures
 5. **Consider scoped metrics** for contextual measurements
 6. **Follow naming conventions** for consistency across your application

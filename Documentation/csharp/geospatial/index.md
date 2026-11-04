@@ -17,7 +17,7 @@ Cratis provides strongly-typed geospatial types for working with geographic coor
 
 - **GeoJSON Compatible** — Standard format for geographic databases and mapping tools
 - **Automatic Serialization** — Handled by the Cratis Application Model
-- **Type Safe** — Compile-time validation through C# records
+- **Type Safe** — Strongly typed C# records
 - **Full-Stack** — Use the same types on C# and TypeScript with automatic round-tripping
 
 See [Understanding Geospatial Types](./understanding.md) for concepts and when to use each type.

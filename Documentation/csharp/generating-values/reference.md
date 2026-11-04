@@ -26,13 +26,14 @@ If a type implements both, callers use the context form. Neither interface dispa
 
 ## GenerateValue
 
-`public static partial class GenerateValue`. Every generation method except `UuidV5` uses a cryptographically secure generator.
-`UuidV5` is deterministic and uses no randomness.
+`public static partial class GenerateValue`. Every generation method except `UuidV5` and `Sha256` uses a cryptographically secure generator.
+`UuidV5` and `Sha256` are deterministic and use no randomness.
 
 | Signature | Output shape | Random bits | Time-ordered | Limits and exceptions |
 | --- | --- | --- | --- | --- |
 | `Guid Uuid()` | RFC 9562 version 4, RFC variant | 122 | No | None |
 | `Guid UuidV5(Guid @namespace, string name)` | RFC 9562 version 5 (SHA-1 of namespace bytes in network order + UTF-8 name), RFC variant | 0 (deterministic) | No | `ArgumentNullException`, `InvalidUuidV5Name` |
+| `string Sha256(string value)` | SHA-256 of UTF-8 text without BOM insertion, normalization or case folding; 64 lowercase hex characters | 0 (deterministic) | No | `ArgumentNullException`, `InvalidSha256Input` |
 | `Guid UuidV7()` | RFC 9562 version 7 using the current UTC time | 74 | Yes | None |
 | `Guid UuidV7(GenerationContext context)` | Version 7 using `context.Now` | 74 | Yes | `MissingGenerationTime`, `GenerationTimeBeforeUnixEpoch` |
 | `string Ulid()` | 26 uppercase Crockford base32 characters; first character `0` to `7` | 80 | Yes | None |
@@ -76,6 +77,9 @@ Argument limits:
 
 An undefined enum value throws `UnknownValueEncoding`.
 
+`Sha256` preserves a literal leading U+FEFF. It adds no entropy and is not encryption or password hashing.
+See [SHA-256 digests](sha-256.md) for the text contract and security boundaries.
+
 ## Checksum
 
 | Member | Value | Suffix |
@@ -95,6 +99,7 @@ An empty digit payload counts as zero. Check digits add no entropy. Pattern reje
 | `MissingGenerationTime` | A context overload receives a `default` `Now` |
 | `GenerationTimeBeforeUnixEpoch` | A UUID v7, ULID or TypeID context overload receives a `Now` before the Unix epoch |
 | `InvalidUuidV5Name` | The UUID v5 name contains an unpaired surrogate |
+| `InvalidSha256Input` | The SHA-256 input contains an unpaired surrogate |
 | `InvalidTypeIdPrefix` | The TypeID prefix is null or breaks the prefix rule |
 | `InvalidNanoIdSize` | The size is outside 1 to 256 |
 | `InvalidNanoIdAlphabet` | The alphabet is outside 2 to 256 characters, not distinct, or not printable ASCII |
@@ -105,7 +110,7 @@ An empty digit payload counts as zero. Check digits add no entropy. Pattern reje
 | `EmptyPatternSupport` | No pattern payload has an emittable check digit for the substituted date |
 | `InvalidIntegerRange` | The minimum exceeds the maximum |
 | `UnknownChecksum` | The algorithm is undefined, or None is used for validation |
-| `ArgumentNullException` | `HasValidChecksum` receives null, or `UuidV5` receives a null name |
+| `ArgumentNullException` | `HasValidChecksum` or `Sha256` receives null, or `UuidV5` receives a null name |
 
 ## Encodings of ULID and TypeID
 

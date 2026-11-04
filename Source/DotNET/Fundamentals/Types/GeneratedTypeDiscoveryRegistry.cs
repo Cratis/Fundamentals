@@ -24,7 +24,13 @@ public static class GeneratedTypeDiscoveryRegistry
     static readonly object _closureWalkGate = new();
 #endif
     static readonly List<ICanProvideAssembliesForDiscovery> _providers = [];
-    static readonly HashSet<Assembly> _assembliesProcessedByClosureWalk = [];
+
+    /// <summary>
+    /// The assemblies a completed walk processed, held by weak keys: an assembly in a collectible AssemblyLoadContext
+    /// must stay collectible once a walk has processed it, and its entry goes away with it. The value refers back to nothing.
+    /// </summary>
+    static readonly ConditionalWeakTable<Assembly, object> _assembliesProcessedByClosureWalk = [];
+    static readonly object _processed = new();
 
     /// <summary>
     /// Gets the currently registered providers.
@@ -123,7 +129,7 @@ public static class GeneratedTypeDiscoveryRegistry
         lock (_closureWalkGate)
         {
             var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            if (Array.TrueForAll(loadedAssemblies, _assembliesProcessedByClosureWalk.Contains))
+            if (Array.TrueForAll(loadedAssemblies, IsProcessed))
             {
                 return;
             }
@@ -209,13 +215,13 @@ public static class GeneratedTypeDiscoveryRegistry
 
             // Dynamic assemblies are marked as processed too - they have no module constructor to run,
             // and leaving them out would make the gate walk again on every call for as long as one is loaded.
-            _assembliesProcessedByClosureWalk.Add(assembly);
+            _assembliesProcessedByClosureWalk.AddOrUpdate(assembly, _processed);
         }
 
         void Reach(Assembly assembly)
         {
             // A processed assembly's closure was walked when it was processed; walking it again finds nothing.
-            if (_assembliesProcessedByClosureWalk.Contains(assembly) || !reached.Add(assembly))
+            if (IsProcessed(assembly) || !reached.Add(assembly))
             {
                 return;
             }
@@ -265,4 +271,6 @@ public static class GeneratedTypeDiscoveryRegistry
             return null;
         }
     }
+
+    static bool IsProcessed(Assembly assembly) => _assembliesProcessedByClosureWalk.TryGetValue(assembly, out _);
 }

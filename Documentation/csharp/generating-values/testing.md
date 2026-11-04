@@ -9,6 +9,7 @@ Production randomness stays secure, and the spec stays repeatable.
 ## Pin by value
 
 A `UuidV5` value needs no pinning: a spec can assert the exact expected value for a fixed namespace and name.
+Likewise, `Sha256` is deterministic: assert the exact digest for fixed text. See [SHA-256 digests](sha-256.md).
 
 Construct the concept from a known value and pass it to the behavior under test. A concept is a record, so equality compares the wrapped value:
 
@@ -58,11 +59,10 @@ var second = OrderId.New(context);
 
 first.Value[6..16].ShouldEqual("01j0dy9j4n");
 second.Value[6..16].ShouldEqual(first.Value[6..16]);
-(first == second).ShouldBeFalse();
 ```
 
 For that `received` value, the characters at positions 6 to 15 of an `order_` TypeID are always `01j0dy9j4n`. The first assertion pins that part,
-the second shows two ids from one context share it, and the third shows the random remainder still makes them different.
+and the second shows two ids from one context share it. The remainder is random, so do not assert that two ids differ: random generation does not guarantee uniqueness.
 This excerpt assumes the `OrderId` from the [tutorial](tutorial.md#step-5-an-order-id-that-follows-the-operation) and `Because`-style spec setup.
 
 Do not build `new GenerationContext()` in a spec: its `Now` is `default` and the generation throws `MissingGenerationTime`.
@@ -80,7 +80,6 @@ When a value is generated deep inside the code under test, assert what is guaran
 | Check digits | `GenerateValue.HasValidChecksum(value, Checksum.Luhn)` is true for a Luhn-generated value |
 | Integer | The returned `long` is between both inclusive bounds |
 | Time | The embedded time falls between a `before` and an `after` you capture around the call |
-| Distinctness | Two calls return different values (not a statistical test) |
 
 Do not assert an exact random value, and do not generate ten thousand ids to prove uniqueness.
 For [patterns with dates](patterns.md), pin the `GenerationContext` and assert only the date and shape, not the random payload.

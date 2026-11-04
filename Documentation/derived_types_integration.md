@@ -50,7 +50,7 @@ export class CreditCard implements IPaymentMethod {
 }
 ```
 
-> **Uniqueness Requirement**: Derived type IDs must be unique per interface. Use descriptive strings (e.g., `'credit-card'`, `'paypal'`) for readability, or GUIDs for maximum uniqueness (though with reduced readability). Whatever format you choose, ensure these identifiers are **centralized in shared constants** to maintain consistency across both backend and frontend.
+> **Uniqueness Requirement**: Derived type IDs must be unique across all attributed types the backend registry discovers (the `ITypes` universe the `DerivedTypes` registry is built from), not only per interface; the registry rejects duplicates. Use descriptive strings (e.g., `'credit-card'`, `'paypal'`) for readability, or GUIDs for maximum uniqueness (though with reduced readability). Whatever format you choose, ensure these identifiers are **centralized in shared constants** to maintain consistency across both backend and frontend.
 
 ### JSON Wire Format
 
@@ -216,16 +216,20 @@ class PaymentService {
     }
 
     async getAvailablePaymentMethods(): Promise<IPaymentMethod[]> {
+        // The API returns a bare array. Wrap it locally in a model whose field declares
+        // the candidate derivatives, so the serializer knows which types to create.
         const response = await fetch('/api/payment/methods');
-        const json = await response.text();
+        const methods = await response.json();
 
-        // Each item will be properly typed as CreditCard or PayPal
-        return JsonSerializer.deserializeArray(Object, json)
-            .map(item => {
-                // The JsonSerializer will have already created the correct instances
-                return item as IPaymentMethod;
-            });
+        // Each item is created as CreditCard or PayPal
+        return JsonSerializer.deserializeFromInstance(PaymentMethodList, { methods }).methods;
     }
+}
+
+// Wrapper model that declares the polymorphic array and its candidate derivatives
+class PaymentMethodList {
+    @field(Object, true, [CreditCard, PayPal])
+    methods!: IPaymentMethod[];
 }
 
 // Usage in component
@@ -291,25 +295,42 @@ sequenceDiagram
 
 ### Backend Configuration
 
+`DerivedTypeJsonConverterFactory` has no parameterless constructor; it requires an `IDerivedTypes` registry.
+
 ```csharp
 // In Program.cs or Startup.cs
+using Cratis.Serialization;
+
+// Explicit registration: use the shared registry
 services.Configure<JsonSerializerOptions>(options =>
 {
-    options.Converters.Add(new DerivedTypeJsonConverterFactory());
+    options.Converters.Add(new DerivedTypeJsonConverterFactory(DerivedTypes.Instance));
     options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase; // Match frontend
 });
-
-// The DerivedTypes system is automatically registered as a singleton
-services.AddSingleton<IDerivedTypes, DerivedTypes>();
 ```
+
+If you register services by convention (`AddBindingsByConvention()`), `IDerivedTypes` is bound to `DerivedTypes`, which needs an `ITypes` registration (for example from `AddTypeDiscovery()`). Resolve the registry from the container instead:
+
+```csharp
+using Cratis.Serialization;
+
+services.AddOptions<JsonSerializerOptions>()
+    .Configure<IDerivedTypes>((options, derivedTypes) =>
+    {
+        options.Converters.Add(new DerivedTypeJsonConverterFactory(derivedTypes));
+        options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase; // Match frontend
+    });
+```
+
+Derived type serialization honours `[JsonIgnore]` and `JsonIgnoreCondition` (including `options.DefaultIgnoreCondition`) like regular System.Text.Json serialization.
 
 ### Frontend Configuration
 
-```typescript
-// Ensure reflect-metadata is imported early
-import 'reflect-metadata';
+The decorators import their own bundled reflection support, which supplies the metadata APIs when they are missing. An external `import 'reflect-metadata';` is therefore optional for these examples and is not a Fundamentals prerequisite. If you already use that package, import it before your decorated classes.
 
-// Configure TypeScript
+The flags below are the legacy-decorator configuration this repository uses; they are not requirements for every consumer project:
+
+```json
 // tsconfig.json
 {
   "compilerOptions": {
@@ -426,12 +447,13 @@ try {
     return result;
 } catch (error) {
     console.error('Failed to deserialize payment result:', error);
-    // Handle unknown types or malformed data
+    // Handle actual failures. An unknown _derivedTypeId alone does not throw: the field's
+    // declared type is used and the identifier is kept on the resulting object.
     return null;
 }
 ```
 
-**Backend**:
+**Backend** (illustrative; an unknown identifier is reported by the registry with `MissingDerivedTypeForTargetType`, a direct `Exception` subtype, so which catch handles it depends on how the exception propagates):
 
 ```csharp
 try
@@ -489,7 +511,7 @@ describe('Payment integration', () => {
 ### 3. Missing Derivatives Lists
 
 **Problem**: Frontend field decorators missing derivatives parameter.
-**Solution**: Always specify derivatives for polymorphic fields.
+**Solution**: Specify derivatives for polymorphic fields typed as an interface or `Object`, which have no registered class family. A field typed with a base class whose derived classes are registered through `@derivedType` (and whose modules have been loaded) can omit a redundant list.
 
 ### 4. Case Sensitivity
 
@@ -498,8 +520,8 @@ describe('Payment integration', () => {
 
 ### 5. Missing Field Decorators
 
-**Problem**: TypeScript properties without `@field` decorators aren't serialized.
-**Solution**: Decorate all serializable properties.
+**Problem**: TypeScript properties without `@field` decorators are not reconstructed as typed values when deserializing. Serialization writes an object's own property names whether or not they are decorated; `@field` metadata drives typed field reconstruction, with the converter and concept special cases applied.
+**Solution**: Decorate all properties that must deserialize to typed values.
 
 ### 6. Type Registration Order
 

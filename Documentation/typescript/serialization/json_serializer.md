@@ -26,7 +26,7 @@ import { JsonSerializer } from '@cratis/fundamentals';
 
 // Traditional approach - loses type information
 const json = `{"name":"John","age":30}`;
-const user = JSON.parse(json); // Plain object, not a User
+const plainUser = JSON.parse(json); // Plain object, not a User
 
 // With JsonSerializer - maintains type information
 const user = JsonSerializer.deserialize(User, json); // Real User instance
@@ -266,13 +266,22 @@ const users = JsonSerializer.deserializeArray(User, JSON.stringify(usersJson));
 const paymentJson = `{"method":{"amount":99.99,"_derivedTypeId":"..."}}`;
 const payment = JsonSerializer.deserialize(Payment, paymentJson);
 
-// Array of polymorphic types
-const methodsJson = `[
+// Array of polymorphic types: declare the array as a field of a model.
+// deserializeArray needs a runtime constructor, and an interface such as
+// IPaymentMethod is erased at runtime, so it cannot be passed.
+class PaymentMethods {
+    @field(Object, true, [CreditCard, PayPal])
+    methods!: IPaymentMethod[];
+}
+
+const methodsJson = `{"methods":[
   {"amount":50,"_derivedTypeId":"credit-card"},
   {"amount":40,"_derivedTypeId":"paypal"}
-]`;
-const methods = JsonSerializer.deserializeArray(IPaymentMethod, methodsJson);
+]}`;
+const { methods } = JsonSerializer.deserialize(PaymentMethods, methodsJson);
 ```
+
+See [Derived Types](./derived_types.md) for the field-based pattern.
 
 ## Custom converters
 
