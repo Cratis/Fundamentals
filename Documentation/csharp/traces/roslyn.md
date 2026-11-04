@@ -3,7 +3,7 @@ description: Generate trace span implementations from partial methods marked wit
 ---
 # Trace Source Generation
 
-The `Cratis.Observability.SourceGenerators` package can generate trace span implementations from partial methods decorated with `[Span]`. This keeps raw `ActivitySource` usage out of your business code and applies a consistent convention for span creation and tagging.
+Use this reference when you choose `Cratis.Observability.SourceGenerators` to implement partial methods decorated with `[Span]`, keeping raw `ActivitySource` usage out of business code. For the connected declaration, service-call and scope-lifetime example, start with the [tracing overview](index.md). The sections below cover the generation contract and its diagnostics.
 
 ## Table of Contents
 
@@ -50,7 +50,7 @@ For each matching method, the generator:
 
 ## Getting Started
 
-Declare your spans in a partial class. Prefer extension methods so call sites stay close to the injected activity source:
+These declaration and call-site excerpts show the extension-method shape used in the tracing overview. They assume its service registration, injected activity source and source subscription; they are not a separate host setup:
 
 ```csharp
 using Cratis.Traces;
@@ -73,7 +73,7 @@ public static partial class OrderTraces
 }
 ```
 
-Use the generated methods like this:
+At the call site, keep both scopes alive together so validation can run beneath processing when activities are created. Disposal ends each scope; see the overview for the complete service method:
 
 ```csharp
 using var processScope = _activitySource.ProcessOrder(order.Id, order.CustomerId);
