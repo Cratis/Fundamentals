@@ -60,8 +60,7 @@ var json = "{ \"RegisteredDate\": \"2022-08-19\", \"RegisteredTime\": \"13:37:00
 var account = JsonSerializer.Deserialize<Account>(json, options);
 ```
 
-> Note: If you're using the Cratis Application Model, you do not have to configure this. It is automatically configured for the ASP.NET pipelines
-> and other parts that needs it, such as the Cratis Kernel transports.
+> Note: Cratis Arc includes these converters in its default JSON options and copies them to MVC controller JSON options when controller support is enabled. Cratis Chronicle registers them for the Kernel's Microsoft Orleans JSON serialization. For separately configured `JsonSerializerOptions`, add the converters as shown above.
 
 ## Type Converters
 
@@ -86,4 +85,4 @@ using Cratis.Conversion;
 TypeConverters.Register();
 ```
 
-> Note: If you're using the Cratis Application Model, you do not have to manually set this up. It is automatically configured at startup.
+> Note: Cratis Arc calls `TypeConverters.Register()` when its core services are added, so you do not need to repeat that registration.

@@ -9,7 +9,7 @@ Choose which options your serializer uses before copying a shape example: the gl
 
 ## Automatic Registration
 
-The geospatial converters are registered in `Cratis.Json.Globals.JsonSerializerOptions`, so any code that uses these options gets them. The Cratis Application Model uses these options; a serializer configured separately must register the converters itself (see Manual Converter Configuration below):
+The geospatial converters are registered in `Cratis.Json.Globals.JsonSerializerOptions`, so any code that uses these options gets them. Cratis Arc also registers these converters in its own default JSON options; a serializer configured separately must register the converters itself (see Manual Converter Configuration below):
 
 ```csharp
 using System.Text.Json;
