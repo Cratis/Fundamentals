@@ -2,8 +2,6 @@
 title: Cratis Fundamentals geospatial types — choosing a shape
 description: Use Point for a location, LineString for a connected path and Polygon for a bounded area in .NET. Learn coordinate order and GeoJSON representation.
 ---
-# Understanding Geospatial Types
-
 Use `Point` for a single location, `LineString` for a connected path and `Polygon` for an area with a boundary. In Cratis Fundamentals, these geospatial types let a model distinguish a delivery vehicle's current position from its route and the delivery zone it serves.
 
 ## Point

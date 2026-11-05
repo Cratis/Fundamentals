@@ -2,8 +2,6 @@
 title: Cratis Fundamentals tracing in .NET
 description: Cratis Fundamentals adds typed .NET tracing sources and disposable span scopes. Register a source and generate span methods to instrument your services.
 ---
-# Traces
-
 Cratis Fundamentals tracing lets you mark operations in a .NET service as spans: timed units of work that can form a trace of a request. Use `IActivitySource<T>` to create them and `IActivityScope<T>` to stop them when the work ends. The examples below instrument order processing and validation with generated span methods.
 
 ## Table of Contents

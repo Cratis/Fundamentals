@@ -2,8 +2,6 @@
 title: Cratis Fundamentals geospatial types in .NET
 description: Cratis Fundamentals provides Point, LineString and Polygon records for .NET. Choose a shape for a location, route or area and serialize it as GeoJSON.
 ---
-# Geospatial Types
-
 Cratis Fundamentals provides C# geospatial records for representing a location, a connected path or a bounded area. Choose `Point`, `LineString` or `Polygon` according to what your application needs to describe. Their JSON converters use [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/), a JSON format for geographic shapes.
 
 ## Types

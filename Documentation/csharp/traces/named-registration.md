@@ -2,8 +2,6 @@
 title: Cratis Fundamentals named activity source registration
 description: Register named activity sources in Cratis Fundamentals so typed .NET services share a tracing scope. Resolve each source with a dependency-injection key.
 ---
-# Named activity source registration
-
 Named activity source registration lets several .NET services report spans under the same source name, instead of a name derived from each service type. Cratis Fundamentals uses keyed dependency injection, where a name selects the service to inject. Register separate names when you need separate tracing scopes.
 
 ## Register a named activity source

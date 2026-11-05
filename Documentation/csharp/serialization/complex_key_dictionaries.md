@@ -2,8 +2,6 @@
 title: Complex key dictionaries in Cratis Fundamentals
 description: Cratis Fundamentals serializes .NET dictionaries with complex object keys as JSON property names and reconstructs typed keys when reading.
 ---
-# Complex Key Dictionaries
-
 The default JSON object model uses string property names. This means dictionaries with complex object keys need a custom conversion strategy to preserve typed keys across serialization boundaries.
 
 ## Overview
