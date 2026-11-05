@@ -1,5 +1,5 @@
 ---
-description: Register several named meters in one .NET application and resolve each explicitly through keyed services.
+description: Register named meters and instrumentation scope versions in a .NET application, then resolve each meter explicitly through keyed dependency injection.
 ---
 # Named meter registration
 

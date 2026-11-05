@@ -1,6 +1,6 @@
 ---
 title: Patterns and checksums
-description: Generate readable reference formats with UTC dates, exact uniform sampling and optional check digits.
+description: Generate readable C# reference codes with GenerateValue.Pattern, combining literals, UTC dates, uniform random sampling and optional check digits.
 ---
 
 A reference read over the phone needs a recognizable format, not a UUID. `Pattern` keeps the literal text, alphabet,

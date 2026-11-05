@@ -1,5 +1,5 @@
 ---
-description: Use the PropertyAccessor type to pass strongly-typed property-selection callbacks in TypeScript.
+description: Use Cratis PropertyAccessor callbacks to select TypeScript object properties with input type checking, member completion and refactoring support.
 ---
 # PropertyAccessor
 

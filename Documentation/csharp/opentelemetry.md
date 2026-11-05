@@ -1,6 +1,6 @@
 ---
 title: Set up OpenTelemetry
-description: Capture Cratis traces, metrics, and scoped logs with one setup call and standard OTEL configuration.
+description: Configure Cratis.OpenTelemetry in a .NET host to capture traces, metrics and scoped logs, set resource identity and control metric cardinality.
 ---
 
 Use `Cratis.OpenTelemetry` in your host to capture all `Cratis.*` activity sources and meters, including Arc and the Chronicle client. You do not need to maintain a list of product scopes. The package is separate from `Cratis.Fundamentals`; instrumentation libraries do not need to depend on the hosting SDK or exporter.
