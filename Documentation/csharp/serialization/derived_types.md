@@ -62,11 +62,25 @@ public class PayPal : IPaymentMethod
 
 ### 3. Configure JSON Serialization
 
+`DerivedTypeJsonConverterFactory` has no parameterless constructor: it needs the `IDerivedTypes` registry that knows your `[DerivedType]` types. Pass the shared `DerivedTypes.Instance` for explicit registration:
+
 ```csharp
+using Cratis.Serialization;
+
 services.Configure<JsonSerializerOptions>(options =>
 {
-    options.Converters.Add(new DerivedTypeJsonConverterFactory());
+    options.Converters.Add(new DerivedTypeJsonConverterFactory(DerivedTypes.Instance));
 });
+```
+
+If you register services by convention (`AddBindingsByConvention()`), `IDerivedTypes` is bound to `DerivedTypes`, which needs an `ITypes` registration (for example from `AddTypeDiscovery()`). In that case resolve the registry from the container instead of using the static instance:
+
+```csharp
+using Cratis.Serialization;
+
+services.AddOptions<JsonSerializerOptions>()
+    .Configure<IDerivedTypes>((options, derivedTypes) =>
+        options.Converters.Add(new DerivedTypeJsonConverterFactory(derivedTypes)));
 ```
 
 ### 4. Use in Your Models
@@ -98,7 +112,7 @@ When serialized, derived types include a special `_derivedTypeId` property:
 
 ## Uniqueness Requirements
 
-Derived type IDs must be **unique per interface** to enable proper polymorphic deserialization. The identifier is an arbitrary string — use whatever format makes sense for your domain:
+Derived type IDs must be **unique across all attributed types discovered by the registry** (the `ITypes` universe it is built from), not only per interface, to enable proper polymorphic deserialization. The `DerivedTypes` constructor rejects duplicate identifiers across that whole set. Uniqueness across separate applications is not checked. The identifier is an arbitrary string — use whatever format makes sense for your domain:
 
 ```csharp
 [DerivedType("credit-card")]

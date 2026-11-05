@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 namespace Cratis.Concepts;
 
 /// <summary>
-/// Generates values using cryptographically secure randomness, and derives name-based UUIDs deterministically.
+/// Generates values using cryptographically secure randomness, and derives name-based UUIDs and SHA-256 digests deterministically.
 /// </summary>
 public static partial class GenerateValue
 {

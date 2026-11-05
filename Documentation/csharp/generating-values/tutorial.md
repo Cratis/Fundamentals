@@ -208,7 +208,7 @@ order_01j0e1qdrnfvm9xabkp66m09gw
 ```
 
 The first ten characters after `order_` encode the time. The first two ids share them because they share one `Now`; the third differs.
-The remaining characters are random, so the two ids are still different. The built-in strategies read `Now` only, never `Tenant`; a concept can
+The remaining characters are random, so the two ids usually differ, but random generation does not guarantee uniqueness. The built-in strategies read `Now` only, never `Tenant`; a concept can
 use the tenant itself, as [Context-dependent values](context.md) shows.
 
 ## Step 6: create values from generic code
@@ -271,11 +271,10 @@ public class when_creating_two_orders_at_a_known_time : Specification
     [Fact] void should_use_the_order_prefix() => _first.Value.StartsWith("order_").ShouldBeTrue();
     [Fact] void should_encode_the_received_time() => _first.Value[6..16].ShouldEqual("01j0dy9j4n");
     [Fact] void should_share_the_time_between_orders() => _second.Value[6..16].ShouldEqual(_first.Value[6..16]);
-    [Fact] void should_still_create_distinct_ids() => (_first == _second).ShouldBeFalse();
 }
 ```
 
-Run `dotnet test Shop.Specs`. All four pass on every run: the spec asserts the parts you control and does not assert the random part.
+Run `dotnet test Shop.Specs`. The spec asserts only the parts you control (the prefix and the time part) and does not assert the random part. The exact timestamp literal and your test setup were not verified here.
 
 ## What you built
 

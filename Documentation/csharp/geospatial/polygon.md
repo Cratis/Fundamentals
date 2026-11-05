@@ -71,12 +71,6 @@ Polygons work as properties in domain models:
 ```csharp
 using Cratis.Geospatial;
 
-public record Zone(
-    string Name,
-    string Type,
-    Polygon Boundary
-);
-
 var parkingLot = new Zone(
     "Main Parking",
     "Parking",
@@ -91,6 +85,12 @@ var parkingLot = new Zone(
         ]),
         []
     )
+);
+
+public record Zone(
+    string Name,
+    string Type,
+    Polygon Boundary
 );
 ```
 

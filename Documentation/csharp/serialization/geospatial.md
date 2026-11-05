@@ -7,14 +7,14 @@ Geospatial types (Point, LineString, Polygon) serialize to [GeoJSON](https://www
 
 ## Automatic Registration
 
-When you use the Cratis Application Model, all geospatial converters are automatically registered in the global `JsonSerializerOptions`:
+The geospatial converters are registered in `Cratis.Json.Globals.JsonSerializerOptions`, so any code that uses these options gets them. The Cratis Application Model uses these options; a serializer configured separately must register the converters itself (see Manual Converter Configuration below):
 
 ```csharp
 using System.Text.Json;
 using Cratis.Geospatial;
 using Cratis.Json;
 
-// Converters already registered — use directly
+// Converters already registered in the global options — use directly
 var point = new Point(10.5, 20.3);
 var json = JsonSerializer.Serialize(point, Globals.JsonSerializerOptions);
 ```
@@ -31,10 +31,10 @@ var json = JsonSerializer.Serialize(point, Globals.JsonSerializerOptions);
 var deserialized = JsonSerializer.Deserialize<Point>(json, Globals.JsonSerializerOptions);
 ```
 
-**Validation:**
+**Required format and implemented checks:**
 
-- `type` must be "Point"
-- `coordinates` must be an array with exactly two numbers [longitude, latitude]
+- `type` must be "Point" (checked)
+- `coordinates` must be an array of two numbers [longitude, latitude]. The reader collects Number tokens and requires exactly two of them; other token kinds inside the array are skipped, not rejected
 
 ## LineString Serialization
 
@@ -53,11 +53,11 @@ var json = JsonSerializer.Serialize(lineString, Globals.JsonSerializerOptions);
 var deserialized = JsonSerializer.Deserialize<LineString>(json, Globals.JsonSerializerOptions);
 ```
 
-**Validation:**
+**Required format and implemented checks:**
 
-- `type` must be "LineString"
-- `coordinates` must be an array with at least two coordinate pairs
-- Each pair must be an array of two numbers [longitude, latitude]
+- `type` must be "LineString" (checked)
+- `coordinates` must be an array with at least two coordinate pairs (the point count is checked)
+- Each pair must be an array of two numbers [longitude, latitude]. The reader processes each nested array, collects its Number tokens and requires exactly two; it skips other token kinds, including non-array items in the enclosing array, rather than rejecting every malformed shape
 
 ## Polygon Serialization
 
@@ -93,19 +93,17 @@ With holes:
 }
 ```
 
+**Required format and implemented checks:**
 
-
-**Validation:**
-
-- `type` must be "Polygon"
-- `coordinates` must be an array with at least one ring (the shell)
-- Each ring must have at least 4 coordinate pairs
-- The first and last coordinate of each ring must be the same (closed ring)
-- Each coordinate must be an array of two numbers [longitude, latitude]
+- `type` must be "Polygon" (checked)
+- `coordinates` must be an array with at least one ring (the shell) (checked)
+- Each ring must have at least 4 coordinate pairs (checked)
+- The first and last coordinate of each ring must match. Closure is checked as an absolute difference of at most `1e-9` for each coordinate, not exact equality
+- Each coordinate must be an array of two numbers [longitude, latitude]. The reader processes nested arrays, collects Number tokens and requires exactly two; it skips other token kinds, including non-array items in the enclosing loops, rather than rejecting every malformed shape
 
 ## Manual Converter Configuration
 
-If you need to configure converters outside the Application Model:
+If you use your own `JsonSerializerOptions` instead of `Globals.JsonSerializerOptions`:
 
 ```csharp
 using System.Text.Json;
@@ -140,7 +138,7 @@ catch (JsonException ex)
 
 ## Migration from Coordinate
 
-The deprecated `Coordinate` type used a different JSON format. If you have existing data:
+The removed `Coordinate` type used a different JSON format. If you have existing data:
 
 **Old format:**
 
@@ -154,4 +152,4 @@ The deprecated `Coordinate` type used a different JSON format. If you have exist
 {"type": "Point", "coordinates": [10.5, 20.3]}
 ```
 
-Replace all `Coordinate` references with `Point` and update your stored JSON accordingly. TypeScript maintains a deprecated `Coordinate` class for backwards compatibility, but it will be removed in a future version.
+Replace all `Coordinate` references with `Point` and update your stored JSON accordingly.

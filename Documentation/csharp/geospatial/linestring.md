@@ -37,11 +37,6 @@ LineStrings work as properties in domain models:
 ```csharp
 using Cratis.Geospatial;
 
-public record Route(
-    string Name,
-    LineString Path
-);
-
 var trail = new Route(
     "Mountain Trail",
     new LineString(
@@ -50,6 +45,11 @@ var trail = new Route(
         new Point(10.7625, 59.9245), // Waypoint 1
         new Point(10.7728, 59.9351)  // End
     ])
+);
+
+public record Route(
+    string Name,
+    LineString Path
 );
 ```
 

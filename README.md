@@ -94,9 +94,11 @@ If you want to jump into building this repository and possibly contributing, ple
 
 The following are prerequisites to work with this repository.
 
-* [.NET 6+](https://dotnet.microsoft.com/en-us/).
-* [Node 16+](https://nodejs.org/en)
+* [.NET SDK 10.0.100](https://dotnet.microsoft.com/en-us/) or a later feature band, as selected by `global.json` (roll-forward policy `latestFeature`).
+* [Node 23+](https://nodejs.org/en) (`engines.node` is `>=23.0.0` in `package.json`).
 * [Yarn](https://yarnpkg.com)
+
+Consumers of the published libraries are not affected by these contributor requirements; the libraries target net8.0, net9.0, and net10.0.
 
 ### Running .NET specifications
 

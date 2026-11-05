@@ -18,7 +18,7 @@ flowchart LR
     subgraph Concept["The concept declares how"]
         A["IGeneratable&lt;T&gt;<br/>static T New()"]
         B["IGeneratableInContext&lt;T&gt;<br/>static T New(GenerationContext)"]
-        C["GenerateValue<br/>Uuid, UuidV5, UuidV7, Ulid, TypeId, NanoId, Bytes, Pattern, Integer"]
+        C["GenerateValue<br/>Uuid, UuidV5, UuidV7, Ulid, TypeId, NanoId, Bytes, Pattern, Integer, Sha256"]
         A --> C
         B --> C
     end
@@ -36,7 +36,7 @@ flowchart LR
 - **One contract, one call.** A concept implements `IGeneratable<TSelf>` and its `New()` makes one call to `GenerateValue`.
 - **Generic code needs no reflection.** `T.New()` works on any `T : IGeneratable<T>`, and the result is the concept, not a raw `Guid` or `string`.
 - **The caller owns the "when".** Production code generates; a spec supplies a known value or a fixed `GenerationContext`.
-- **Secure by default.** Every random strategy draws from a cryptographically secure random number generator. `UuidV5` is deterministic, not random.
+- **Secure by default.** Every random strategy draws from a cryptographically secure random number generator. `UuidV5` and `Sha256` are deterministic, not random.
 
 ## What you will be able to do
 
@@ -58,6 +58,7 @@ By the end of this section you will:
 | A value must follow the operation's time or tenant | [Context-dependent values](context.md) |
 | A readable reference needs a format, UTC date or check digits | [Patterns and checksums](patterns.md) |
 | You are creating tokens, links, API keys or key material | [Secrets and tokens](secrets-and-tokens.md) |
+| You need a deterministic fingerprint or a high-entropy token verifier | [SHA-256 digests](sha-256.md) |
 | Your specs break because ids are random | [Testing generated values](testing.md) |
 | You need exact signatures, limits and encodings | [Reference](reference.md) |
 
