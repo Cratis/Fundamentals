@@ -3,11 +3,11 @@ description: Represent a calendar date without time or time zone in TypeScript w
 ---
 # DateOnly
 
-`DateOnly` represents a date with no time and no time zone — a day on a calendar. It is the TypeScript counterpart of .NET's `System.DateOnly`.
+An invoice date needs to stay the same calendar day when you display it or send it back to an API. `DateOnly` holds that date without a time or time zone. Parse the date string, use its calendar parts, and convert to a JavaScript `Date` only when another API actually needs an instant.
 
 ## Why not a Date
 
-A JavaScript `Date` is an instant, and a calendar date is not one. Turning `2026-05-12` into a `Date` produces UTC midnight, which every browser-local getter west of UTC reads back as the 11th:
+A JavaScript `Date` is an instant, and a calendar date is not one. Turning `2026-05-12` into a `Date` produces UTC midnight, so reading its local day west of UTC gives the 11th:
 
 ```typescript
 // A birthday, a due date, an invoice date — none of them are instants
@@ -29,7 +29,11 @@ const constructed = DateOnly.from(2026, 5, 12);
 const today = DateOnly.fromDate(new Date());
 ```
 
-`parse()` accepts `yyyy-MM-dd` and throws an `Error` for anything else. `fromDate()` reads the local parts rather than the UTC ones, because the calendar date a moment falls on is a question only a time zone can answer, and the local one is the one the person looking at the screen is in.
+`parse()` requires `yyyy-MM-dd` and checks that the year, month and day form a valid calendar date; an impossible date such as `2026-02-30` throws an `Error`. `from()` simply assigns the supplied parts without those checks, so use it for values you already know are valid.
+
+`year`, `month` and `day` remain writable public fields, not a frozen value. Assigning them directly does not run calendar validation; parse the new date string instead when changing a date.
+
+`fromDate()` reads the host's local year, month and day, not the UTC parts. Choose it when that local calendar date is what you need; the host's zone is not necessarily the zone of the person receiving the result.
 
 ## Available values
 
@@ -58,14 +62,14 @@ console.log(date.toString()); // "2026-05-12"
 
 ## Converting to a Date
 
-Where a `Date` is genuinely wanted — to feed a date picker, or to do arithmetic — `toDate()` constructs one at midnight in the local time zone, so the date read back with `getDate()` is the one you started with.
+If a date picker needs a JavaScript `Date`, `toDate()` passes the calendar parts to its local-time constructor. In the ordinary date below, `getDate()` reads back the 12th. This is not a UTC or arbitrary-time-zone conversion, and JavaScript `Date` normalization rules still apply.
 
 ```typescript
 import { DateOnly } from '@cratis/fundamentals';
 
 const date = DateOnly.parse('2026-05-12');
 const asDate = date.toDate();
-console.log(asDate.getDate()); // 12, in every time zone
+console.log(asDate.getDate()); // 12
 ```
 
 This invents a time that was never sent, which is why it is a method to call rather than what the value is — the choice is visible at the call site making it.
@@ -85,7 +89,7 @@ console.log(first.equals(undefined));                  // false
 
 ## JSON serialization
 
-`DateOnlyJsonConverter` is registered with `JsonSerializer` out of the box, so a field declared as `DateOnly` deserializes from the ISO-8601 string the server sends and serializes back to it.
+For an invoice response, give `@field` the `DateOnly` constructor so `JsonSerializer.deserialize()` rebuilds `issued` as an instance. The built-in `DateOnlyJsonConverter` handles the date string; the `day` access below then reads its calendar part:
 
 ```typescript
 import { DateOnly, field, JsonSerializer } from '@cratis/fundamentals';
@@ -104,7 +108,9 @@ console.log(invoice.issued.day); // 12
 const json = JsonSerializer.serialize(invoice); // {"number":"INV-1","issued":"2026-05-12"}
 ```
 
-Serialization goes through `JsonSerializer`, not through `JSON.stringify` — `DateOnly` has no `toJSON()`, so `JSON.stringify` writes the individual parts instead of the ISO-8601 string.
+You can also send a date directly with native JSON serialization. `DateOnly.toJSON()` returns its date string, so `JSON.stringify({ issued: DateOnly.from(2026, 5, 12) })` produces `{"issued":"2026-05-12"}`, not a component object.
+
+Reading that JSON with `JSON.parse()` leaves `issued` as a string. Use `DateOnly.parse()` to restore a scalar date, or the decorated model above when you need the whole response restored. [JsonSerializer](./serialization/json_serializer.md) explains that model boundary.
 
 ## Related
 

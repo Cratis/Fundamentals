@@ -52,15 +52,23 @@ class Projection {
 
 ## Example
 
+This continuation uses the imports and decorated `AccountKey`, `AccountSummary` and `Projection` declarations above. The payload represents the account key as a JSON property name; deserialization reconstructs the key and summary before the lookup:
+
 ```typescript
 import { JsonSerializer } from '@cratis/fundamentals';
 
+const json = JSON.stringify({
+    accounts: {
+        [JSON.stringify({ tenant: 'tenant-a' })]: { balance: 1200 }
+    }
+});
 const projection = JsonSerializer.deserialize(Projection, json);
 
 const key = new AccountKey();
 key.tenant = 'tenant-a';
 
 const summary = projection.accounts.get(key);
+console.log(summary?.balance); // 1200
 
 projection.accounts.set(key, { balance: 1200 });
 
