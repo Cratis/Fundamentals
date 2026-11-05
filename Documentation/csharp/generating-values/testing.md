@@ -1,28 +1,34 @@
 ---
-title: Testing generated values
-description: Pin generated values by supplying them, fix the clock with a GenerationContext, and assert on shape when you cannot pin.
+title: Cratis Fundamentals deterministic value testing
+description: Make C# specs repeatable by supplying known concepts, fixing generation time, and asserting only the guaranteed shape of random values.
 ---
 
-Use this page when a spec touches a value that is random by design. The approach: put the value in, don't seed the generator.
-Production randomness stays secure, and the spec stays repeatable.
+To test behavior that uses generated values, supply a known concept instead of calling its random generator.
+Cratis Fundamentals does not provide a seed setting for `GenerateValue`. When you test generation itself,
+fix the inputs you control and assert only what the strategy guarantees.
 
 ## Pin by value
 
-A `UuidV5` value needs no pinning: a spec can assert the exact expected value for a fixed namespace and name.
-Likewise, `Sha256` is deterministic: assert the exact digest for fixed text. See [SHA-256 digests](sha-256.md).
-
-Construct the concept from a known value and pass it to the behavior under test. A concept is a record, so equality compares the wrapped value:
+For a behavior test, construct the concept from a known value and pass it to the code under test. This example
+uses the string-backed `CustomerId` from [step 2 of the tutorial](tutorial.md#step-2-a-public-id-that-sorts-by-age).
+As a record, the concept compares its wrapped value for equality:
 
 ```csharp
 var customerId = new CustomerId("cus_01j0dy9j4nej4saxp79mmcqts7");
 ```
 
-There is no seeded `Random`, injectable generator or seed setting, and a spec should not look for one. Frameworks such as Arc let a spec supply
-a generated value by name in place of the real one; use that framework's guidance when you test through it.
+The behavior now receives the same identifier on every run, without changing production generation.
+When you test through Cratis Arc's command pipeline, use its named generated-value pins instead of calling
+`New()` in the spec.
+
+Input-driven strategies need no pin: assert the complete expected `UuidV5` value for a fixed namespace and name,
+or the exact `Sha256` digest for fixed text. [SHA-256 digests](sha-256.md) covers the text and comparison rules.
 
 ## Test that a concept honors the contract
 
-A generic spec proves the concept implements the contract and returns its own type:
+Use a generic call to check that the concept can be created through `IGeneratable<T>`. The compiler checks the
+contract; the assertions check the generated value's length and alphabet. This spec uses `InviteCode` from
+[step 3 of the tutorial](tutorial.md#step-3-a-short-invite-code) and the `Cratis.Specifications.XUnit` package:
 
 ```csharp
 using Cratis.Concepts;
@@ -46,7 +52,10 @@ public class when_creating_an_invite_code_through_the_contract : Specification
 
 ## Pin the clock
 
-For a concept that implements `IGeneratableInContext<TSelf>`, build the context yourself. The time part is then fixed and the random part is not:
+For a concept that implements `IGeneratableInContext<TSelf>`, supply a `GenerationContext` with a fixed instant.
+That fixes the embedded time, not the random part of the identifier. This fragment uses `OrderId` from
+[step 5 of the tutorial](tutorial.md#step-5-an-order-id-that-follows-the-operation). Keep the `using` directives
+at the top of the spec file and place the statements in its `Because` method:
 
 ```csharp
 using Cratis.Concepts;
@@ -61,15 +70,17 @@ first.Value[6..16].ShouldEqual("01j0dy9j4n");
 second.Value[6..16].ShouldEqual(first.Value[6..16]);
 ```
 
-For that `received` value, the characters at positions 6 to 15 of an `order_` TypeID are always `01j0dy9j4n`. The first assertion pins that part,
-and the second shows two ids from one context share it. The remainder is random, so do not assert that two ids differ: random generation does not guarantee uniqueness.
-This excerpt assumes the `OrderId` from the [tutorial](tutorial.md#step-5-an-order-id-that-follows-the-operation) and `Because`-style spec setup.
+For that `received` value, the characters at positions 6 to 15 of an `order_` TypeID are `01j0dy9j4n`.
+The first assertion checks the encoded time; the second checks that both calls use the same time. The remainder
+is random. Do not assert that two identifiers differ, because random generation does not guarantee uniqueness.
 
-Do not build `new GenerationContext()` in a spec: its `Now` is `default` and the generation throws `MissingGenerationTime`.
+Supply the instant explicitly. A default `new GenerationContext()` has a `default` `Now`, so the time-dependent
+generation shown here throws `MissingGenerationTime`.
 
 ## Assert shape when you cannot pin
 
-When a value is generated deep inside the code under test, assert what is guaranteed:
+When you cannot supply a known value, check the properties the strategy guarantees. The same checks are useful
+when testing a concept's `New()` implementation:
 
 | Property | Assertion |
 | --- | --- |
@@ -99,5 +110,5 @@ error.ShouldBeOfExactType<InvalidNanoIdSize>();
 
 ## Next steps
 
-- [Reference](reference.md) lists every exception and its trigger.
-- [Tutorial: generate your first values](tutorial.md) builds the concepts used here.
+Use the [Reference](reference.md) to choose the exception cases your concept should reject.
+The [tutorial](tutorial.md) builds the concepts used here and shows a complete pinned-time spec.

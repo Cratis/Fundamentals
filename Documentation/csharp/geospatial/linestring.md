@@ -1,7 +1,7 @@
 ---
-description: Create and use a .NET LineString, a path of two or more geographic points, for routes, boundaries and trajectories.
+title: LineString paths in Cratis Fundamentals for .NET
+description: Cratis Fundamentals LineString represents an ordered path of two or more geographic points in .NET, with converters for GeoJSON serialization.
 ---
-# LineString
 
 ## What is a LineString?
 

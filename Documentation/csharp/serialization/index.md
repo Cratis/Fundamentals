@@ -3,7 +3,7 @@ description: Find the .NET serialization topics in Cratis.Fundamentals, from JSO
 ---
 # Serialization
 
-This section covers various aspects of serialization in the Fundamentals package, including JSON serialization, type handling, and specific converters for .NET types.
+Start with [JSON Serialization](./serialization.md) to choose the options you will pass to the serializer. Then follow the shape of your model: [derived types](./derived_types.md) for an interface or base-class value, the dictionary and date/time guides below for their converters, or [Geospatial Serialization](./geospatial.md) for geometry payloads.
 
 | Topic | Description |
 | ------- | ----------- |
@@ -11,4 +11,4 @@ This section covers various aspects of serialization in the Fundamentals package
 | [Complex Key Dictionaries](./complex_key_dictionaries.md) | How to serialize and deserialize dictionaries with complex object keys. |
 | [Date & Time Only](./date_and_time_only.md) | How to work with DateOnly & TimeOnly for serializers and converters. |
 
-For information about geospatial type serialization, see [Geospatial Types](../geospatial/index.md).
+For help choosing a geometry type before serializing it, see [Geospatial Types](../geospatial/index.md).

@@ -1,30 +1,30 @@
 ---
-description: See how DerivedTypes in .NET and TypeScript share type identifiers so polymorphic objects serialize across the client-server boundary.
+title: DerivedTypes serialization between .NET and TypeScript
+description: Connect .NET and TypeScript derived-type serialization with matching identifiers so payment-method fields deserialize into concrete classes.
 ---
-# DerivedTypes Integration: Backend and Frontend
+<a id="derivedtypes-integration-backend-and-frontend"></a>
 
-This document explains how the DerivedTypes serialization systems in the .NET backend and TypeScript frontend work together to provide seamless polymorphic serialization across your full-stack application.
+Cratis Fundamentals uses matching derived-type identifiers to reconstruct concrete classes in .NET and TypeScript when a JSON field can hold more than one type. Use this when a payment request declares an `IPaymentMethod`, but the value must arrive as a `CreditCard` or `PayPal` rather than an untyped object.
 
 ## Overview
 
-The DerivedTypes system creates a bridge between strongly-typed C# classes and TypeScript classes, enabling type-safe polymorphic serialization across the client-server boundary. Both systems use identical JSON representations and type identifiers to ensure compatibility.
+Polymorphic serialization means writing and reading values through a shared interface or base class while retaining their concrete type. The JSON carries `_derivedTypeId`, a property that identifies that type. Each side uses its own registration mechanism to turn the identifier back into a class.
+
+Start by configuring the [.NET derived-type converter](csharp/serialization/derived_types.md) in the options your API actually uses. On the frontend, import the decorated models before deserializing and describe polymorphic fields with `@field`. Matching identifiers connect the registrations; they do not replace either side's setup.
 
 ## Shared Concepts
 
 ### Target Type Resolution Across Stacks
 
-- **Backend (.NET):** `[DerivedType]` resolves a primary target from interface inference (or explicit
-    `targetType`) and also auto-registers the derived type for non-system base classes.
-- **Frontend (TypeScript):** `@derivedType` registers identifiers on the concrete type and runtime
-    prototype chain constructors, and `JsonSerializer` resolves candidates from both
-    `field.derivatives` and `DerivedType.getDerivedTypesFor(field.type)`.
+In .NET, `[DerivedType]` marks the concrete class. The registry selects its single non-system interface as the primary target, unless the attribute supplies an explicit `targetType`. It also registers non-system base classes. Here, non-system means a namespace that does not start with `System`. A class still needs a non-system interface; if it implements several, specify the target explicitly.
 
-This means polymorphic fields typed as base classes work end-to-end without requiring explicit target
-type wiring in most cases. Interface-only fields still need explicit runtime candidates.
+In TypeScript, `@derivedType` records the identifier on the concrete class and registers that class against its base classes. The deserializer considers both those runtime registrations and the candidates in `field.derivatives`.
+
+TypeScript interfaces do not exist at runtime. For the `IPaymentMethod` fields below, `@field(Object, false, [CreditCard, PayPal])` supplies the concrete candidates the deserializer needs. A field declared with a base-class constructor can use registered subclasses instead, provided their modules have loaded.
 
 ### Unique Type Identifiers
 
-Both backend and frontend use unique string identifiers that must match exactly:
+Use the same identifier string for a concrete type on both sides. Here, `"credit-card"` connects the C# attribute to the TypeScript decorator; the class names themselves are not the wire contract:
 
 **Backend (.NET)**:
 
@@ -50,11 +50,11 @@ export class CreditCard implements IPaymentMethod {
 }
 ```
 
-> **Uniqueness Requirement**: Derived type IDs must be unique across all attributed types the backend registry discovers (the `ITypes` universe the `DerivedTypes` registry is built from), not only per interface; the registry rejects duplicates. Use descriptive strings (e.g., `'credit-card'`, `'paypal'`) for readability, or GUIDs for maximum uniqueness (though with reduced readability). Whatever format you choose, ensure these identifiers are **centralized in shared constants** to maintain consistency across both backend and frontend.
+The .NET registry rejects duplicate identifiers across all attributed types in its `ITypes` discovery set, not just types implementing the same interface. Choose stable, descriptive values such as `'credit-card'` and `'paypal'`; a GUID string is also valid. Changing an identifier leaves existing payloads referring to the old value. Constants can reduce repeated literals, but you still need to keep their C# and TypeScript values aligned.
 
 ### JSON Wire Format
 
-Both systems produce and consume identical JSON:
+For a payment-method field, both serializers use this JSON shape. The surrounding API model must use the same property names on each side:
 
 ```json
 {
@@ -66,17 +66,17 @@ Both systems produce and consume identical JSON:
 }
 ```
 
-The `_derivedTypeId` property is the key that allows both systems to:
-
-1. **Identify the correct type** during deserialization
-2. **Instantiate the proper class** instead of a generic object
-3. **Maintain type safety** throughout the serialization process
+When reading `paymentMethod`, the .NET converter looks up `"credit-card"` against the declared `IPaymentMethod` target. The TypeScript deserializer looks for it among the field's candidate classes. With both registrations in place, each creates its own `CreditCard` instance. The identifier selects a type; it does not validate the payment data.
 
 ## Full-Stack Example
 
-Let's walk through a complete example showing data flow from backend to frontend and back.
+The following excerpts send a payment request to an API and read its response back into TypeScript classes. The controller relies on the models in step 2; `_paymentService`, its injection, and the payment processing are application code omitted here. C# serialization types come from `Cratis.Serialization` and `System.Text.Json`; TypeScript decorators and serialization helpers come from `@cratis/fundamentals`.
 
 ### 1. Backend API Endpoint
+
+Configure the ASP.NET Core MVC JSON options used by this controller with `DerivedTypeJsonConverterFactory` and camel-case property names before handling requests. The registry passed to the factory must discover `CreditCard` and `PayPal`. Registering a separate `JsonSerializerOptions` instance does not, by itself, configure MVC; see the [.NET serialization setup](csharp/serialization/derived_types.md#3-configure-json-serialization) for the converter and registry choices.
+
+The POST action receives an `IPaymentMethod` and returns it inside `PaymentResult`. The GET action returns a bare array, which the frontend handles separately below.
 
 ```csharp
 [ApiController]
@@ -110,7 +110,9 @@ public class PaymentController : ControllerBase
 
 ### 2. Shared Models
 
-**Backend Models**:
+Keep the request and result shapes aligned across languages. In C#, the declared `IPaymentMethod` properties tell the converter which target to resolve. Both concrete payment classes carry stable identifiers.
+
+Backend models:
 
 ```csharp
 public interface IPaymentMethod
@@ -146,7 +148,7 @@ public class PaymentResult
 }
 ```
 
-**Frontend Models** (mirroring backend):
+Frontend models use the same identifiers and camel-case JSON property names. `@field` supplies runtime type information for deserialization. In particular, the derivatives list on `paymentMethod` lets the deserializer choose between `CreditCard` and `PayPal` even though the property is typed as an interface:
 
 ```typescript
 export interface IPaymentMethod {
@@ -192,6 +194,10 @@ export class PaymentResult {
 ```
 
 ### 3. Frontend Usage
+
+Serialize the `PaymentRequest` wrapper, not just its payment method, when calling the POST endpoint. Read the response text with `JsonSerializer.deserialize(PaymentResult, ...)` so the nested value is reconstructed using the field metadata rather than left as a plain JavaScript object.
+
+The GET endpoint returns an array without a wrapper. `PaymentMethodList` provides a local field with the candidate derivatives; it does not change the API response format.
 
 ```typescript
 class PaymentService {
@@ -252,6 +258,8 @@ if (result.paymentMethod instanceof CreditCard) {
 
 ## Data Flow
 
+These diagrams follow the payment-method value inside the request and response wrappers. The HTTP calls above still send a `PaymentRequest` and receive a `PaymentResult`.
+
 ### 1. Frontend to Backend (Serialization)
 
 ```mermaid
@@ -295,7 +303,7 @@ sequenceDiagram
 
 ### Backend Configuration
 
-`DerivedTypeJsonConverterFactory` has no parameterless constructor; it requires an `IDerivedTypes` registry.
+`DerivedTypeJsonConverterFactory` needs an `IDerivedTypes` registry to resolve identifiers. `Cratis.Json.Globals.JsonSerializerOptions` already includes this factory, so you do not need to add it again. For separately configured options, choose one of the registrations below and pass the resulting options to your serializer calls. For the controller example, apply the converter and naming policy to MVC's JSON options instead.
 
 ```csharp
 // In Program.cs or Startup.cs
@@ -309,7 +317,7 @@ services.Configure<JsonSerializerOptions>(options =>
 });
 ```
 
-If you register services by convention (`AddBindingsByConvention()`), `IDerivedTypes` is bound to `DerivedTypes`, which needs an `ITypes` registration (for example from `AddTypeDiscovery()`). Resolve the registry from the container instead:
+If your application uses convention-based service registration through `AddBindingsByConvention()`, it binds `IDerivedTypes` to `DerivedTypes`. That registry needs an `ITypes` registration, for example from `AddTypeDiscovery()`. Resolve it from the container so the converter uses the same type discovery as your services:
 
 ```csharp
 using Cratis.Serialization;
@@ -322,13 +330,13 @@ services.AddOptions<JsonSerializerOptions>()
     });
 ```
 
-Derived type serialization honours `[JsonIgnore]` and `JsonIgnoreCondition` (including `options.DefaultIgnoreCondition`) like regular System.Text.Json serialization.
+The derived-type converter respects `[JsonIgnore]` and `JsonIgnoreCondition`, including `options.DefaultIgnoreCondition`.
 
 ### Frontend Configuration
 
 The decorators import their own bundled reflection support, which supplies the metadata APIs when they are missing. An external `import 'reflect-metadata';` is therefore optional for these examples and is not a Fundamentals prerequisite. If you already use that package, import it before your decorated classes.
 
-The flags below are the legacy-decorator configuration this repository uses; they are not requirements for every consumer project:
+The flags below show the legacy-decorator configuration used by this repository. Fundamentals also accepts standard decorators, so these flags are not a universal prerequisite. Follow the [field decorator setup](typescript/serialization/field_decorator.md) for the decorator mode your project uses:
 
 ```json
 // tsconfig.json
@@ -344,16 +352,13 @@ The flags below are the legacy-decorator configuration this repository uses; the
 
 ### Prefer Concrete Base Types for Polymorphic Properties
 
-When your domain has a stable base class, prefer using that base class as the property type.
-This gives runtime constructors on both stacks, which simplifies polymorphic resolution and reduces
-manual derivative wiring.
+When the domain already has a stable base class, using its constructor in TypeScript field metadata lets registered subclasses supply the candidates. You can avoid repeating a derivatives list on every field, but the subclass modules must still load before deserialization.
 
-Use interface-typed properties when needed, and then provide explicit derivative candidates in
-frontend field metadata and explicit target type where ambiguity exists.
+There is no need to introduce a base class just for serialization. Interface-shaped models work with explicit frontend candidates, as the payment example shows. In .NET, keep the required non-system interface and specify `targetType` when multiple interfaces make inference ambiguous.
 
 ### 1. Synchronized Type Definitions
 
-Maintain a shared understanding of types:
+Keep the two model definitions aligned as the contract changes. If you generate TypeScript from C#, check that the output retains the identifiers and field metadata needed for this round trip:
 
 ```typescript
 // Consider generating TypeScript models from C# classes
@@ -362,7 +367,7 @@ Maintain a shared understanding of types:
 
 ### 2. Consistent Naming Conventions
 
-Configure JSON serialization to use consistent casing:
+Match the backend's JSON property names to the decorated frontend fields. Apply the naming policy to the options used by the API; a C# property named `CardNumber` must arrive as `cardNumber` for the TypeScript model below:
 
 **Backend**:
 
@@ -380,7 +385,7 @@ cardNumber!: string; // Serializes as "cardNumber"
 
 ### 3. Centralize Type Identifiers (Magic Strings)
 
-Store derived type identifiers in shared constants to ensure consistency and ease maintenance:
+When an identifier appears in several places, use constants to reduce repeated literals within each codebase. Keep the C# and TypeScript values equal. These excerpts show only the identifier declarations and registrations; retain the model members from the full example:
 
 **Backend (C#)**:
 
@@ -415,11 +420,11 @@ export class CreditCard implements IPaymentMethod { }
 export class PayPal implements IPaymentMethod { }
 ```
 
-> **Why centralize?** These "magic strings" are critical for serialization consistency. Centralizing them prevents duplicates across your codebase, makes it easy to maintain and update, and ensures the frontend and backend remain synchronized.
+Constants do not synchronize the files or prevent two classes from using the same identifier. The .NET registry still checks uniqueness, and your contract checks still need to compare the values used on each side.
 
 ### 4. Consistent Naming Conventions
 
-Configure JSON serialization to use consistent casing:
+After setting the policy, inspect a payload to confirm the names match. The same setting from step 2 is shown again here: the observable check is that the JSON contains `cardNumber`, not `CardNumber`.
 
 **Backend**:
 
@@ -437,9 +442,9 @@ cardNumber!: string; // Serializes as "cardNumber"
 
 ### 5. Error Handling
 
-Handle deserialization failures gracefully:
+Handle malformed JSON and conversion failures at the API boundary, but do not treat every unknown identifier as an exception. In TypeScript, an unmatched `_derivedTypeId` falls back to the field's declared type and keeps the identifier on the resulting object. With `Object` as the declared type, that means a plain object rather than a `CreditCard` or `PayPal` instance.
 
-**Frontend**:
+The frontend catch below handles failures that do throw; it does not detect an unresolved derived type:
 
 ```typescript
 try {
@@ -453,7 +458,7 @@ try {
 }
 ```
 
-**Backend** (illustrative; an unknown identifier is reported by the registry with `MissingDerivedTypeForTargetType`, a direct `Exception` subtype, so which catch handles it depends on how the exception propagates):
+The .NET registry reports an unknown identifier with `MissingDerivedTypeForTargetType`, a direct `Exception` subtype rather than a `JsonException`. The illustrative catch below handles JSON failures, not that registry exception directly. Account for how the registry exception propagates through your API's error handling. A missing `_derivedTypeId` is different again: the derived-type converter returns the target type's default value.
 
 ```csharp
 try
@@ -470,7 +475,7 @@ catch (JsonException ex)
 
 ### 6. Testing Integration
 
-Test the complete round-trip:
+Check the concrete class and its fields after a round trip. This test sketch uses an application-owned `simulateBackendProcessing` helper: it accepts the serialized card and must return a serialized `PaymentResult` containing that card. For an API integration test, send the `PaymentRequest` wrapper used by `PaymentService` and exercise the actual backend converter. A simulated response alone does not verify the .NET setup.
 
 ```typescript
 describe('Payment integration', () => {
@@ -500,37 +505,33 @@ describe('Payment integration', () => {
 
 ### 1. Mismatched Type IDs
 
-**Problem**: Frontend and backend have different identifiers for the same type.
-**Solution**: Use shared constants files to centralize derived type IDs (e.g., `DerivedTypeIds.cs` and `derivedTypeIds.ts`).
+If a payment method arrives without its expected concrete class, compare `_derivedTypeId` in the payload with both registrations. A C# constant and a TypeScript constant with the same name can still contain different strings.
 
 ### 2. Duplicate Magic Strings
 
-**Problem**: Type identifiers duplicated across multiple files, making updates error-prone.
-**Solution**: Centralize all derived type IDs in a single shared location and import from there.
+Repeated identifier literals make a contract change easy to miss. Use the constants shown above wherever the identifier is reused, and remember that existing stored or in-flight JSON still carries the old value after a rename.
 
 ### 3. Missing Derivatives Lists
 
-**Problem**: Frontend field decorators missing derivatives parameter.
-**Solution**: Specify derivatives for polymorphic fields typed as an interface or `Object`, which have no registered class family. A field typed with a base class whose derived classes are registered through `@derivedType` (and whose modules have been loaded) can omit a redundant list.
+An interface declaration does not give TypeScript a runtime constructor. Supply derivatives for fields declared with `Object`, as in `PaymentRequest.paymentMethod`. A base-class field can omit the list when its subclasses have registered through `@derivedType` and their modules have loaded.
 
 ### 4. Case Sensitivity
 
-**Problem**: Property names don't match between frontend and backend.
-**Solution**: Configure consistent casing policies.
+If fields are missing after deserialization, compare the payload's property names with the `@field` names. Configure the backend's JSON casing to match them; changing only a TypeScript interface does not rename incoming properties.
 
 ### 5. Missing Field Decorators
 
-**Problem**: TypeScript properties without `@field` decorators are not reconstructed as typed values when deserializing. Serialization writes an object's own property names whether or not they are decorated; `@field` metadata drives typed field reconstruction, with the converter and concept special cases applied.
-**Solution**: Decorate all properties that must deserialize to typed values.
+Serialization writes an object's own properties even when they are not decorated. Typed reconstruction is different: `@field` metadata tells the deserializer which properties to populate and how to convert them, alongside converter and concept handling. Decorate each model property that must be reconstructed as a typed value.
 
 ### 6. Type Registration Order
 
-**Problem**: Derived types not registered before serialization.
-**Solution**: Ensure all classes are imported before use.
+Load the modules containing decorated classes before using those classes for serialization or candidate resolution. An identifier present in a source file is not a runtime registration until the module has executed.
 
 ## Debugging
 
 ### Backend Debugging
+
+Inspect the same `IDerivedTypes` registry that your converter uses. These checks show whether `CreditCard` was discovered and which primary target it represents; they do not confirm that MVC is using the converter.
 
 ```csharp
 // Check if a type is registered
@@ -542,6 +543,8 @@ var targetType = derivedTypes.GetTargetTypeFor(typeof(CreditCard));
 ```
 
 ### Frontend Debugging
+
+Check the concrete class's identifier, then inspect the wrapper's field metadata and the outgoing JSON. This separates a missing class registration from a missing derivatives list or a payload without `_derivedTypeId`. Use synthetic payment data for logging, not real card details.
 
 ```typescript
 // Check derived type registration
@@ -557,4 +560,4 @@ const json = JsonSerializer.serialize(paymentRequest);
 console.log('Outgoing JSON:', json);
 ```
 
-This integration enables robust, type-safe communication between your .NET backend and TypeScript frontend while maintaining the flexibility of polymorphic serialization.
+Once `result.paymentMethod instanceof CreditCard` holds and the expected fields survive the response, check the other payment types and the API's failure cases. For more detail, use the [.NET derived-type guide](csharp/serialization/derived_types.md) for registry setup, the [TypeScript derived-type guide](typescript/serialization/derived_types.md) for runtime candidates, and the [field decorator reference](typescript/serialization/field_decorator.md) for field metadata.

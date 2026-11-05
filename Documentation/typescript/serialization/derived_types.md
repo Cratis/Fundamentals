@@ -1,31 +1,22 @@
 ---
-description: Deserialize polymorphic JSON into the correct TypeScript classes with derived type identifiers that match the .NET backend.
+title: TypeScript JsonSerializer for polymorphic models
+description: Use derived type identifiers and field metadata to deserialize polymorphic JSON fields into TypeScript classes with JsonSerializer.
 ---
-# DerivedTypes Serialization (Frontend)
+<a id="derivedtypes-serialization-frontend"></a>
 
-The DerivedTypes serialization system in the TypeScript frontend provides seamless polymorphic serialization that works hand-in-hand with the backend .NET implementation. This system allows you to deserialize JSON objects into their correct TypeScript class instances based on type identifiers.
+`JsonSerializer` uses `_derivedTypeId` and field metadata to turn polymorphic JSON fields into their concrete TypeScript classes. Use this when a field can contain several implementations, such as a payment method that can be a credit card or PayPal payment. The identifier tells the reader which class to construct; `@field` tells it which values to populate.
 
-> **Note**: This documentation focuses on derived types and polymorphic serialization. For comprehensive information about the `@field` decorator, including its modes, field types and runtime inspection of field metadata, see [Field Decorator Documentation](field_decorator.md).
+This guide builds that payment model. For decorator syntax and compiler setup, use the [field decorator guide](field_decorator.md).
 
 ## Overview
 
-The frontend DerivedTypes system consists of:
-
-- **`@derivedType` decorator**: Marks classes with unique identifiers matching the backend
-- **`DerivedType` class**: Manages metadata for derived type identifiers
-- **`JsonSerializer`**: Handles serialization/deserialization with type information
-- **`@field` decorator**: Defines fields with optional derivative type support
-- **`Field` class**: Represents field metadata including derivative type information
+A JSON object alone cannot tell JavaScript whether a payment is a `CreditCard` or `PayPal` instance. Add `@derivedType` to each implementation to give it an identifier, then declare the containing field with `@field`. At deserialization time, `JsonSerializer` matches the incoming identifier to a candidate constructor and reads that class's field metadata.
 
 ## Key Concepts
 
 ### Type Metadata System
 
-The frontend uses TypeScript decorators and Fundamentals' metadata support to store type information:
-
-- **Derived Type IDs**: Unique string identifiers that must match exactly with backend `[DerivedType]` attributes
-- **Field Metadata**: Information about properties including their types and possible derivatives
-- **Runtime Type Resolution**: Dynamic instantiation of correct classes during deserialization
+Cratis Fundamentals stores the identifiers and constructors as runtime metadata. TypeScript's type annotations disappear during compilation, so declaring a property as `IPaymentMethod` is not enough to reconstruct it. The decorators supply the information that remains available when the JSON arrives. When exchanging derived types with .NET, use exactly the same identifier as the backend's `[DerivedType]` attribute.
 
 ### Runtime Resolution Behavior
 
@@ -34,22 +25,21 @@ At runtime, the deserializer resolves derived types from two candidate sources:
 - `field.derivatives` provided by `@field(..., derivatives)`
 - Runtime registrations from `DerivedType.getDerivedTypesFor(field.type)`
 
-The runtime registrations are populated by the `@derivedType` decorator by walking the prototype chain.
-Because of this, class-based hierarchies (base class + subclasses) are discovered automatically.
+When a decorated class is evaluated, `@derivedType` registers it against every base class in its inheritance chain. Import the modules that define your subclasses before deserializing; an unloaded class has not registered itself.
 
-For interface-shaped polymorphism, remember that TypeScript interfaces are erased at runtime.
-In those cases, use explicit `field.derivatives`, or pass `targetType` to `@derivedType` so the
-type is registered against a concrete runtime constructor.
+Interfaces have no runtime constructor. For an interface-shaped field, provide the implementations explicitly in `field.derivatives`, as the payment example below does. Alternatively, pass a concrete `targetType` constructor to `@derivedType` and use that constructor as the field's runtime type.
+
+If no candidate matches `_derivedTypeId`, the reader falls back to the field's declared constructor. It preserves the identifier on the resulting instance, but does not reconstruct an unknown implementation. Root calls such as `deserialize(BaseClass, json)` also use the supplied constructor; derived-type selection happens when reading declared fields.
 
 ### Decorator-Based Configuration
 
-Unlike the backend's attribute-based approach, the frontend uses decorators to mark classes and fields with metadata.
+Use `@derivedType` on the class and `@field` on the values you need to read back. These serve different purposes: registering a class identifier does not declare its fields.
 
 ## Uniqueness Requirements
 
-Derived type IDs must be **unique per interface** to enable proper polymorphic deserialization. While you can use any string format, using descriptive identifiers is recommended for readability:
+Give every candidate for a field a distinct identifier. The TypeScript reader selects the first candidate with a matching ID; it does not reject duplicate registrations. The .NET `DerivedTypes` registry rejects duplicate identifiers across its discovered types, so keep identifiers unique across the types you exchange with that backend.
 
-**Good approach** - Descriptive and unique:
+Short, descriptive strings make payloads easier to inspect. These excerpts assume the `IPaymentMethod` interface defined in the usage section:
 
 ```typescript
 @derivedType('credit-card')
@@ -59,7 +49,7 @@ export class CreditCard implements IPaymentMethod { }
 export class PayPal implements IPaymentMethod { }
 ```
 
-**Alternative approach** - Using GUIDs for maximum uniqueness:
+GUID strings are another identifier format:
 
 ```typescript
 @derivedType('550e8400-e29b-41d4-a716-446655440001')
@@ -69,7 +59,7 @@ export class CreditCard implements IPaymentMethod { }
 export class PayPal implements IPaymentMethod { }
 ```
 
-> **Note on GUIDs**: While GUIDs guarantee uniqueness, they sacrifice readability. If using GUIDs, ensure they are stored in shared constants or configuration to maintain consistency across your codebase and backend services.
+Whichever format you choose, keep the value stable and identical in both clients. Changing an identifier means previously written payloads no longer match that class.
 
 ## Usage
 
@@ -82,6 +72,8 @@ export interface IPaymentMethod {
 ```
 
 ### 2. Create Derived Types
+
+Decorate both implementations with their payload identifiers. The `@field` declarations supply the runtime types for their data, including fields shared through the interface.
 
 ```typescript
 import { derivedType } from '@cratis/fundamentals';
@@ -111,6 +103,8 @@ export class PayPal implements IPaymentMethod {
 
 ### 3. Configure Parent Classes with Derivatives
 
+Use `Object` as the runtime field type and list the two implementations. The `true` argument on `alternativePayments` applies the same resolution to each array element.
+
 ```typescript
 export class Order {
     @field(String)
@@ -124,26 +118,19 @@ export class Order {
 }
 ```
 
-If `paymentMethod` is typed as a concrete base class (instead of interface-only shape), runtime
-registration from `@derivedType` can often resolve the correct subtype without an explicit derivatives list.
-Keeping the list is still valid and can be useful for clarity.
+With these declarations, a `paymentMethod` payload carrying `_derivedTypeId: "credit-card"` becomes a `CreditCard` instance. If you use a class hierarchy instead, pass the concrete base class to `@field`; its registered subclasses can then be found without an explicit list.
 
 ## Serialization and Deserialization
 
-For detailed information about serialization and deserialization operations, including usage examples and API details, see the [JsonSerializer Documentation](./json_serializer.md).
-
-When working with polymorphic types, the `JsonSerializer` automatically handles:
-
-- Adding `_derivedTypeId` during serialization based on the `@derivedType` decorator
-- Using `_derivedTypeId` to instantiate the correct derived type during deserialization
+Call `JsonSerializer.serialize(order)` to write the order, or `JsonSerializer.deserialize(Order, json)` to read it. Serialization adds the identifier registered on each payment class. Deserialization uses the containing field's candidates to choose the payment constructor. The [JsonSerializer guide](./json_serializer.md) covers these calls and array inputs.
 
 ## Field Decorator Integration
 
-The `@field` decorator is essential for defining serializable properties. For comprehensive documentation on the `@field` decorator including all parameters, usage patterns and runtime inspection of field metadata, see [Field Decorator Documentation](field_decorator.md).
+Decorate each field that needs typed deserialization, including fields on the derived classes. Serialization writes runtime own properties even without `@field`, but reading a concrete class populates only declared fields. The [field decorator guide](field_decorator.md) explains nested types, collections, and metadata inspection.
 
 ## Serialization Format
 
-The frontend produces the same JSON format as the backend:
+The payment identifier travels with its data in `_derivedTypeId`, the discriminator property also used by the .NET derived-type converter:
 
 ```json
 {
@@ -156,14 +143,13 @@ The frontend produces the same JSON format as the backend:
 }
 ```
 
-The `_derivedTypeId` property is automatically:
-
-- **Added during serialization** based on the class's `@derivedType` decorator
-- **Used during deserialization** to instantiate the correct class
+You do not need to declare `_derivedTypeId` as a field. `JsonSerializer` writes it from the class registration and preserves an incoming identifier when reading, even if the concrete class cannot be resolved.
 
 ## Advanced Scenarios
 
 ### Complex Nested Objects
+
+Nesting does not change the field declarations. Here, reading each `Order` also reads its payment fields using the candidates already declared on `Order`.
 
 ```typescript
 export class ShoppingCart {
@@ -180,6 +166,8 @@ export class ShoppingCart {
 
 ### Mixed Collections
 
+A collection can list additional implementations. This excerpt assumes a `BankTransfer` class with its own `@derivedType` identifier and decorated fields.
+
 ```typescript
 export class PaymentHistory {
     @field(Object, true, [CreditCard, PayPal, BankTransfer])
@@ -189,7 +177,7 @@ export class PaymentHistory {
 
 ### Well-Known Types
 
-The system automatically handles common types:
+Use runtime constructors for other values on your model too. These field excerpts use the built-in `Date` and `Guid` converters:
 
 ```typescript
 @field(Date)
@@ -206,12 +194,13 @@ isActive!: boolean;
 
 ### Common Issues
 
-1. **Missing `@derivedType` decorator**: Classes won't be recognized during deserialization
-2. **Mismatched IDs**: Frontend and backend derived type IDs must match exactly
-3. **Missing field decorators**: Runtime own properties are serialized even without `@field`, but they have no typed deserialization metadata
-4. **Missing derivatives list for an interface-shaped field**: Erased interfaces cannot provide a runtime constructor, so their possible implementations must be explicit
+If a payment comes back as a plain object, check that its implementation module was imported and its `@derivedType` identifier matches the payload. Then check the containing field: an erased interface needs explicit candidates or a concrete runtime target registration.
+
+If the class is correct but data is missing, inspect its `@field` declarations. An undecorated property can appear in outgoing JSON without having metadata to read it back.
 
 ### Debugging Tips
+
+Inspect the identifier on the candidate and the fields on its containing model. Import `DerivedType` and `Fields` from `@cratis/fundamentals` for this excerpt.
 
 ```typescript
 // Check if a type has derived type metadata
@@ -261,7 +250,7 @@ export class CreditCard implements IPaymentMethod { }
 export class PayPal implements IPaymentMethod { }
 ```
 
-> **Why centralize?** These "magic strings" are critical for serialization consistency. Centralizing them in one place prevents duplicates, makes them easy to maintain, and ensures frontend and backend stay synchronized.
+Constants reduce repeated literals within the frontend. They do not synchronize a separately maintained backend, so compare the actual values on both sides when a payload fails to resolve.
 
 ### 3. Typed Field Metadata
 
@@ -286,7 +275,7 @@ export class CreditCard implements IPaymentMethod {
 
 ### 4. Derivative Lists for Erased Types
 
-Specify derivatives for interface-shaped fields because TypeScript erases the interface at runtime:
+For the interface-based payment model, keep the candidates on the field. The second declaration below has no candidates from which to resolve `CreditCard` or `PayPal`.
 
 ```typescript
 // ✅ Good - explicit derivatives list
@@ -302,7 +291,7 @@ A field typed with a concrete base class can omit the explicit list when each im
 
 ### 5. Interface Consistency
 
-Keep interfaces synchronized between frontend and backend:
+Match the fields and JSON property names used by the backend contract. A TypeScript `number` can carry the example amount, but it does not provide .NET `decimal` precision semantics.
 
 ```typescript
 // Frontend interface should match backend interface
@@ -313,17 +302,13 @@ export interface IPaymentMethod {
 
 ### 6. Testing
 
-For testing serialization round-trips with derived types, create tests that verify:
-
-1. Polymorphic types deserialize to the correct class
-2. Derived type IDs are preserved during serialization
-3. Frontend IDs match backend IDs exactly
-
-Refer to the [JsonSerializer Documentation](./json_serializer.md) for comprehensive testing examples.
+Check both the reconstructed class and its data in a round-trip test. Include the identifier in the serialized result and a representative backend payload so that an ID mismatch is visible. The [JsonSerializer testing example](./json_serializer.md#2-test-round-trip-serialization) shows the basic round-trip assertions.
 
 ## Type System Integration
 
 ### Working with TypeScript's Type System
+
+Once a payment field has been reconstructed, `instanceof` can distinguish the implementations and narrow their TypeScript types.
 
 ```typescript
 // Type-safe polymorphic handling
@@ -345,6 +330,8 @@ function isCreditCard(payment: IPaymentMethod): payment is CreditCard {
 
 ### Generic Serialization
 
+For an array whose elements all use one known constructor, pass that constructor to `deserializeArray`. The helper below does not select a different constructor for each root element; use a containing field like `PaymentHistory.transactions` for mixed implementations.
+
 ```typescript
 // Generic deserialization
 function deserializePayments<T extends IPaymentMethod>(
@@ -357,22 +344,15 @@ function deserializePayments<T extends IPaymentMethod>(
 const creditCards = deserializePayments(json, CreditCard);
 ```
 
-## Runtime Type Safety
+<a id="runtime-type-safety"></a>
 
-The `@field` decorator records field metadata that `JsonSerializer` uses at runtime, beyond TypeScript's compile-time checking. To inspect that metadata, see [Runtime Inspection](field_decorator.md#runtime-inspection) in the Field Decorator Documentation.
+## Runtime Metadata and Validation
 
-With derived types, you benefit from:
-
-- Automatic polymorphic type resolution at runtime
-- Correct class instantiation based on `_derivedTypeId`
-- Full method access on all polymorphic instances
-- Type-safe instanceof checks across derived types
+Runtime metadata tells `JsonSerializer` how to construct a model; it is not a schema validator for untrusted JSON. For example, the primitive field readers do not check that a supplied value is really a number or string. Validate incoming data separately when your application needs those checks. Use [runtime inspection](field_decorator.md#runtime-inspection) to examine the metadata used for reconstruction.
 
 ## Performance Considerations
 
-- **Reflection overhead**: Metadata lookup happens at runtime
-- **Type scanning**: Keep derivative lists focused to avoid unnecessary type checking
-- **Memory usage**: Metadata is stored per-class, not per-instance
+Derived-type selection reads class metadata and searches the field's candidate list at runtime. Keep that list specific to the field's possible values; registering unrelated implementations adds candidates without helping resolution.
 
 ## Decorator Compatibility
 
@@ -382,5 +362,4 @@ Fundamentals loads its metadata support when you import `derivedType`; you do no
 
 ## See Also
 
-- [JsonSerializer](./json_serializer.md) - Core serialization utility for type-safe JSON conversion
-- [Field Decorator](./field_decorator.md) - Comprehensive guide to the `@field` decorator system and runtime type safety
+Use [JsonSerializer](./json_serializer.md) to read and write the configured models. If a field needs a different runtime type or collection declaration, continue with the [field decorator guide](./field_decorator.md).

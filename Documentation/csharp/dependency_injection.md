@@ -1,37 +1,38 @@
 ---
-description: Register .NET services by naming convention, bind self-types and control lifetimes with attributes using Cratis.DependencyInjection.
+title: Register .NET services by convention with Cratis
+description: Cratis.DependencyInjection registers .NET services by naming convention or concrete type, with transient defaults and attributes for exceptions.
 ---
-# Dependency Injection
 
-The `Cratis.DependencyInjection` namespace provides convention-based dependency injection features that simplify service registration in .NET applications. These utilities help reduce boilerplate code when working with Microsoft's dependency injection container.
+<a id="dependency-injection"></a>
+
+`Cratis.DependencyInjection` in Cratis Fundamentals registers services with Microsoft's dependency injection container by naming convention or concrete type. Use it when you would otherwise maintain matching registrations for each application service. Keep explicit registrations for services that need a factory or a choice between implementations.
 
 ## Overview
 
-The dependency injection utilities offer:
+A registration tells the container which implementation to construct when a consumer asks for a service. `AddBindingsByConvention` pairs an interface with its matching implementation; `AddSelfBindings` registers a concrete type so consumers can request it directly.
 
-- **Convention-based registration**: Automatically register services following naming conventions
-- **Self-binding**: Register concrete types for direct injection
-- **Lifecycle management**: Control service lifetimes using attributes
-- **Selective registration**: Exclude types from convention-based registration
+Both methods default to a transient lifetime: the container creates an instance for each resolution. Apply `[Singleton]` when the registration should reuse one instance, or `[IgnoreConvention]` when you want to register a type yourself. Existing registrations take precedence: neither method replaces a service type already registered.
+
+Each method prefers its generated binding list and falls back to reflection when that list is empty. If an expected service is missing, check the contributing assemblies in [type discovery](./types.md) before changing its registration.
 
 ## Extension Methods
 
 ### AddBindingsByConvention
 
-Automatically registers services based on interface naming conventions.
+Call `AddBindingsByConvention` to pair interfaces with implementations whose names match:
 
 ```csharp
 services.AddBindingsByConvention();
 ```
 
-**Convention Rules:**
+A pair qualifies when:
 
-- Interface and implementation must be in the same namespace
-- Interface name must be `I{ImplementationName}` (e.g., `IUserService` → `UserService`)
-- Only one implementation per interface is allowed
-- Types with `[IgnoreConvention]` attribute are excluded
+- The interface and implementation are in the same namespace.
+- The interface name is `I{ImplementationName}`, such as `IUserService` and `UserService`.
+- Exactly one non-ignored implementation exists for the interface.
+- The implementation is not marked `[IgnoreConvention]`.
 
-**Examples:**
+The following pairs qualify; the test implementation is excluded so it does not compete with `UserService`:
 
 ```csharp
 // These will be automatically registered:
@@ -49,21 +50,17 @@ public class TestUserService : IUserService { }
 
 ### AddSelfBindings
 
-Registers concrete types for direct injection without requiring an interface.
+Call `AddSelfBindings` when consumers depend on concrete classes rather than interfaces:
 
 ```csharp
 services.AddSelfBindings();
 ```
 
-**Registration Rules:**
+Self-binding excludes static or abstract types, interfaces, exception types, and types marked `[IgnoreConvention]`. It also excludes types in `System` or `Microsoft` namespaces.
 
-- Non-static, non-abstract, non-interface types
-- Types not derived from `Exception`
-- Types without `[IgnoreConvention]` attribute
-- Types not in `System` or `Microsoft` namespaces
-- Types with no public constructor that has a primitive-typed or record-typed parameter (a type is excluded if any public constructor has a parameter of either kind)
+A type is excluded if any public constructor has a primitive-typed or record-typed parameter. This keeps data values, such as a connection string, from being treated as services the container should resolve. The rule checks all public constructors, not just the one you expect the container to use.
 
-**Examples:**
+`EmailSender` and `CacheManager` below qualify. The remaining examples illustrate the namespace, attribute, and constructor exclusions:
 
 ```csharp
 // These will be automatically registered:
@@ -83,7 +80,7 @@ public class BadService(string connectionString) { } // Primitive parameter
 
 ### SingletonAttribute
 
-Marks a class to be registered as a singleton service.
+Apply `[Singleton]` to change a convention or self-binding registration from transient to singleton:
 
 ```csharp
 [Singleton]
@@ -93,15 +90,11 @@ public class DatabaseConnection : IDatabaseConnection
 }
 ```
 
-**Usage:**
-
-- Apply to class declarations
-- Works with both convention-based and self-binding registration
-- Overrides the default transient lifetime
+The attribute controls the lifetime of an eligible registration; it does not make an otherwise excluded type eligible. Choose it only when sharing the instance across consumers fits the service's state and dependencies.
 
 ### IgnoreConventionAttribute
 
-Excludes a class from convention-based registration.
+Apply `[IgnoreConvention]` to keep a class out of both `AddBindingsByConvention` and `AddSelfBindings`:
 
 ```csharp
 [IgnoreConvention]
@@ -111,17 +104,13 @@ public class TestImplementation : IService
 }
 ```
 
-**Usage:**
-
-- Apply to class declarations
-- Useful for test implementations, decorators, or manually registered services
-- Affects both `AddBindingsByConvention` and `AddSelfBindings`
+Use this for test implementations or services you register manually, including decorators. Excluding a test implementation also prevents it from making an otherwise unique interface-to-implementation pair ambiguous.
 
 ## Best Practices
 
 ### 1. Use Convention-Based Registration First
 
-Start with convention-based registration for most services:
+Combine the two methods when the application uses both interface and concrete-type dependencies. Register exceptions explicitly, as with the scoped service below:
 
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -136,7 +125,7 @@ public void ConfigureServices(IServiceCollection services)
 
 ### 2. Follow Naming Conventions
 
-Ensure your interfaces and implementations follow the expected patterns:
+Use an `I`-prefixed interface name and place the matching implementation in the same namespace when you want automatic pairing. A different naming scheme is valid C#, but requires an explicit registration:
 
 ```csharp
 // ✅ Good - follows convention
@@ -150,7 +139,7 @@ public class UserRepositoryImpl : UserRepo { }
 
 ### 3. Use Attributes Appropriately
 
-Apply lifecycle and exclusion attributes where needed:
+Choose a singleton lifetime for services intended to be shared, and exclude implementations that should not participate in automatic registration. Construction cost alone is not a reason to share mutable state across requests:
 
 ```csharp
 // Singleton for expensive-to-create services
@@ -164,7 +153,7 @@ public class MockUserService : IUserService { }
 
 ### 4. Avoid Primitive Dependencies
 
-Avoid primitive-typed and record-typed public constructor parameters on types you want self-bound; inject services and configuration objects instead:
+For a self-bound service, pass configuration through an eligible non-record configuration class rather than individual primitive values. The container still needs a registration for that configuration:
 
 ```csharp
 // ❌ Bad - primitive parameters prevent auto-registration
@@ -174,11 +163,13 @@ public class EmailService(string smtpServer, int port) { }
 public class EmailService(SmtpConfiguration config, ILogger<EmailService> logger) { }
 ```
 
-`SmtpConfiguration` here must be a non-record class, and its own shape must avoid the exclusions above. Being a concept is not enough: `ConceptAs<T>` is itself declared as a record. Eligibility for self-binding is not proof that activation succeeds; the configuration and logging services must be registered separately.
+Here, `SmtpConfiguration` must be a non-record class. If you also want it self-bound, it must satisfy the same exclusions. A `ConceptAs<T>` dependency does not avoid the record restriction because the concept base type is a record.
+
+Registration and construction are separate steps. Even when `EmailService` qualifies for self-binding, the container must be able to resolve both `SmtpConfiguration` and `ILogger<EmailService>`.
 
 ## Integration Example
 
-Complete setup in a typical ASP.NET Core application:
+In an ASP.NET Core host, combine conventions with framework registrations and factories. Adapt the application-specific constructors and connection settings to your host:
 
 ```csharp
 public class Startup
@@ -201,4 +192,4 @@ public class Startup
 }
 ```
 
-This approach significantly reduces the amount of manual service registration code while maintaining flexibility for special cases.
+Conventions handle the matching service pairs and eligible concrete types; the factory supplies the manually configured email service. If a type is not registered as expected, use [Types](./types.md) to inspect the discovery mode and contributing assemblies, then check the naming and constructor rules above.

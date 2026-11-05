@@ -1,9 +1,10 @@
 ---
-description: Generate metric method implementations from partial methods with the Cratis.Observability.SourceGenerators source generator and avoid boilerplate.
+title: Cratis Fundamentals metrics source generator
+description: The Cratis Fundamentals metrics source generator implements attributed partial methods so .NET services can record measurements with typed calls.
 ---
-# Metrics Source Generator
+<a id="metrics-source-generator"></a>
 
-The `Cratis.Observability.SourceGenerators` package provides a powerful source generator that automatically implements metrics methods for you. This eliminates boilerplate code and ensures consistent, efficient metrics collection across your application.
+The Cratis Fundamentals metrics source generator turns attributed partial methods into .NET metric-recording code at compile time. Use `Cratis.Observability.SourceGenerators` when you want services to call named methods such as `CountUserRegistration` without managing the underlying instruments at each call site.
 
 ## Table of Contents
 
@@ -18,9 +19,9 @@ The `Cratis.Observability.SourceGenerators` package provides a powerful source g
 
 ## Installation
 
-> Formerly `Cratis.Metrics.Roslyn`; that package still works as a forwarding package through the current major. It will be retired (no longer published) in the next major, together with the assembly and namespace rename. Replace your old package reference with `Cratis.Observability.SourceGenerators` rather than adding both.
+Your project needs `Cratis.Fundamentals` for the meter types and attributes. Add `Cratis.Observability.SourceGenerators` to generate the method implementations. In the package-reference excerpt below, replace `[version]` with the package version you are using.
 
-Add the `Cratis.Observability.SourceGenerators` NuGet package to your project:
+If your project references `Cratis.Metrics.Roslyn`, replace that reference with `Cratis.Observability.SourceGenerators`. The old package forwards to the new one through the current major. In the next major, the old package will no longer be published, and the generator's assembly and namespace will be renamed. The generator's assembly and namespace are still named `Cratis.Metrics.Roslyn`, so that name also appears when inspecting generated files.
 
 ```xml
 <PackageReference Include="Cratis.Observability.SourceGenerators" Version="[version]" />
@@ -34,24 +35,17 @@ dotnet add package Cratis.Observability.SourceGenerators
 
 ## How It Works
 
-The source generator analyzes your code at compile time and looks for:
+At compile time, the generator finds static partial classes containing static partial methods marked with `[Counter<T>]`, `[Gauge<T>]`, or `[Histogram<T>]`. It validates the meter and measurement parameters, then generates the method bodies.
 
-1. **Static partial classes** (declared with both `static` and `partial`) containing static partial methods
-2. **Methods decorated** with `[Counter<T>]`, `[Gauge<T>]`, or `[Histogram<T>]` attributes
-3. **Proper method signatures** that follow the required pattern
-
-For each qualifying method, it generates a complete implementation that:
-
-- Creates the appropriate metrics instrument (Counter, Gauge, or Histogram)
-- Handles tag collection from method parameters and scopes
-- Calls the underlying .NET metrics APIs
-- Includes proper null checks and error handling
+At runtime, each generated method collects tags, looks up the instrument for the supplied meter, and records the measurement. It creates the instrument on first use and caches it per `Meter` instance. You still need to register the meter and configure your telemetry provider to collect from it.
 
 ## Getting Started
 
+Before declaring methods, [register a typed meter](index.md#getting-started) for your service. The following excerpts assume your application provides `UserService` and its registration logic.
+
 ### 1. Create a Static Partial Class
 
-Create a static partial class to contain your metrics methods. The generator only considers classes declared with both `static` and `partial`; a non-static class is skipped and its methods are not generated:
+Put your metric methods in a static partial class. The generator skips classes that are not both `static` and `partial`:
 
 ```csharp
 using Cratis.Metrics;
@@ -66,7 +60,7 @@ public static partial class UserMetrics
 
 ### 2. Define Partial Methods with Attributes
 
-Add partial method declarations with the appropriate attributes:
+Choose the instrument for each measurement. Here, a counter counts registrations and a gauge records the current number of sessions. `internal` makes the registration method callable from a service in the same assembly:
 
 ```csharp
 public static partial class UserMetrics
@@ -81,7 +75,7 @@ public static partial class UserMetrics
 
 ### 3. Use in Your Services
 
-Inject the meter and use your metrics methods:
+Inject `IMeter<UserService>` and call the registration counter after your registration logic succeeds. The excerpt leaves that application logic as a placeholder:
 
 ```csharp
 public class UserService
@@ -104,7 +98,7 @@ public class UserService
 
 ## Method Signature Requirements
 
-All metrics methods must follow specific signature requirements:
+Use a static partial method in a static partial class, with a meter or scope first. The following is a signature schematic showing alternatives, not a copyable declaration:
 
 ### Required Structure
 
@@ -119,28 +113,25 @@ static partial void MethodName(
 
 ### First Parameter Rules
 
-The first parameter must be either:
+Use `IMeter<T>` for a measurement with method tags only. Use `IMeterScope<T>` when the measurement also needs tags shared by several calls. The generated method reads tags from the scope you pass; there is no ambient scope applied to other meter calls.
 
-- `IMeter<T>` - For basic metrics without scoped context
-- `IMeterScope<T>` - For metrics within a scope (includes scope tags automatically)
-
-Unkeyed `IMeter<T>` uses `typeof(T).FullName` as its meter name and is not subscribed by default. Explicitly subscribe that name in your telemetry provider, or use a subscribed [named meter](named-registration.md).
+`UnkeyedMeter<T>` names its meter with `typeof(T).FullName`, falling back to `typeof(T).Name` when necessary. Subscribe to that name in your telemetry provider, or configure a [named meter](named-registration.md) and subscribe to its name.
 
 ### Value Parameter Rules
 
-- **Counters**: Value parameter is optional. If not provided, defaults to incrementing by 1
-- **Gauges**: Value parameter is required and must match the generic type `T` in the attribute
-- **Histograms**: Value parameter is required and must match the generic type `T` in the attribute
-- **Type matching**: The value parameter type must exactly match `T` in `[Counter<T>]`, `[Gauge<T>]`, or `[Histogram<T>]`
+After the meter or scope, the generator uses the first parameter whose type matches the attribute's generic type as the measurement. For `[Counter<long>]`, for example, a `long bytes` parameter supplies the increment. A counter without a matching parameter adds one.
+
+Gauges and histograms require a matching measurement parameter. Use the same numeric type spelling in the attribute and parameter, as the examples below do. A parameter's name does not decide whether it is a measurement or a tag.
 
 ### Tag Parameters
 
-- All parameters after the first (and value parameter if present) become metric tags
-- Parameter names become tag names unless overridden with `[Tag("…")]`
-- Parameter values become tag values
-- Keep tag cardinality reasonable for performance
+After removing the meter and measurement parameters, the generator turns the remaining parameters into tags. Each parameter name becomes a tag key and its argument becomes the value. Override a key with `[Tag("…")]` from `Cratis.Diagnostics` when you need a stable name independent of the parameter name.
+
+Choose bounded values such as an outcome or HTTP method. Every distinct tag-value combination can create a separate time series; this count is called cardinality.
 
 ### Examples
+
+These declarations are excerpts for a static partial class with `Cratis.Metrics` imported and the illustrated service types available.
 
 ```csharp
 // Counter without value parameter (increments by 1)
@@ -160,11 +151,11 @@ static partial void RecordCpuUsage(IMeter<SystemService> meter, double percentag
 static partial void CountScopedOperation(IMeterScope<ProcessingService> scope, string operation, int duration);
 ```
 
+In `CountScopedOperation`, `int duration` is the counter increment because its type matches `[Counter<int>]`; only `operation` becomes a method tag. Use a histogram to measure a duration distribution.
+
 ## Generated Code
 
-Choose bounded dimensions such as result or authentication method rather than identifiers. Tags from scopes also consume the budget. See [metric views and cardinality](../opentelemetry.md#metric-views-and-cardinality) for shaping and overflow handling. These excerpts assume the illustrated service and domain types, with bounded vocabularies for dimension values.
-
-The source generator creates efficient implementations. Here's what gets generated for a counter:
+The following counter example shows how the generator collects method tags and records through the underlying meter:
 
 ### Your Declaration
 
@@ -194,13 +185,15 @@ static partial void CountUserLogin(IMeter<AuthService> meter, string result, str
 }
 ```
 
-Each instrument is created once per `Meter` instance, so calling the method with different keyed or versioned meters records to each of them. Counters, gauges, and histograms pass the name, unit, and description as named arguments to the .NET instrument creation APIs. Existing two-argument counters and gauges keep compiling and have a `null` unit. Use a third argument for a UCUM unit. Names, units, descriptions, and tag keys preserve quotes, backslashes, and line breaks.
+Each generated method caches its instrument by `Meter` instance. Passing different keyed or versioned meters therefore records to their respective instruments. The cache is a `ConditionalWeakTable`, as shown above.
+
+Counters, gauges, and histograms pass the name, unit, and description as named arguments to the .NET instrument creation APIs. Two-argument attributes leave the unit `null`. Supply a third argument for a UCUM unit, such as `"s"` for seconds or `"By"` for bytes. UCUM is the Unified Code for Units of Measure. Generated string literals preserve quotes, backslashes, and line breaks in names, units, descriptions, and tag keys.
 
 ### Explicit tags and histograms
 
-Import `Cratis.Diagnostics` to use `[Tag("…")]` on a span or metric parameter. Untagged metric parameters keep their parameter names; untagged span parameters keep their snake_case names for compatibility. Prefer explicit keys for new instrumentation.
+Import `Cratis.Diagnostics` to use `[Tag("…")]` on a metric parameter. An explicit key lets you rename a parameter without changing the tag used by dashboards and queries.
 
-This declaration excerpt requires a static partial class and `Cratis.Observability.SourceGenerators`:
+This declaration excerpt requires a static partial class, `Cratis.Metrics`, the `RequestHandler` service type, and `Cratis.Observability.SourceGenerators`:
 
 ```csharp
 [Histogram<double>("cratis.my_app.request.duration", "Request duration", "s")]
@@ -210,7 +203,9 @@ internal static partial void RequestDuration(
     [Tag("cratis.my_app.request.outcome")] string outcome);
 ```
 
-Histograms require a numeric measurement parameter matching the attribute's type. Use seconds for durations. `IMeterScope<T>` is also supported; scope tags are added alongside the method's tags.
+Here, `seconds` supplies the measurement and `outcome` supplies the explicitly named tag. Use seconds for durations. You can also accept `IMeterScope<T>` to add the scope's tags alongside the method tags.
+
+Keep scope and method tags bounded. See [metric views and cardinality](../opentelemetry.md#metric-views-and-cardinality) to set budgets, filter tags, and handle overflow.
 
 ### Exported Metric Names
 
@@ -222,15 +217,13 @@ Update dashboards, alert rules, and queries that refer to the old names when upg
 
 ### Key Features of Generated Code
 
-1. **Lazy initialization** - Metrics instruments are created only when first used
-2. **Null safety** - Proper null checks prevent exceptions
-3. **Efficient tagging** - Uses `TagList` and `ReadOnlySpan` for performance
-4. **Scope integration** - Automatically merges scope tags when using `IMeterScope<T>`
-5. **Generated code attributes** - Clearly marks generated code for debugging
+The generated method assembles a `TagList` for each call and appends scope tags when its first parameter is `IMeterScope<T>`. It then checks the underlying `ActualMeter` or scope `Meter` before recording. That check does not make a null meter or scope argument safe: the method accesses the argument's properties first.
+
+Generated methods carry `GeneratedCodeAttribute("Cratis.Metrics.Roslyn", "1.0.0")`, which identifies the generator when you inspect their implementation.
 
 ## Error Handling
 
-The source generator provides compile-time validation with helpful error messages:
+The generator reports diagnostics for missing or invalid meter parameters and missing measurements. Match the diagnostic to the declaration before changing the calling code:
 
 ### METRICS001: Missing First Parameter
 
@@ -240,7 +233,7 @@ The source generator provides compile-time validation with helpful error message
 static partial void BadMethod();
 ```
 
-**Fix**: Add `IMeter<T>` or `IMeterScope<T>` as first parameter.
+Add `IMeter<T>` or `IMeterScope<T>` as the first parameter.
 
 ### METRICS002: Invalid First Parameter Type
 
@@ -250,9 +243,11 @@ static partial void BadMethod();
 static partial void BadMethod(string invalidParameter);
 ```
 
-**Fix**: Use `IMeter<T>` or `IMeterScope<T>` as first parameter.
+Replace the first parameter with `IMeter<T>` or `IMeterScope<T>`.
 
-### METRICS003: Missing Value Parameter
+<a id="metrics003-missing-value-parameter"></a>
+
+### METRICS0013: Missing Value Parameter
 
 ```csharp
 // ❌ Error: Gauge missing required value parameter
@@ -260,13 +255,13 @@ static partial void BadMethod(string invalidParameter);
 static partial void BadGauge(IMeter<Service> meter, string tag);
 ```
 
-**Fix**: Add a parameter of type `double` for the gauge value.
+Add a `double` parameter for the gauge value so it matches `[Gauge<double>]`.
 
 ## Advanced Usage
 
 ### Working with Scoped Metrics
 
-When using `IMeterScope<T>`, the generator automatically includes scope tags:
+Pass a scope when several measurements need the same context. In this example, each order step gets the shared `operation` and `customer_type` tags plus its own `step` tag. The usage excerpts assume an injected `_meter` and your application's order operations:
 
 ```csharp
 public static partial class OrderMetrics
@@ -313,6 +308,8 @@ public async Task ProcessOrderAsync(Order order)
 
 ### Complex Tag Scenarios
 
+Tag parameters can have different types. Here, `bytes` supplies the counter increment; the remaining parameters become tags. Use a route template for `endpoint` so individual resource IDs do not create new time series:
+
 ```csharp
 public static partial class ApiMetrics
 {
@@ -333,7 +330,7 @@ ApiMetrics.CountRequestSize(_meter, request.ContentLength, "/users", "POST", 201
 
 ### Organizing Metrics
 
-Group related metrics in focused static partial classes:
+Keep related declarations together so a service's instrumentation can be found in one place. These are declaration excerpts; add an access modifier such as `internal` to methods that another class needs to call:
 
 ```csharp
 // Authentication metrics
@@ -361,53 +358,26 @@ public static partial class DatabaseMetrics
 
 ### Source Generator Not Running
 
-If methods aren't being generated:
-
-1. **Check build output** for any compilation errors
-2. **Verify package reference** includes `Cratis.Observability.SourceGenerators`
-3. **Ensure methods are partial** and in `static partial` classes
-4. **Check method signatures** match the required pattern
+Start with the compiler output and resolve any errors in the declaration. Confirm the project references `Cratis.Observability.SourceGenerators`, then check that both the class and method are `static partial`. A class missing either modifier is skipped. Compare the first and measurement parameters with the [signature requirements](#method-signature-requirements).
 
 ### Metrics Not Appearing
 
-If metrics aren't showing up in your monitoring:
-
-1. **Verify meter registration** in dependency injection
-2. **Check your metrics collection** configuration
-3. **Ensure ActivitySource** is properly configured for your application
+First confirm that your service resolves its meter and reaches the metric method call. Then check that the telemetry provider subscribes to the actual meter name and has an exporter configured. Dependency-injection registration alone does not connect the meter to a collector. Use [named meter registration](named-registration.md) to check name and key selection, and [OpenTelemetry setup](../opentelemetry.md) to configure collection.
 
 ### Build Errors
 
-For compilation issues:
-
-1. **Review error messages** - the generator provides specific error codes
-2. **Check parameter types** match attribute generic types
-3. **Verify namespace imports** include `Cratis.Metrics`
+Use the [diagnostics above](#error-handling) to check the declaration's first parameter and measurement type. Confirm `Cratis.Metrics` is imported. If a service cannot call a generated method, check its access modifier: a partial method without one is private to its containing class.
 
 ### Debugging Generated Code
 
-To see the generated code:
-
-1. **Enable source generators** in your IDE
-2. **Check the Dependencies > Analyzers** node in Solution Explorer
-3. **Look for generated files** under `Cratis.Metrics.Roslyn`
+In an IDE that exposes generated sources, inspect the project's analyzer-generated files. Look for `Cratis.Metrics.Roslyn`, the generator's assembly name, even though the package reference is `Cratis.Observability.SourceGenerators`. Compare the generated method's tags and instrument name with the declaration.
 
 ## Best Practices
 
-1. **Use descriptive names** for both metrics and method names
-2. **Keep tag cardinality low** to avoid performance issues  
-3. **Group related metrics** in focused static partial classes
-4. **Use meaningful descriptions** that explain what the metric measures
-5. **Consider scoped metrics** for contextual measurements
-6. **Follow naming conventions** for consistency across your application
+Choose instrument names and descriptions that tell a reader what is measured. Keep tag keys stable with explicit `[Tag("…")]` attributes where dashboards depend on them, and choose bounded tag values. Group declarations by the service or operation they describe. Use scopes when several calls need the same context.
 
 ## Performance Considerations
 
-The generated code is optimized for performance:
+Generation happens at compile time, but recording measurements still does work at runtime. The generated method builds its tags and looks up the instrument on each call. Instruments are cached per meter after first use; tag collection still constructs an array of key-value pairs and a `TagList`, then appends any scope tags.
 
-- **Lazy initialization** prevents unnecessary metric creation
-- **Efficient tagging** uses `TagList` and `ReadOnlySpan`
-- **Minimal allocations** through careful memory management
-- **Null safety** prevents exceptions without performance overhead
-
-The source generator runs at compile time, so there's no runtime performance impact from the generation process itself.
+When planning collection, account for how often the method runs and how many distinct tag combinations it emits. The [metrics overview](index.md) explains instrument choice and scope usage; [metric views and cardinality](../opentelemetry.md#metric-views-and-cardinality) covers collection budgets and overflow.

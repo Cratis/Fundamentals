@@ -1,16 +1,15 @@
 ---
+title: DateOnly and TimeOnly in Cratis Fundamentals
 description: Serialize and bind DateOnly and TimeOnly in .NET with the System.Text.Json converters and type converters in Cratis.Fundamentals.
 ---
-# Date & Time Only
-
 In .NET 6, two new types were introduced: `DateOnly` and `TimeOnly`.
-These are unfortunately not fully supported in serializers and typically require type conversion for use with
-Web APIs. Fundamentals offers serializers and type converters for these types, which are automatically hooked up
-in the application model.
+Choose the conversion boundary first. For a JSON body, use the JSON options and converters below. For a controller parameter or another component-model conversion, use the type converters in the second section; registering them does not configure JSON serialization.
 
 ## System.Text.Json converters
 
 Within the **Fundamentals** package you'll find a namespace called `Json`. This holds converters for serializing and deserializing both `DateOnly` and `TimeOnly` types.
+
+The following serialization and deserialization examples are separate fragments. Both assume an application-defined Account with RegisteredDate and RegisteredTime properties of those types. Use the first fragment to compare the written values and property names, then the second to read that shape back; do not paste both fragments into one scope.
 
 ```csharp
 using System.Text.Json;
@@ -60,8 +59,7 @@ var json = "{ \"RegisteredDate\": \"2022-08-19\", \"RegisteredTime\": \"13:37:00
 var account = JsonSerializer.Deserialize<Account>(json, options);
 ```
 
-> Note: If you're using the Cratis Application Model, you do not have to configure this. It is automatically configured for the ASP.NET pipelines
-> and other parts that needs it, such as the Cratis Kernel transports.
+> Note: Cratis Arc includes these converters in its default JSON options and copies them to MVC controller JSON options when controller support is enabled. Cratis Chronicle registers them for the Kernel's Microsoft Orleans JSON serialization. For separately configured `JsonSerializerOptions`, add the converters as shown above.
 
 ## Type Converters
 
@@ -86,4 +84,4 @@ using Cratis.Conversion;
 TypeConverters.Register();
 ```
 
-> Note: If you're using the Cratis Application Model, you do not have to manually set this up. It is automatically configured at startup.
+> Note: Cratis Arc calls `TypeConverters.Register()` when its core services are added, so you do not need to repeat that registration.

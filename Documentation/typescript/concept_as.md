@@ -1,11 +1,12 @@
 ---
-description: Create strongly-typed TypeScript identifiers and value objects that wrap string, number or boolean with the ConceptAs class.
+title: Model domain values with TypeScript ConceptAs
+description: Use ConceptAs in Cratis Fundamentals to name TypeScript domain values, accept primitives with unions, and restore wrapper instances from JSON.
 ---
-# ConceptAs
+<a id="conceptas"></a>
 
-When a string represents a user ID rather than arbitrary text, `ConceptAs<string>` gives that value a named wrapper. Read its primitive with `value` or `valueOf()`, and use the wrapper class with `@field` when `JsonSerializer` needs to rebuild it from JSON.
+`ConceptAs<T>` in Cratis Fundamentals wraps a value in a named TypeScript class, so a user ID or an order count has a domain name in your code. Use it when that name makes a field or function signature easier to understand. The wrapper stores the value; validation remains your responsibility.
 
-If an API should also accept the primitive directly, export a union of the class and primitive type:
+Start by extending `ConceptAs` with the value's type. If callers should also be able to pass a plain string or number, export a union type: a type that accepts either the wrapper or its underlying value.
 
 ```typescript
 import { ConceptAs } from '@cratis/fundamentals';
@@ -17,17 +18,23 @@ class OrderCountConcept extends ConceptAs<number> {}
 export type OrderCount = OrderCountConcept | number;
 ```
 
-## Overview
+<a id="overview"></a>
 
-Concept names express what a value means in your code. They do not validate its contents or make empty subclasses nominally distinct: TypeScript checks their instance structure. A union such as `UserIdConcept | string` also accepts any string. Choose that convenience deliberately, rather than relying on it to prevent identifier mix-ups.
+## Choose what the name should express
 
-The examples below are separate examples or labeled excerpts, not one file to concatenate. Start with the wrapper, then use [Using with JsonSerializer](#using-with-jsonserializer) when you need a JSON response restored as a class instance.
+`UserId` tells a reader what a string means, while `OrderCount` gives a number a purpose. Neither name checks the value's contents. A union such as `UserIdConcept | string` accepts any string, so choose it when accepting raw values is useful to your callers.
 
-## Key Benefits
+The sections below use separate examples and labeled excerpts. For reading and writing JSON, go to [Using with JsonSerializer](#using-with-jsonserializer); for extracting a wrapped value, see the [API reference](#api-reference).
 
-### 1. Type Safety
+<a id="key-benefits"></a>
 
-Two empty subclasses wrapping strings have the same public instance structure. The assignment below is accepted; the different class names do not create a compile-time boundary:
+## What ConceptAs changes
+
+<a id="1-type-safety"></a>
+
+### Understand the type boundary
+
+TypeScript compares the structure of instances, not just their class names. Two empty subclasses of `ConceptAs<string>` therefore remain interchangeable. In this example, a user ID is accepted as an order ID:
 
 ```typescript
 import { ConceptAs } from '@cratis/fundamentals';
@@ -42,11 +49,13 @@ const acceptedAsOrder: OrderId = new UserIdConcept('user-123');
 console.log(acceptedAsOrder.toString()); // "user-123"
 ```
 
-If an input must satisfy a format or business rule, validate it before wrapping it. Neither the constructor nor the union supplies that validation.
+If your API must reject a user ID where an order ID is expected, these empty subclasses do not provide that boundary. Validate formats and business rules before constructing a wrapper, too: the constructor stores whatever value you pass.
 
-### 2. Self-Documenting Code
+<a id="2-self-documenting-code"></a>
 
-The type names still help a reader understand a signature. This declaration excerpt assumes the `ConceptAs` import above; it describes the before/after signatures, not an executable invoice operation:
+### Name values in function signatures
+
+Domain names help explain a function even when they do not enforce distinct types. In the following before-and-after declaration excerpt, `CustomerId` and `InvoiceAmount` explain the arguments without requiring a reader to inspect the implementation. The excerpt uses the earlier `ConceptAs` import; it declares signatures rather than implementing invoice creation.
 
 ```typescript
 // Before: What does this string represent?
@@ -62,9 +71,11 @@ export type InvoiceAmount = InvoiceAmountConcept | number;
 declare function createInvoice(customerId: CustomerId, amount: InvoiceAmount): void;
 ```
 
-### 3. JSON Serialization Support
+<a id="3-json-serialization-support"></a>
 
-`JsonSerializer.serialize()` unwraps a concept to its inner value. To rebuild a concept on a model field, give `@field` the concept class; a union type alone supplies no runtime constructor. The instance check below shows what that metadata restores:
+### Keep JSON values simple
+
+`JsonSerializer.serialize()` writes the value inside a concept, so the JSON contains `"user-123"` rather than an object with a `value` property. When reading that JSON back, `@field(UserIdConcept)` tells the serializer which class to construct. The union type exists only for TypeScript's type checking and cannot supply that runtime constructor.
 
 ```typescript
 import { ConceptAs, JsonSerializer, field } from '@cratis/fundamentals';
@@ -96,9 +107,9 @@ console.log((deserialized.id as UserIdConcept).value); // "user-123"
 
 ## Usage
 
-### Creating a ConceptAs Type
+### Creating a ConceptAs type
 
-To create a ConceptAs type, extend the `ConceptAs<T>` abstract class with the appropriate primitive type. For convenience and ease of reading, export the concept as a union type that includes both the concept class and the underlying primitive:
+Extend the `ConceptAs<T>` abstract class with the type you want to wrap. Strings suit identifiers, numbers suit counts or amounts, and booleans can express a named flag. The unions below let callers use either a wrapper instance or the corresponding primitive:
 
 ```typescript
 import { ConceptAs } from '@cratis/fundamentals';
@@ -113,15 +124,11 @@ class IsActiveConcept extends ConceptAs<boolean> {}
 export type IsActive = IsActiveConcept | boolean;
 ```
 
-This pattern provides:
+Use the exported union in a type annotation when both representations are acceptable. Keep the class available for operations that need a runtime value, such as construction, `instanceof`, or `@field` metadata.
 
-- **Convenience**: Consumers can assign either the concept instance or the primitive value
-- **Readability**: The exported type name is clean and matches domain language
-- **Runtime reconstruction**: `@field` supplies the class to construct during deserialization, independently of the union annotation
+### Using ConceptAs types
 
-### Using ConceptAs Types
-
-Continuing from the three declarations above, pass the underlying value to the constructor. `valueOf()` returns that value for an operation; the union also lets you assign primitives without constructing a wrapper:
+With the three declarations above, pass a value to the constructor to create a wrapper. Read it through `value` or `valueOf()`, and use `toString()` when you need text. Assigning a primitive to a union-typed variable leaves it as a primitive; that assignment does not construct a wrapper.
 
 ```typescript
 // Instantiate the concept class
@@ -147,7 +154,7 @@ flexibleUserId = new UserIdConcept('user-789'); // Also works!
 
 ### Using with JsonSerializer
 
-To use ConceptAs types in objects that will be serialized/deserialized, mark the fields with the `@field` decorator. The `@field` decorator takes the concept class (not the union type), ensuring proper deserialization:
+To restore concept instances on a model, mark each field with `@field` and pass its concept class. In the `Order` below, `@field(OrderIdConcept)` gives the serializer the constructor for `orderId`. The `OrderId` union annotation separately allows application code to assign either a wrapper or a string.
 
 ```typescript
 import { ConceptAs, JsonSerializer, field } from '@cratis/fundamentals';
@@ -187,15 +194,15 @@ console.log(restored.orderId instanceof OrderIdConcept); // ✅ true
 console.log(restored.customerId instanceof UserIdConcept); // ✅ true
 ```
 
-After deserialization, both decorated IDs are concept instances even though one was assigned as a string before serialization. The class passed to `@field` controls that result; the union controls which assignments TypeScript accepts.
+Both `instanceof` checks are true after deserialization, including the customer ID that began as a plain string. The JSON does not record which representation you assigned; the class passed to `@field` determines what the serializer reconstructs.
 
-A TypeScript union such as `UserId | string` explicitly permits both representations. It does not make two structurally identical concepts incompatible or supply value equality; compare the underlying values when that is the operation you need.
+Wrappers are still objects. When comparing identifiers by their contents, compare their underlying values. A union annotation does not add value equality or make structurally identical concept classes incompatible.
 
-### Union Types for Flexible Assignment
+### Union types for flexible assignment
 
-Use a union when accepting either representation is useful to your callers. Export the class as well when another module needs to construct it, test `instanceof`, or pass it to `@field`. The union is a type annotation, not a runtime value or a validation boundary.
+A union is useful at an API boundary where callers may already have a raw value. Export the class alongside it so other modules can construct wrappers, test `instanceof`, and declare field metadata. Callers import the union for type annotations and the class for those runtime operations.
 
-#### Recommended Export Pattern
+#### Recommended export pattern
 
 These two modules export both the runtime class and the union type:
 
@@ -217,16 +224,11 @@ export class OrderCountConcept extends ConceptAs<number> {}
 export type OrderCount = OrderCountConcept | number;
 ```
 
-**Benefits of this pattern:**
+The two exports serve different jobs: `UserId` names the accepted inputs, and `UserIdConcept` provides the constructor. Keeping both in the same module lets a model use that domain name while still supplying the serializer with a class.
 
-- **Convenience**: Consumers can assign either the concept instance or the primitive value
-- **Readability**: The exported type name (`UserId`) is clean and matches domain language
-- **Runtime access**: Consumers import `UserIdConcept` when they need the constructor or field metadata
-- **Consistency**: All concept files follow the same export pattern
+#### Using the exported types
 
-#### Using the Exported Types
-
-When declaring fields, import and use the exported union type. The `@field` decorator still references the concept class for proper serialization:
+Import both exports when declaring a field that accepts primitives but must be reconstructed as a wrapper. Here, `userId` and `orderCount` use union annotations, while their decorators name the classes to create when reading JSON:
 
 ```typescript
 import { JsonSerializer, field } from '@cratis/fundamentals';
@@ -246,11 +248,11 @@ class Order {
 }
 ```
 
-The following assignment and serialization excerpts use this `Order` declaration and its imported concept classes. Treat each serialization alternative as a separate use of that model, not another declaration in the same scope.
+The following excerpts use this `Order` declaration and its imports. Each serialization example is a separate use of the model.
 
-#### Assignment Flexibility
+#### Assignment flexibility
 
-With union types exported from the concept file, you can assign either concept instances or primitive values:
+The union accepts wrappers and primitives on the same field. These assignments change what the field holds without converting one representation into the other:
 
 ```typescript
 const order = new Order();
@@ -268,11 +270,9 @@ order.userId = new UserIdConcept('user-789');
 order.orderCount = 55; // primitive
 ```
 
-#### Serialization Behavior
+#### Serialization behavior
 
-For a string or number concept, serialization writes the primitive whether the field holds a wrapper or the primitive itself. Deserialization uses the declared field class to wrap the incoming value:
-
-**Serialization** - Both ConceptAs instances and primitives serialize to the inner primitive value:
+For the string and number concepts below, a field produces the same JSON shape whether it holds a wrapper or a primitive. The first order uses wrappers; the second uses raw values:
 
 ```typescript
 // With ConceptAs instances
@@ -292,7 +292,7 @@ const json2 = JsonSerializer.serialize(order2);
 // Result: {"userId":"user-456","orderCount":99}
 ```
 
-**Deserialization** - Present, non-null field values become concept instances based on the `@field` decorator:
+When reading JSON, present, non-null values become instances of the classes supplied to `@field`:
 
 ```typescript
 const json = '{"userId":"user-123","orderCount":42}';
@@ -304,25 +304,15 @@ console.log((order.userId as UserIdConcept).value); // "user-123"
 console.log((order.orderCount as OrderCountConcept).value); // 42
 ```
 
-For these non-null inputs, the class specified in `@field` is restored regardless of whether the field originally held a wrapper or a primitive. An omitted field keeps its constructor default; an explicit `null` remains `null`, as described in [JsonSerializer](./serialization/json_serializer.md#integration-with-field-decorators).
+The serializer reconstructs these wrappers from the field metadata, regardless of how the values were assigned before serialization. An omitted concept field keeps its constructor default; an explicit `null` remains `null`. See [JsonSerializer's field handling](./serialization/json_serializer.md#integration-with-field-decorators) when your payload can omit values.
 
-#### Implementation Details
+#### Implementation details
 
-When serializing a concept, `JsonSerializer` performs these operations:
+`JsonSerializer` recognizes a concept instance, reads its `value`, and sends that value through serialization again. For a string, number, or boolean, the result is a JSON primitive. An inner object goes through its own serialization logic. The union annotation plays no part in this process because TypeScript types are absent at runtime.
 
-1. **Recognition**: During serialization, the serializer detects ConceptAs instances
-2. **Unwrapping**: Extracts the inner value from the ConceptAs instance
-3. **Recursive Serialization**: Calls the serializer recursively on the inner value to handle complex types properly
+#### Best practices for union types
 
-This ensures that:
-
-- Simple primitives (string, number, boolean) are serialized directly
-- Complex inner types are properly serialized using their own serialization logic
-- Union annotations need no runtime handling; `@field` supplies the class for reconstruction
-
-#### Best Practices for Union Types
-
-Export the class alongside the union if consumers need runtime operations:
+Keep the runtime class exported when consumers need more than assignment. This module gives a service access to both the accepted input type and the constructor:
 
 ```typescript
 // UserId.ts
@@ -333,7 +323,7 @@ export class UserIdConcept extends ConceptAs<string> {}
 export type UserId = UserIdConcept | string;
 ```
 
-This continuation excerpt uses the `Order` declaration from [Using the Exported Types](#using-the-exported-types). Its method accepts either representation and returns that model:
+Using the `Order` declaration from [Using the Exported Types](#using-the-exported-types), this service accepts either representation and places it on the model. It leaves conversion to the serializer when the model is read back from JSON:
 
 ```typescript
 import { UserId, UserIdConcept } from './UserId';
@@ -356,7 +346,7 @@ service.createOrder(new UserIdConcept('user-123'), new OrderCountConcept(42));
 service.createOrder('user-123', 42);
 ```
 
-**✅ DO** use type guards when you need to distinguish between ConceptAs and primitives:
+When an operation needs to distinguish a wrapper from a primitive, use an `instanceof` check. TypeScript then narrows the union so the wrapper branch can read `value`:
 
 ```typescript
 import { UserId, UserIdConcept } from './UserId';
@@ -372,7 +362,7 @@ function processUserId(userId: UserId) {
 }
 ```
 
-When a field needs reconstruction as a concept, supply `@field`. The next excerpt contrasts two alternative `Order` declarations using the types above; choose one, rather than placing both declarations in a file:
+A union annotation alone cannot tell `JsonSerializer` to construct a concept. The alternative declarations below show the difference: use the decorated field when the JSON value needs to become a wrapper.
 
 ```typescript
 // ❌ BAD: Missing @field decorator
@@ -387,7 +377,7 @@ class Order {
 }
 ```
 
-## API Reference
+## API reference
 
 ### Constructor
 
@@ -395,7 +385,7 @@ class Order {
 constructor(readonly value: T)
 ```
 
-Creates a new instance of the concept with the specified value.
+Stores the supplied value without validating or converting it. The example uses the earlier `ConceptAs` import.
 
 **Parameters:**
 
@@ -427,7 +417,7 @@ console.log(userId.value); // "user-123"
 
 #### `valueOf(): T`
 
-Returns the primitive value of the concept. JavaScript can call it during coercion, but that does not make arithmetic on a wrapper a valid TypeScript expression. Call `valueOf()` explicitly before numeric operations:
+Returns the wrapped value. JavaScript can call `valueOf()` during coercion, but TypeScript does not treat the wrapper itself as a number for arithmetic. Extract the number explicitly, as in `count.valueOf() + 10`:
 
 **Returns:** The underlying value
 
@@ -458,11 +448,13 @@ const count = new OrderCountConcept(42);
 console.log(count.toString()); // "42"
 ```
 
-## Best Practices
+## Best practices
 
-### 1. Use for Domain Identifiers
+<a id="1-use-for-domain-identifiers"></a>
 
-Use a named wrapper where it helps distinguish an identifier's purpose. These declaration excerpts assume the earlier `ConceptAs` import; for separate modules, follow [Recommended Export Pattern](#recommended-export-pattern) to export the classes as well as their union types:
+### Name domain identifiers
+
+Use a wrapper where its name helps explain an identifier's purpose in your application. These declaration excerpts use the earlier `ConceptAs` import. When placing them in separate modules, follow the [export pattern](#recommended-export-pattern) so callers can also import the classes.
 
 ```typescript
 // UserId.ts
@@ -482,9 +474,11 @@ class CustomerIdConcept extends ConceptAs<string> {}
 export type CustomerId = CustomerIdConcept | string;
 ```
 
-### 2. Use for Measured Values
+<a id="2-use-for-measured-values"></a>
 
-A wrapper can also make the unit or meaning of a number visible. These declaration excerpts use the same import and export setup as the identifier examples; they do not add unit conversion or range validation:
+### Make numeric meaning visible
+
+`TemperatureInCelsius` tells a reader which unit a number represents; `Quantity` tells them what it measures. These declarations use the same import and export setup as the identifier examples. Validate ranges and perform unit conversions separately.
 
 ```typescript
 // OrderCount.ts
@@ -504,9 +498,11 @@ class TemperatureInCelsiusConcept extends ConceptAs<number> {}
 export type TemperatureInCelsius = TemperatureInCelsiusConcept | number;
 ```
 
-### 3. Use Union Types for Flexibility
+<a id="3-use-union-types-for-flexibility"></a>
 
-For a field that should accept either representation, export its union and runtime class. The `Order.ts` continuation also uses `OrderCount.ts` from [Recommended Export Pattern](#recommended-export-pattern):
+### Accept primitives where callers need them
+
+Export a union when the field should accept both wrappers and primitives. Keep the class exported for field metadata, as this `Order.ts` continuation shows. It also imports `OrderCount.ts` from the [export pattern](#recommended-export-pattern).
 
 ```typescript
 // UserId.ts
@@ -541,9 +537,11 @@ order.userId = 'user-456';
 
 See the [Union Types for Flexible Assignment](#union-types-for-flexible-assignment) section for complete details.
 
-### 4. Don't Add Extra Properties
+<a id="4-dont-add-extra-properties"></a>
 
-`JsonSerializer` unwraps the concept's `value`; additional subclass properties are not preserved. These contrasting excerpts use the earlier `ConceptAs`, `field` and `UserId` declarations. Keep a timestamp on the containing model when it needs to survive serialization:
+### Keep extra state on the containing model
+
+A timestamp placed on a concept subclass disappears when `JsonSerializer` unwraps its `value`. Put that timestamp on the containing model and decorate it there if it needs to survive serialization. These contrasting excerpts use the earlier `ConceptAs`, `field`, and `UserId` declarations.
 
 ```typescript
 // ❌ DON'T do this
@@ -561,13 +559,15 @@ class User {
 }
 ```
 
-### 5. Keep Concepts Simple
+<a id="5-keep-concepts-simple"></a>
 
-ConceptAs is for wrapping primitives. For complex domain objects with multiple properties, create regular classes instead.
+### Use regular classes for multi-property objects
+
+Use `ConceptAs` when a single wrapped value expresses the domain meaning you need. If the object has several properties that must be stored together, make it a regular class and declare its serialized fields with `@field`.
 
 ## Comparison with C# ConceptAs
 
-The names are related, but the TypeScript wrapper does not inherit C# record equality or nominal type distinctions. Read the language-specific contracts separately:
+If you already use C# concepts, keep the language differences in view. The TypeScript wrapper shares the idea of naming an underlying value, but it does not provide C# record equality or make empty subclasses distinct types.
 
 | Feature | C# | TypeScript |
 |---------|----|------------|
@@ -580,8 +580,10 @@ The names are related, but the TypeScript wrapper does not inherit C# record equ
 | Serialization pattern | Unwrap → Serialize recursively | Unwrap → Serialize recursively |
 | Comparison operators | `IComparable` interface | Not implemented (use `value` directly) |
 
-## See Also
+<a id="see-also"></a>
 
-- [JsonSerializer](./serialization/json_serializer.md) - JSON serialization with ConceptAs support
-- [Field Decorator](./serialization/field_decorator.md) - Declaring fields for serialization
-- [C# Concepts](../csharp/concepts.md) - C# equivalent documentation
+## Next steps
+
+To restore concepts as part of a larger model, continue with [JsonSerializer](./serialization/json_serializer.md). The [field decorator reference](./serialization/field_decorator.md) covers the metadata you need for collections and other field types.
+
+For the .NET side of your model, read [C# Concepts](../csharp/concepts.md) for its conversion and equality behavior rather than assuming the TypeScript rules apply.

@@ -1,7 +1,7 @@
 ---
-description: Represent a time of day without date or time zone in TypeScript with TimeOnly, the counterpart of .NET System.TimeOnly.
+title: TimeOnly
+description: TimeOnly in Cratis Fundamentals represents a time of day without a date or time zone in TypeScript, with parsing and JSON serialization.
 ---
-# TimeOnly
 
 An opening time such as 09:00 does not identify an instant until you also choose a date and time zone. `TimeOnly` keeps just the time of day. Use `parse()` for an incoming time string, compare it with `equals()`, and send it back as a string without inventing a date.
 

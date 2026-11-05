@@ -1,27 +1,26 @@
 ---
-description: Understand the Point, LineString and Polygon geospatial types in .NET and which one fits a location, a path or an area.
+title: Cratis Fundamentals geospatial types — choosing a shape
+description: Use Point for a location, LineString for a connected path and Polygon for a bounded area in .NET. Learn coordinate order and GeoJSON representation.
 ---
-# Understanding Geospatial Types
-
-Geospatial types represent locations and areas on Earth's surface. Cratis provides three core types, each suited for different scenarios.
+Use `Point` for a single location, `LineString` for a connected path and `Polygon` for an area with a boundary. In Cratis Fundamentals, these geospatial types let a model distinguish a delivery vehicle's current position from its route and the delivery zone it serves.
 
 ## Point
 
-A **Point** is the simplest geospatial type — a single location defined by longitude and latitude coordinates. Use Points when you need to store or track a discrete location: a warehouse address, a vehicle's current position, a user's home location.
+A `Point` is a single location defined by longitude and latitude. Use it for the coordinates of a warehouse or a vehicle's current position. A history of positions can remain a collection of Points when you need separate observations rather than a path connecting them.
 
-Points are always paired: longitude (east-west, -180° to 180°) and latitude (north-south, -90° to 90°).
+Coordinate order matters: longitude comes first, then latitude. Longitude measures east-west position from -180° to 180°; latitude measures north-south position from -90° to 90°. Reversing the pair describes a different location.
 
 ## LineString
 
-A **LineString** is a path formed by connecting two or more Points in order. Unlike an array of points, a LineString explicitly represents the connections between them, forming a continuous line. Use LineStrings for routes, boundaries, and trajectories: a hiking trail, a river boundary, a vehicle's movement history.
+A `LineString` describes a path connecting two or more Points in order. Choose it when the connections matter, such as a delivery route or a hiking trail. The same positions stored as separate observations do not express that connected path.
 
-A LineString must have at least two points. It represents the shortest path (geodesic) between consecutive pairs of points on Earth's surface.
+A LineString needs at least two points. It stores the path's coordinates; it does not calculate a route or the distance between positions.
 
 ## Polygon
 
-A **Polygon** encloses an area using one or more closed rings of points. The outer ring is the boundary; optional inner rings define excluded areas (like courtyards or lakes within land). Use Polygons for areas and regions: park boundaries, property parcels, delivery zones, geofences.
+A `Polygon` describes an area enclosed by an outer ring of points, called the shell. Optional inner rings describe holes excluded from the area, such as a courtyard within a building footprint. Use a Polygon for a delivery zone when the area inside the boundary matters; use a LineString when you only need a boundary line.
 
-A Polygon ring must have at least 4 points, with the first and last points identical to close it.
+Each ring is a `LinearRing` with at least four points, including a repeated first point at the end to close it. These C# records store the coordinates without validating them in their constructors, so supply valid coordinate ranges, point counts and closed rings when creating them.
 
 ## When to Use Each
 
@@ -31,16 +30,18 @@ A Polygon ring must have at least 4 points, with the first and last points ident
 | Track position over time | Point (repeated snapshots) |
 | Represent a route or boundary line | LineString |
 | Represent a bounded area or region | Polygon |
-| Geofencing (location triggers) | Polygon |
-| Administrative boundaries | Polygon |
+| Describe a geofence boundary | Polygon |
+| Represent an administrative area | Polygon |
+
+A Polygon represents the zone used for geofencing. Your application or a spatial database still needs to check whether a position falls inside it and decide when to trigger an action.
 
 ## JSON Serialization
 
-All types serialize to [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/) format — a standard adopted by geographic databases and mapping services. This ensures your data integrates seamlessly with external tools and services.
+The converters serialize these types as [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/) geometry objects. Each object has a `type` that names the shape and `coordinates` whose nesting reflects its structure.
 
-The converters are registered in the Fundamentals global serializer options (`Cratis.Json.Globals.JsonSerializerOptions`), which the Cratis Application Model uses. Code that serializes with its own options must register the converters itself. The same conversion happens in reverse when deserializing.
+The converters are registered in the Fundamentals global serializer options (`Cratis.Json.Globals.JsonSerializerOptions`). Code that serializes with its own options must register the converters itself. They also read GeoJSON back into the corresponding records. Follow [Geospatial Serialization](../serialization/geospatial.md) for the registration details.
 
-**Point example:**
+A Point has one longitude-latitude pair. In this example, longitude is 10.5 and latitude is 20.3:
 
 ```json
 {
@@ -49,7 +50,7 @@ The converters are registered in the Fundamentals global serializer options (`Cr
 }
 ```
 
-**LineString example:**
+A LineString has an ordered array of coordinate pairs:
 
 ```json
 {
@@ -58,7 +59,7 @@ The converters are registered in the Fundamentals global serializer options (`Cr
 }
 ```
 
-**Polygon example:**
+A Polygon adds another array level to group its rings. The first ring is the shell; any following rings are holes. This example has only a shell, with its first coordinate repeated at the end:
 
 ```json
 {
@@ -67,14 +68,18 @@ The converters are registered in the Fundamentals global serializer options (`Cr
 }
 ```
 
-## Full-Stack Type Safety
+<a id="full-stack-type-safety"></a>
 
-Use the same geospatial types on both C# backend and TypeScript frontend. Data round-trips cleanly in GeoJSON format:
+## Sharing a Point with TypeScript
+
+Cratis Fundamentals also provides TypeScript classes for these shapes. A C# model can declare a Point property:
 
 ```csharp
 // C# backend
 public record Location(string Name, Point Position);
 ```
+
+The corresponding TypeScript model declares the property with `@field(Point)`, which tells the Fundamentals JSON serializer to deserialize it as a Point:
 
 ```typescript
 // TypeScript frontend
@@ -87,4 +92,6 @@ class Location {
 }
 ```
 
-Both serialize and deserialize to identical GeoJSON, so the type information flows end-to-end.
+With the Fundamentals serializers, the Point value uses the GeoJSON representation shown above. Plain `JSON.parse` returns an object, not a Point instance; use the TypeScript serializer when you need the typed value.
+
+Once you have chosen a shape, follow the [Point](./point.md), [LineString](./linestring.md) or [Polygon](./polygon.md) examples to add it to a C# model.

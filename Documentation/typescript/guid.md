@@ -1,7 +1,7 @@
 ---
-description: Create, parse, convert and compare GUIDs in TypeScript with the Guid class from @cratis/fundamentals.
+title: GUID
+description: The Guid class in Cratis Fundamentals creates, parses and compares GUIDs in TypeScript, with string and byte conversions and JSON serialization.
 ---
-# GUID
 
 Use `Guid` when an identifier needs to move between a string, bytes and a value you can compare. For an incoming string, check its shape with `Guid.isGuid()` before calling `Guid.parse()`. For two separately created instances of the same identifier, use `equals()` rather than reference equality.
 

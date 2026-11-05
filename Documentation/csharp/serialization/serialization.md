@@ -26,6 +26,8 @@ The options use acronym-friendly **camelCase** property names and set `DefaultIg
 Naming applies to both serialization and deserialization, but does not enable case-insensitive input: the options leave `PropertyNameCaseInsensitive` at its default, `false`.
 Custom converters can have their own naming and null-handling behavior.
 
+Use the Person example above as a baseline: passing the global options produces `firstName`, and reading that payload with the same options restores `FirstName`. If a payload uses different casing, compare it with the options passed to that call rather than assuming the global property configures every serializer. For a model with an interface-valued property, continue with [DerivedTypes Serialization](./derived_types.md); for complex dictionary keys, [read the dictionary example](./complex_key_dictionaries.md). The [date/time guide](./date_and_time_only.md) separates JSON conversion from parameter conversion, while the [geospatial guide](./geospatial.md) shows the geometry payloads and their implemented checks.
+
 ## Enums under NativeAOT
 
 The type-discovery generator emits enum converter factories for enums declared in each participating assembly. `Cratis.Json.EnumConverterFactory` uses these factories under NativeAOT, avoiding runtime generic converter construction. Keep using `new EnumConverterFactory()` in your serializer options and use a source-generated `JsonSerializerContext` for the types you serialize, as required by System.Text.Json under NativeAOT.

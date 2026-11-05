@@ -1,7 +1,7 @@
 ---
-description: Create and use a .NET Polygon, a bounded area made of closed rings with optional holes, for regions, parcels and geofences.
+title: Polygon areas in Cratis Fundamentals for .NET
+description: Cratis Fundamentals Polygon represents a bounded area in .NET using an outer ring and optional holes, with converters for GeoJSON serialization.
 ---
-# Polygon
 
 ## What is a Polygon?
 

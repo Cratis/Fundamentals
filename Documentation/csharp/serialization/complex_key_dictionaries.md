@@ -1,8 +1,7 @@
 ---
-description: Serialize .NET dictionaries with complex object keys to JSON and back with the ComplexKeyDictionaryJsonConverterFactory.
+title: Complex key dictionaries in Cratis Fundamentals
+description: Cratis Fundamentals serializes .NET dictionaries with complex object keys as JSON property names and reconstructs typed keys when reading.
 ---
-# Complex Key Dictionaries
-
 The default JSON object model uses string property names. This means dictionaries with complex object keys need a custom conversion strategy to preserve typed keys across serialization boundaries.
 
 ## Overview
@@ -38,6 +37,8 @@ var roundTrip = JsonSerializer.Deserialize<IDictionary<AccountKey, AccountSummar
 public record AccountKey(Guid Id, string Tenant);
 public record AccountSummary(int Balance);
 ```
+
+In the example, each AccountKey becomes compact JSON inside a JSON property name; it is not a nested key object alongside the value. Reading `roundTrip` reconstructs an AccountKey from that property name and an AccountSummary from its value. Keep the same key-conversion settings on both sides: the converter copies the supplied options for keys and turns off indentation. If the payload instead uses a plain identifier as the property name, compare it with this key format before treating it as an AccountKey dictionary.
 
 ## Frontend Interop
 

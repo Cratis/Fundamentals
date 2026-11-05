@@ -1,7 +1,7 @@
 ---
+title: DateOnly
 description: Represent a calendar date without time or time zone in TypeScript with DateOnly, the counterpart of .NET System.DateOnly.
 ---
-# DateOnly
 
 An invoice date needs to stay the same calendar day when you display it or send it back to an API. `DateOnly` holds that date without a time or time zone. Parse the date string, use its calendar parts, and convert to a JavaScript `Date` only when another API actually needs an instant.
 

@@ -1,7 +1,7 @@
 ---
-description: Parse, format and serialize time intervals in TypeScript using TimeSpan, compatible with .NET System.TimeSpan strings.
+title: TimeSpan
+description: TimeSpan in Cratis Fundamentals parses and formats TypeScript durations as .NET-compatible strings, with component values and totals.
 ---
-# TimeSpan
 
 A timeout or elapsed interval is a duration, not a calendar date or an opening time. `TimeSpan.parse()` turns its string into components and aggregate values you can compare. Use `totalHours` when the whole interval matters, then `toString()` or JSON serialization when you need the duration string again.
 

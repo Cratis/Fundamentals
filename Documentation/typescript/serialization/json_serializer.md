@@ -1,25 +1,24 @@
 ---
-description: Serialize and deserialize TypeScript objects to JSON with JsonSerializer, keeping class instances, methods and runtime types intact.
+title: TypeScript JsonSerializer for typed JSON models
+description: JsonSerializer reads JSON into TypeScript class instances using field metadata and converters, so model methods and nested types are available.
 ---
-# JsonSerializer
+<a id="jsonserializer"></a>
 
-The `JsonSerializer` is the core utility for serializing and deserializing TypeScript objects to and from JSON. It works seamlessly with the `@field` decorator system and `@derivedType` decorators to provide type-safe, round-trip serialization that preserves runtime types and method access.
+`JsonSerializer` reads JSON into TypeScript class instances using runtime field metadata. Use it when `JSON.parse()` gives you plain objects but your code needs model methods, nested class instances, or values such as `Date` and `Guid`. It also writes those models back to JSON.
 
 ## Overview
 
-The `JsonSerializer` bridges the gap between JSON data and strongly-typed TypeScript class instances, enabling:
+Pass the model's constructor to `deserialize` and declare its readable fields with `@field`. Cratis Fundamentals uses that metadata to reconstruct field values, calling built-in or registered converters where needed. For fields with several possible implementations, `@derivedType` identifiers let the reader choose a candidate class.
 
-- **True Object Deserialization**: JSON data becomes actual class instances, not plain objects
-- **Method Preservation**: All class methods remain accessible on deserialized instances
-- **Type Safety**: Automatic type resolution and validation during serialization/deserialization
-- **Polymorphic Support**: Automatic handling of derived types and interface implementations
-- **Seamless Backend Integration**: Compatible with .NET backend serialization format
+This is reconstruction, not schema validation. Primitive field readers pass values through without checking their types, so validate untrusted input separately.
 
 ## Key Benefits
 
-### 1. Type-Safe Runtime Objects
+<a id="1-type-safe-runtime-objects"></a>
 
-Instead of plain JavaScript objects from `JSON.parse()`, the `JsonSerializer` creates actual class instances:
+### 1. Construct Class Instances
+
+A TypeScript annotation does not turn a parsed object into a class instance. `JsonSerializer.deserialize(User, json)` constructs `User` and populates its declared fields. These excerpts use the decorated `User` class shown in the next section.
 
 ```typescript
 import { JsonSerializer } from '@cratis/fundamentals';
@@ -35,7 +34,7 @@ console.log(user instanceof User); // ✅ true
 
 ### 2. Business Logic Access
 
-Methods defined on your classes are immediately available on deserialized objects:
+Because the result is a `User` instance, its prototype provides `getDisplayName()`. JSON supplies only the data; the method comes from your class definition. Import `field` alongside `JsonSerializer` for this model.
 
 ```typescript
 export class User {
@@ -59,7 +58,7 @@ console.log(user.getDisplayName()); // ✅ "John (30)"
 
 ### 3. Automatic Polymorphic Resolution
 
-When working with interfaces or base classes, the `JsonSerializer` automatically deserializes to the correct derived type:
+A polymorphic field can select its implementation from `_derivedTypeId`. This excerpt shows identifier registration only; the [derived types guide](./derived_types.md) supplies the interface and decorated payment fields omitted from these class bodies. It assumes a containing `Payment` class whose `method` field declares `CreditCard` and `PayPal` as candidates.
 
 ```typescript
 // Different payment types deserialized to their correct classes
@@ -81,13 +80,13 @@ The runtime resolution flow is:
 2. Build candidates from both `field.derivatives` and `DerivedType.getDerivedTypesFor(field.type)`.
 3. Match candidate identifier and deserialize into the matching constructor.
 
-This makes class inheritance work with runtime-only registration from `@derivedType`.
-For interface-only polymorphism, include explicit derivatives on `@field` (or use `@derivedType`
-with an explicit `targetType` constructor).
+The decorator registers subclasses against their base classes when their modules are evaluated. Import those modules before reading payloads. For an interface-shaped field, list the implementations on `@field`, or register them with an explicit `targetType` constructor and use that constructor for the field.
+
+If no candidate matches, the field's declared constructor is used and the incoming identifier is preserved. Root calls to `deserialize` and `deserializeArray` use the supplied constructor; they do not select a root subtype from `_derivedTypeId`.
 
 ### 4. Proper Type Conversion
 
-Complex types like `Date` and `Guid` are properly converted during deserialization:
+Declare `Date` or `Guid` as the field's runtime type to invoke its built-in converter. In this model, `createdAt` and `customerId` arrive as JSON strings but are read as `Date` and `Guid` instances. Import `Guid` from `@cratis/fundamentals` for the excerpt.
 
 ```typescript
 export class Order {
@@ -112,7 +111,7 @@ console.log(order.customerId instanceof Guid); // ✅ true
 
 ### Basic Serialization
 
-Convert class instances to JSON:
+Pass an instance to `serialize` to get a JSON string. Serialization visits runtime own properties, including properties without `@field`; the decorator controls typed reading, not which properties are written.
 
 ```typescript
 const user = new User();
@@ -125,7 +124,7 @@ console.log(json); // {"name":"John","age":30}
 
 ### Basic Deserialization
 
-Convert JSON strings back to typed instances:
+Pass the constructor and a JSON string to `deserialize`. For models without a converter, the constructor is called without arguments, so it must support that call. The reader then populates the decorated fields.
 
 ```typescript
 const json = `{"name":"John","age":30}`;
@@ -137,7 +136,7 @@ console.log(user.name); // "John"
 
 ### Array Deserialization
 
-Handle arrays of typed objects:
+Use `deserializeArray` when the JSON root is an array whose elements use the same runtime constructor.
 
 ```typescript
 const json = `[
@@ -151,27 +150,23 @@ const users = JsonSerializer.deserializeArray(User, json);
 
 ## Integration with Field Decorators
 
-The `JsonSerializer` relies on the `@field` decorator to understand your class structure. It reads collections declared either as `@field(ItemType, true)` or as `@field(Array, { genericArguments: [ItemType] })`. Both forms deserialize each element using its declared type, including concepts and nested models. An absent collection becomes `[]`; an explicit `null` stays `null`.
+Declare collections either as `@field(ItemType, true)` or as `@field(Array, { genericArguments: [ItemType] })`. Both forms read each element using its declared type, including concepts and nested models. An absent collection becomes `[]`; an explicit `null` stays `null`.
 
 For non-collection fields, an omitted field or an `undefined` input value leaves the constructor's default untouched. This preserves initializers, including `null`, object references, and references to the instance itself. A field without an initializer stays `undefined`. A present value overrides the default after conversion; an explicit `null` overrides it without conversion. These rules also apply to fields inside nested decorated types.
 
 For a concept whose underlying value needs conversion, declare its runtime type on the concept. For example, `class Identifier extends ConceptAs<Guid> { static readonly valueType = Guid; }` converts a JSON string into a `Guid` before wrapping it in `Identifier`. Concepts wrapping `""`, `0`, or `false` are also reconstructed; an omitted concept field keeps its constructor default.
 
-For comprehensive details about decorators, field configuration, and advanced patterns, see:
-
-- [Field Decorator Documentation](./field_decorator.md) - Complete guide to the `@field` decorator system, runtime type safety, and advanced serialization patterns
+Use the [field decorator guide](./field_decorator.md) to configure generic arguments, runtime metadata, and compiler decorator modes.
 
 ## Integration with Derived Types
 
-For polymorphic serialization and working with multiple implementations of the same interface, see:
-
-- [DerivedTypes Serialization Documentation](./derived_types.md) - Full guide to the `@derivedType` decorator, polymorphic deserialization, and multi-type scenarios
+When a field can hold several implementations, follow the [derived types guide](./derived_types.md) to give each class an identifier and make its constructor available to the field reader. A TypeScript interface alone cannot supply that runtime information.
 
 ## Best Practices
 
 ### 1. Complete Field Declaration
 
-Ensure all serializable properties are decorated:
+Decorate every field you need to reconstruct with a runtime type. An undecorated property can be written to JSON but will not be populated when reading a concrete model class.
 
 ```typescript
 // ✅ Good - all fields decorated
@@ -189,7 +184,7 @@ export class Product {
 
 ### 2. Test Round-Trip Serialization
 
-Verify your objects serialize and deserialize correctly:
+Check both the data and the behavior you need after reading it back. This test excerpt uses the `User` model above and assumes your test framework provides `expect`.
 
 ```typescript
 const original = new User();
@@ -206,7 +201,7 @@ expect(deserialized.getDisplayName()).toBe(original.getDisplayName());
 
 ### 3. Handle Complex Nested Objects
 
-The `JsonSerializer` automatically handles nested typed objects:
+Declare nested constructors just as you would primitive field types. This excerpt assumes decorated `Customer` and `Product` classes and an order payload in `json`. Reading `Order` also constructs its customer and each product in `items`.
 
 ```typescript
 export class Order {
@@ -226,7 +221,7 @@ const order = JsonSerializer.deserialize(Order, json);
 
 ### 4. Error Handling
 
-Wrap serialization calls in try-catch blocks for production code:
+Handle parse or converter errors where your application receives the payload, so it can report or reject unreadable data. A `try`/`catch` catches those failures; it does not add validation for values the reader accepts.
 
 ```typescript
 try {
@@ -241,7 +236,7 @@ try {
 
 ### Backend Integration
 
-Deserialize data received from your .NET backend:
+After receiving a response, reconstruct it with the model constructor. The backend's property names and value formats must match your field declarations and converters. The excerpt below parses the response and converts it back to a string; if you already have a parsed object, `JsonSerializer.deserializeFromInstance(User, json)` avoids that extra stringify/parse step.
 
 ```typescript
 // Response from backend
@@ -254,12 +249,16 @@ const user = JsonSerializer.deserialize(User, JSON.stringify(json));
 
 ### Working with Collections
 
+For an array response, use `deserializeArray` with a JSON string, as below. If you already parsed the response, `deserializeArrayFromInstance(User, usersJson)` reads the array directly.
+
 ```typescript
 const usersJson = await (await fetch('/api/users')).json();
 const users = JsonSerializer.deserializeArray(User, JSON.stringify(usersJson));
 ```
 
 ### Polymorphic API Responses
+
+Put a mixed collection on a model field so each element can resolve its identifier against that field's candidates. These excerpts assume configured `Payment`, `CreditCard`, and `PayPal` classes; replace the single-field payload's `"..."` identifier with a registered ID.
 
 ```typescript
 // Single polymorphic field
@@ -285,11 +284,9 @@ See [Derived Types](./derived_types.md) for the field-based pattern.
 
 ## Custom converters
 
-`Date`, `Guid`, `TimeSpan`, `ValueMap` and the geospatial types come with converters built in. When a
-type needs to cross the wire in a shape only you can decide — or when a built-in shape is not the one
-your backend declared — register a converter for it.
+Built-in converters cover `Date`, `DateOnly`, `Guid`, `TimeOnly`, `TimeSpan`, `ValueMap`, and the [geospatial types](./geospatial.md). Register a custom converter when your payload needs a different representation.
 
-Extend `JsonConverter`, declare the type it handles, and register it once during application start-up:
+Extend `JsonConverter`, return the constructor from `type`, and register an instance during application startup. This example replaces the `Date` converter. Because it reads local midnight but writes through UTC, check the intended timezone behavior before using this date-only representation.
 
 ```typescript
 import { JsonConverter, JsonSerializer, Constructor } from '@cratis/fundamentals';
@@ -311,9 +308,7 @@ class CalendarDateJsonConverter extends JsonConverter<Date> {
 JsonSerializer.registerConverter(new CalendarDateJsonConverter());
 ```
 
-The converter is used for both directions — `read` on the way in, `write` on the way out — and takes
-the place of any converter already registered for the same type, including a built-in one. Registering
-only ever adds, so you can hand back to a built-in by registering a fresh one:
+Registration replaces the converter for that type, including a built-in converter. The reader calls `read` and the writer calls `write`, so replacing `Date` affects all date conversions through that serializer registry. To restore the built-in date representation, register a new `DateJsonConverter`:
 
 ```typescript
 import { DateJsonConverter } from '@cratis/fundamentals';
@@ -323,47 +318,33 @@ JsonSerializer.registerConverter(new DateJsonConverter());
 
 ### What a converter cannot take over
 
-Two shapes resolve ahead of the converters, so a converter registered for them is not reached:
+Some values resolve before converter lookup:
 
-- A type deriving from `ConceptAs` is unwrapped to its underlying value in both directions and converted
-  as that value's type. Register for the underlying type to reach a concept.
-- A `ValueMap` is read back from the declaring field's generic arguments rather than through a
-  converter. Note the asymmetry: writing a `ValueMap` *does* go through the registered converter, so
-  replacing that one changes the outbound half only.
+- A `ConceptAs` type uses its underlying value's conversion before wrapping or unwrapping it. Register for the underlying type to affect that conversion.
+- A `ValueMap` field is read from its declared generic arguments, not through a registered map converter. Writing a `ValueMap` does use the converter, so replacing it changes only the outbound half.
+- A `Guid`, `DateOnly`, `TimeOnly`, or `TimeSpan` used as a `ValueMap` key uses its canonical string form, bypassing its registered converter.
 
-> [!NOTE]
-> `JsonConverter` also defines `canConvert`. `JsonSerializer` does not call it — a converter is resolved
-> by the type it declares through `type`, which is what `canConvert` would answer anyway — so overriding
-> it has no effect.
+`JsonSerializer` resolves converters by their `type` property. It does not call `JsonConverter.canConvert`, so overriding that method has no effect.
 
 ## Loaded more than once
 
-If two copies of `@cratis/fundamentals` end up in the same JavaScript realm, each builds its own
-converter registry and its own `Guid` and `ConceptAs` class objects.
+Two copies of `@cratis/fundamentals` loaded into the same JavaScript realm have separate converter registries and class objects. Built-in keyed types, such as `Guid` and concepts, can still be recognized across copies, but that does not share the registries or make the constructors identical.
 
-Values themselves survive that boundary — a convertible type is recognised by the key it declares
-rather than by its class object, so a `Guid` or a concept created by one copy serialises correctly
-through the other. Three things do not survive it, and all three are silent:
+A converter registration reaches only its own copy. An `instanceof` check against the other copy's class is `false`, and updating the top-level dependency does not update a nested copy. These differences can change behavior without a build error.
 
-- A converter registered through `registerConverter` reaches only the copy it was registered on.
-- `instanceof` against the other copy's class is `false`, including in your own code.
-- A version pinned at the top level does not reach a copy nested under a dependency, so a fix you
-  adopt can reach nothing at all while every build stays green.
-
-So the package reports it once, on load:
+The package reports duplicate loading once, when the second copy registers:
 
 ```text
 [@cratis/fundamentals] Loaded 2 times into the same JavaScript realm, and it has to be loaded once.
 ```
 
-The report names where each copy was loaded from. Two separate installs collapse with
-`yarn dedupe @cratis/fundamentals` (or `npm dedupe`); confirm with `yarn why @cratis/fundamentals`. If
-the two paths differ only in `dist/esm` against `dist/cjs` it is one install reached as both ESM and
-CommonJS, which no dedupe will fix — make every importer resolve the same one.
+The report names each load location. If they point to separate installs, inspect the dependency tree with `yarn why @cratis/fundamentals` and align incompatible version requirements before deduplicating with `yarn dedupe @cratis/fundamentals` or `npm dedupe`. Deduplication alone cannot combine conflicting version requirements.
+
+If the paths differ only in `dist/esm` and `dist/cjs`, one install is being loaded as both ESM and CommonJS. Make importers resolve the same module format; deduplicating the dependency tree does not fix that case. Copies predating the duplicate-load guard do not register themselves, so the report cannot detect them.
 
 ### If you publish a package that uses this one
 
-Declare it as a **peer** dependency, not a regular one:
+Declare `@cratis/fundamentals` as a peer dependency so the consuming application supplies the shared copy. Use a development dependency for your package's own build and specs; this excerpt shows that manifest structure.
 
 ```json
 {
@@ -372,15 +353,8 @@ Declare it as a **peer** dependency, not a regular one:
 }
 ```
 
-A regular dependency tells the package manager that a copy each is acceptable, and an exact pin makes
-duplication unavoidable rather than merely possible — an application combining your package with any
-other pinning a different `7.x` ends up with two physical copies that no dedupe can collapse. A peer
-dependency is the mechanism for "exactly one of these in the tree", which is what this is. Keep the
-range wide so a patch release does not force lockstep releases, and pin exactly in `devDependencies` so
-your own build and specs stay where they were.
+A regular dependency allows a separate nested copy. Conflicting exact pins can force that duplication, because one installed version cannot satisfy both requirements. Choose a peer range that covers the versions your package supports, and check that the application's dependency tree and module resolution actually load one copy. A peer declaration alone does not prove that runtime condition.
 
 ## See Also
 
-- [Field Decorator](./field_decorator.md) - Decorator system for field serialization configuration
-- [Derived Types](./derived_types.md) - Polymorphic type handling and interface implementations
-- [Serialization Overview](./index.md) - Complete serialization system documentation
+Configure the model's runtime types in the [field decorator guide](./field_decorator.md), or continue with [derived types](./derived_types.md) for mixed implementations. The [serialization overview](./index.md) connects both parts of the model setup.

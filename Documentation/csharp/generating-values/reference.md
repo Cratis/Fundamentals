@@ -1,6 +1,6 @@
 ---
 title: Generated values reference
-description: Every public type and member for generating values, with output shapes, random bits, limits, exceptions and encodings.
+description: Cratis Fundamentals provides C# value-generation contracts and helpers with defined encodings, argument limits, exceptions and runtime support.
 ---
 
 All types are in the `Cratis.Concepts` namespace of `Cratis.Fundamentals`.
