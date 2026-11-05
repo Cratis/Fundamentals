@@ -1,13 +1,35 @@
 ---
-description: "@cratis/fundamentals is the npm package of TypeScript utilities for typed concepts, serialization, geospatial types and dates, matching the .NET package."
+title: TypeScript fundamentals
+description: Use Cratis Fundamentals in TypeScript to create identifiers, define typed domain values, and convert JSON in browser or Node.js applications.
 ---
-# TypeScript (JavaScript/TypeScript)
+<a id="typescript-javascripttypescript"></a>
 
-`@cratis/fundamentals` is the [npm package](https://www.npmjs.com/package/@cratis/fundamentals) of common utilities, formalizations and abstractions for JavaScript and TypeScript applications, mirroring the .NET `Cratis.Fundamentals` package.
+`@cratis/fundamentals` provides typed domain values, GUIDs, dates, and JSON conversion for TypeScript applications. Use it in browser or Node.js code without a Cratis backend.
+
+## Installation
+
+Install the [npm package](https://www.npmjs.com/package/@cratis/fundamentals):
+
+```bash
+npm install @cratis/fundamentals
+```
+
+## Display an empty identifier
+
+Add this to your TypeScript application's entry point:
+
+```typescript
+import { Guid } from '@cratis/fundamentals';
+
+const emptyGuid = Guid.empty;
+console.log(emptyGuid.toString());
+```
+
+Run the application with its usual development command. The console prints `00000000-0000-0000-0000-000000000000`, the empty GUID formatted as a string. This checks that the package import and identifier conversion work in your application.
 
 ## Overview
 
-The Fundamentals frontend package provides JavaScript/TypeScript equivalents and enhancements to common development patterns and utilities. It includes tools for type management, serialization, field handling, and reactive programming that complement the backend .NET package.
+Choose a utility for the value or conversion your application needs:
 
 ## Topics
 
@@ -20,14 +42,6 @@ The Fundamentals frontend package provides JavaScript/TypeScript equivalents and
 | [TimeSpan](./time_span.md) | .NET-compatible time interval parsing, formatting, and JSON serialization. |
 | [ValueMap](./value_map.md) | A value-based map for complex object keys with stable lookup semantics. |
 | [Serialization](./serialization/index.md) | Type-safe JSON serialization and deserialization system with polymorphic support and runtime type preservation. |
-
-## Installation
-
-To install the package:
-
-```bash
-npm install @cratis/fundamentals
-```
 
 ## Module imports
 
@@ -43,3 +57,9 @@ import { Point } from '@cratis/fundamentals/geospatial';
 const origin = new Point(0, 0);
 const id = Guid.empty;
 ```
+
+## Next steps
+
+- [Create and compare GUIDs](guid.md) — validate incoming identifiers and compare their values.
+- [Define a typed concept](concept_as.md) — give a primitive value a domain-specific type.
+- [Configure serialization](serialization/index.md) — preserve domain types when converting JSON.
