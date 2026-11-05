@@ -1,6 +1,6 @@
 ---
 title: Context-dependent values
-description: Capture one time and tenant per operation with GenerationContext and generate values from it.
+description: Capture time and tenant once per C# operation with GenerationContext, then generate consistent domain values through IGeneratableInContext contracts.
 ---
 
 Use `IGeneratableInContext<TSelf>` when a value must reflect the operation that creates it, not the moment each call happens to run.

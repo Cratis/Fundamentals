@@ -1,5 +1,5 @@
 ---
-description: Use the Constructor type to accept a class constructor in TypeScript APIs that create or deserialize typed instances.
+description: Use the Cratis Constructor type to pass class constructors into TypeScript factories and deserializers while retaining the resulting instance type.
 ---
 # Constructor
 

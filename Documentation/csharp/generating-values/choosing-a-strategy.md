@@ -1,6 +1,6 @@
 ---
 title: Choosing a strategy
-description: Pick the right GenerateValue strategy for an id, code or token, and know when not to generate at all.
+description: Choose a C# GenerateValue strategy for identifiers, readable codes and secure tokens, comparing entropy, ordering and deterministic derivation.
 ---
 
 Use this page when you know what the value is for and need the strategy that fits. Start at the flowchart, check the table

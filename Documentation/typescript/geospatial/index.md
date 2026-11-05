@@ -1,5 +1,5 @@
 ---
-description: Work with GeoJSON-compatible Point, LineString and Polygon classes in TypeScript that round-trip with the .NET types.
+description: Work with Cratis GeoJSON-compatible Point, LineString and Polygon classes in TypeScript, using typed coordinates and serialization shared with .NET.
 ---
 # Geospatial Types
 
