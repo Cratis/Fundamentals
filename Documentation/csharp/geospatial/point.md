@@ -1,7 +1,7 @@
 ---
-description: Create and use a .NET Point, a single longitude and latitude location, for addresses, landmarks and device positions.
+title: Point coordinates in Cratis Fundamentals for .NET
+description: Cratis Fundamentals Point represents a geographic location in .NET using longitude and latitude, with converters for GeoJSON serialization.
 ---
-# Point
 
 ## What is a Point?
 

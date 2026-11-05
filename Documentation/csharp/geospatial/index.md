@@ -1,9 +1,10 @@
 ---
-description: Work with GeoJSON-compatible Point, LineString and Polygon types in .NET that serialize automatically and round-trip with TypeScript.
+title: Cratis Fundamentals geospatial types in .NET
+description: Cratis Fundamentals provides Point, LineString and Polygon records for .NET. Choose a shape for a location, route or area and serialize it as GeoJSON.
 ---
 # Geospatial Types
 
-Cratis provides strongly-typed geospatial types for working with geographic coordinates following the [GeoJSON specification](https://www.mongodb.com/docs/manual/reference/geojson/).
+Cratis Fundamentals provides C# geospatial records for representing a location, a connected path or a bounded area. Choose `Point`, `LineString` or `Polygon` according to what your application needs to describe. Their JSON converters use [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/), a JSON format for geographic shapes.
 
 ## Types
 
@@ -13,11 +14,12 @@ Cratis provides strongly-typed geospatial types for working with geographic coor
 | [LineString](./linestring.md) | Connected paths and routes |
 | [Polygon](./polygon.md) | Areas and regions bounded by rings |
 
-## Key Features
+<a id="key-features"></a>
 
-- **GeoJSON Compatible** — Standard format for geographic databases and mapping tools
-- **Automatic Serialization** — Handled by the Cratis Application Model
-- **Type Safe** — Strongly typed C# records
-- **Full-Stack** — Use the same types on C# and TypeScript with automatic round-tripping
+## Using the types in a model
 
-See [Understanding Geospatial Types](./understanding.md) for concepts and when to use each type.
+The records live in `Cratis.Geospatial`, so a model can declare whether a property holds a location, path or area. Each uses longitude before latitude. A `Polygon` uses a `LinearRing` for its outer boundary and for any holes inside it.
+
+The GeoJSON converters are included in `Cratis.Json.Globals.JsonSerializerOptions`. If your code uses its own serializer options, register the converters there; choosing a record type alone does not enable GeoJSON output. [Geospatial Serialization](../serialization/geospatial.md) covers that setup.
+
+Read [Understanding Geospatial Types](./understanding.md) to decide which shape fits your data, then follow the type links above for construction examples.

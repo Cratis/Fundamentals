@@ -1,15 +1,15 @@
 ---
-title: Generating values
-description: Give concepts a compile-time contract for creating their own values, choose the right strategy, and keep specs deterministic.
+title: Cratis Fundamentals value generation
+description: Cratis Fundamentals lets C# concepts generate their own values. Choose identifier and token strategies, then test them without relying on random output.
 ---
 
-Open a handler in an average codebase and you find `Guid.NewGuid()` next to an invite code built from `System.Random`
-and a `New()` method that exists on some identifiers but not others. Each call site decides how a value is made, so
-you cannot change the strategy in one place. Generic code cannot ask a type for a fresh value. Specs assert on whatever
-a run happened to produce, and on .NET 8 there is no built-in time-ordered UUID at all.
+Cratis Fundamentals lets a C# concept declare how to create its own values through a compile-time contract.
+Use it when handlers and factories need the same rule for creating an identifier, code or token. The caller asks
+for a value without choosing the generation strategy again at every call site.
 
-Fundamentals moves those decisions to where they belong. A concept declares *how* its values are made. The code that
-needs a value, such as a command pipeline, your own factory or a spec, decides *that* one is needed, and can pin it.
+A concept is a type that wraps a value with domain meaning, such as `CustomerId` instead of a raw `Guid`.
+Its `New()` method chooses how to generate that value. Production code can call it when needed, while a spec
+can supply a known value and test the behavior without depending on random output.
 
 ## The mental model
 
@@ -33,21 +33,19 @@ flowchart LR
     F -. "pins instead of generating" .-> A
 ```
 
-- **One contract, one call.** A concept implements `IGeneratable<TSelf>` and its `New()` makes one call to `GenerateValue`.
-- **Generic code needs no reflection.** `T.New()` works on any `T : IGeneratable<T>`, and the result is the concept, not a raw `Guid` or `string`.
-- **The caller owns the "when".** Production code generates; a spec supplies a known value or a fixed `GenerationContext`.
-- **Secure by default.** Every random strategy draws from a cryptographically secure random number generator. `UuidV5` and `Sha256` are deterministic, not random.
+Implement `IGeneratable<TSelf>` when the concept can generate a value without operation-specific input.
+Generic code constrained to `T : IGeneratable<T>` can call `T.New()` without reflection and receive the concept
+itself. Implement `IGeneratableInContext<TSelf>` when generation needs the operation's captured time or tenant.
+
+`GenerateValue` supplies the strategies used inside `New()`. Its random strategies draw from a cryptographically
+secure random number generator; `UuidV5` and `Sha256` derive deterministic results from supplied input. A fixed
+`GenerationContext` fixes the time used by time-bearing strategies, but leaves their random part random.
 
 ## What you will be able to do
 
-By the end of this section you will:
-
-- make a concept generate its own values and call it from generic code;
-- pick between UUID v4, UUID v7, ULID, TypeID, NanoID, random bytes, readable patterns and integers for a stated reason;
-- derive a stable UUID from an input;
-- build identifiers whose time part follows the operation, not the clock at each call;
-- generate tokens and API keys without leaking them;
-- write specs that pin generated values instead of fighting them.
+Start with the [value generation tutorial](tutorial.md) to build shop identifiers, invitation codes and an API key.
+You will call the concepts from generic code, then write a spec that fixes the time in an order identifier.
+The guides below help you choose a strategy for your own values and handle the result safely.
 
 ## Where to go next
 

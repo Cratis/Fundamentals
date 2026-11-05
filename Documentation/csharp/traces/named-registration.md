@@ -1,11 +1,14 @@
 ---
-description: Register several named activity sources in one .NET application and resolve each explicitly through keyed services.
+title: Cratis Fundamentals named activity source registration
+description: Register named activity sources in Cratis Fundamentals so typed .NET services share a tracing scope. Resolve each source with a dependency-injection key.
 ---
 # Named activity source registration
 
-Use named registration when you want multiple logical activity sources in the same application and resolve them explicitly with keyed services.
+Named activity source registration lets several .NET services report spans under the same source name, instead of a name derived from each service type. Cratis Fundamentals uses keyed dependency injection, where a name selects the service to inject. Register separate names when you need separate tracing scopes.
 
 ## Register a named activity source
+
+Reference `Cratis.Fundamentals` and register the source in your application's service collection:
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -15,24 +18,23 @@ var services = new ServiceCollection();
 services.AddNamedActivitySource("orders");
 ```
 
-This snippet registers only named (keyed) services. Unkeyed `IActivitySource<T>` requires an existing `AddBindingsByConvention()` or `AddSelfBindings()` setup, or an equivalent explicit unkeyed registration.
+The call registers a singleton `System.Diagnostics.ActivitySource` named `orders` and keyed `IActivitySource<T>` wrappers that use it. A consumer requesting the `orders` key receives that source, regardless of its generic type argument.
 
-This registers:
-
-- keyed `System.Diagnostics.ActivitySource` with the name `orders`
-- keyed `IActivitySource<T>` that resolves to that same named `ActivitySource`
+`AddNamedActivitySource` adds only keyed services. If your application also needs unkeyed `IActivitySource<T>`, keep its `AddBindingsByConvention()` or `AddSelfBindings()` setup, or explicitly register `IActivitySource<>` to `UnkeyedActivitySource<>`.
 
 ## Register an instrumentation scope version
 
-Pass `version` to identify the instrumentation scope version:
+If you version your instrumentation, use this call instead of the unversioned registration above. Choose the version when you first register the name:
 
 ```csharp
 services.AddNamedActivitySource("orders", version: "1.2.3");
 ```
 
-The keyed source exposes `Version == "1.2.3"`. The existing overload without a version remains supported and keeps an empty-string version.
+The underlying source exposes `Version == "1.2.3"`. The overload without a version remains supported and uses an empty-string version. Registering `orders` a second time does not update its version.
 
 ## Resolve the named activity source in consumers
+
+Use the registration name in `[FromKeyedServices]` on the consumer's constructor parameter:
 
 ```csharp
 using Cratis.Traces;
@@ -43,13 +45,17 @@ public class OrderService([FromKeyedServices("orders")] IActivitySource<OrderSer
 }
 ```
 
-Unkeyed `IActivitySource<T>` is available only when your application also uses `AddBindingsByConvention()` or `AddSelfBindings()` (or registers the unkeyed `IActivitySource<>` to `UnkeyedActivitySource<>` pair explicitly); `AddNamedActivitySource` adds only the keyed services. Where unkeyed registration exists, the underlying source name defaults to `typeof(T).FullName`. Per-type sources are not subscribed by `Cratis.*` unless the source name matches that configured wildcard. Explicitly subscribe the source name in your telemetry provider, or use a named source under a `Cratis.<Product>` scope that your provider subscribes to. Registration alone does not configure a provider; see [Set up OpenTelemetry](../opentelemetry.md).
+When dependency injection creates `OrderService`, its typed source wraps the registered `orders` source: `activitySource.ActualSource.Name` is `orders`. Use this injected source with the span methods described in the [tracing overview](index.md).
+
+Your telemetry provider must subscribe to `orders` to collect its spans. The shared Cratis OpenTelemetry setup subscribes to `Cratis.*`, which does not match `orders`. Add `orders` explicitly to your provider's source subscription, or choose a `Cratis.<Product>` source name that the provider already subscribes to. Follow [Set up OpenTelemetry](../opentelemetry.md) to configure the provider and export destination.
+
+Unkeyed sources remain separate: they use `typeof(T).FullName`, falling back to `typeof(T).Name`, rather than the named source. Those names also need a matching provider subscription; removing `[FromKeyedServices("orders")]` does not select the `orders` source.
 
 ## Registration boundaries
 
-The name is both the diagnostics source name and the dependency-injection key. Use the same string when registering, resolving, and configuring your telemetry provider. A null, empty, or whitespace-only name is rejected. Different names create separate singleton sources; typed consumers resolved with the same key share the underlying activity source even when their generic type arguments differ.
+The name is both the diagnostics source name and the dependency-injection key. Use the same string when registering and resolving the source, and ensure the telemetry provider's subscription matches it. A null, empty, or whitespace-only name is rejected.
 
-Registration uses `TryAddKeyedSingleton`. Registering the same name again does not replace its existing services, so choose the version on the first registration rather than trying to update it with a later call. Registration alone does not configure an exporter or subscribe a telemetry provider.
+Different names create separate singleton sources. Registration uses `TryAddKeyedSingleton`, so registering the same name again preserves its existing services. Source registration alone neither subscribes a telemetry provider nor configures an exporter.
 
 ## See also
 

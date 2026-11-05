@@ -1,7 +1,7 @@
 ---
-description: Use ValueMap in TypeScript as a Map whose complex keys are compared by value instead of object reference.
+title: ValueMap
+description: ValueMap in Cratis Fundamentals stores TypeScript entries with object keys matched by JSON representation rather than object reference.
 ---
-# ValueMap
 
 A lookup key reconstructed from a response is a new object, even when it describes the same account. `ValueMap<TKey, TValue>` lets `get()` find an entry with that reconstructed key when its JSON representation matches the stored key. It is not a general deep-equality map.
 

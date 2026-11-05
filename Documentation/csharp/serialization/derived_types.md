@@ -1,38 +1,34 @@
 ---
-description: Serialize and deserialize polymorphic .NET objects by runtime type with DerivedTypeAttribute and the DerivedTypes registry.
+title: DerivedTypes serialization for .NET
+description: Configure polymorphic .NET JSON serialization with DerivedTypeAttribute and a type registry so interface properties read back as concrete types.
 ---
-# DerivedTypes Serialization (Backend)
+<a id="derivedtypes-serialization-backend"></a>
 
-An Order can declare its payment method as IPaymentMethod while holding a CreditCard or PayPal value. To read that value back as the right concrete type, the JSON needs an identifier and the serializer needs a registry that can resolve it. This guide connects the payment types, registry and converter used for that round trip.
+Cratis Fundamentals uses `DerivedTypeAttribute` and a type registry to serialize .NET objects through an interface or base class and read them back as concrete types. Use this when an `Order` declares its payment method as `IPaymentMethod`, but the value is a `CreditCard` or `PayPal`.
+
+The JSON carries an identifier for the concrete type. To complete the round trip, the serializer must use options with the derived-type converter, and its registry must contain your payment types.
 
 ## Overview
 
-The DerivedTypes system consists of several key components:
+Mark each concrete class with `DerivedTypeAttribute`. The `DerivedTypes` registry finds these classes through type discovery and connects each identifier to the types it can represent. The registry implements `IDerivedTypes`, which the converter factory uses to create a `DerivedTypeJsonConverter<T>` for a declared target type.
 
-- **`DerivedTypeAttribute`**: Marks classes as derived types with unique identifiers
-- **`DerivedTypes`**: Registry that tracks relationships between derived types and their target types
-- **`DerivedTypeJsonConverter<T>`**: Custom JSON converter for handling polymorphic serialization
-- **`IDerivedTypes`**: Interface defining the contract for the derived types system
+## Key concepts
 
-## Key Concepts
+### Target types and derived types
 
-### Target Types and Derived Types
+A target type is the declared interface or base class, such as `IPaymentMethod`. A derived type is the concrete class marked with `[DerivedType]`, such as `CreditCard`.
 
-- **Primary Target Type**: The type used as the canonical registration key for a derived type.
-    By default this is the inferred non-system interface (or the explicit `targetType` if provided).
-- **Additional Target Types**: Non-system base classes are registered automatically so lookup can resolve
-    by base class without requiring explicit `targetType`.
-- **Derived Type**: The concrete implementation decorated with `[DerivedType]` (e.g., `CreditCard`, `PayPal`)
+The registry chooses one primary target: the class's single non-system interface, or the explicit `targetType` supplied on the attribute. It also registers non-system base classes, so a property declared as a base class can use the same identifier. Here, non-system means the type's namespace does not start with `System`.
 
-### Unique Identifiers
+### Unique identifiers
 
-Each derived type must have a unique string identifier that remains constant across versions. This identifier is used during serialization to determine which concrete type to instantiate during deserialization.
-
-The recommended approach is to use **descriptive strings** (e.g., `"credit-card"`, `"paypal"`) for readability. See the Uniqueness Requirements section below for details and alternatives.
+Choose a stable, descriptive string such as `"credit-card"` or `"paypal"`. The converter writes it into JSON and uses it to find the concrete type when reading. Changing the identifier means existing payloads still refer to the old value. Identifiers must be unique across all attributed types in the registry; see [Uniqueness Requirements](#uniqueness-requirements).
 
 ## Usage
 
-### 1. Define Your Target Interface
+These examples use `System.Text.Json` and types from `Cratis.Serialization`. Define the payment contract and implementations in your application, then configure the options used by the code that writes and reads them. Later sections reuse these names in separate illustrative snippets.
+
+### 1. Define your target interface
 
 ```csharp
 public interface IPaymentMethod
@@ -41,7 +37,7 @@ public interface IPaymentMethod
 }
 ```
 
-### 2. Create Derived Types
+### 2. Create derived types
 
 ```csharp
 [DerivedType("credit-card")]
@@ -60,11 +56,15 @@ public class PayPal : IPaymentMethod
 }
 ```
 
-### 3. Configure JSON Serialization
+### 3. Configure JSON serialization
 
-If you pass `Cratis.Json.Globals.JsonSerializerOptions` to the serializer, those options already include the derived-type converter factory. The registration fragments below are for separately configured options on an existing service collection; they are alternatives, not complete standalone programs. Choose the registry that contains your application's discovered types. If a payment type is missing, inspect [what type discovery found](../types.md#knowing-what-was-discovered) before changing its identifier.
+Use `Cratis.Json.Globals.JsonSerializerOptions` if you want the global options: they already include the derived-type converter factory. You do not need to add it again.
 
-`DerivedTypeJsonConverterFactory` has no parameterless constructor: it needs the `IDerivedTypes` registry that knows your `[DerivedType]` types. Pass the shared `DerivedTypes.Instance` for explicit registration:
+For separately configured options, the factory needs an `IDerivedTypes` registry containing your `[DerivedType]` classes. The following fragments configure `JsonSerializerOptions` on an existing service collection. Choose one registration, and pass the configured options to the serializer; configuring the service collection alone does not change every serialization call.
+
+Also set `PropertyNamingPolicy` to `JsonNamingPolicy.CamelCase`, or enable `PropertyNameCaseInsensitive`, for the payment examples to read back correctly. The derived-type converter writes property names in camel case, then delegates reading to the concrete type's `System.Text.Json` contract. Adding the converter alone does not configure that contract's naming.
+
+To use the shared registry, pass `DerivedTypes.Instance`:
 
 ```csharp
 using Cratis.Serialization;
@@ -75,7 +75,7 @@ services.Configure<JsonSerializerOptions>(options =>
 });
 ```
 
-If you register services by convention (`AddBindingsByConvention()`), `IDerivedTypes` is bound to `DerivedTypes`, which needs an `ITypes` registration (for example from `AddTypeDiscovery()`). In that case resolve the registry from the container instead of using the static instance:
+If your application uses [convention-based dependency injection](../dependency_injection.md#addbindingsbyconvention), `AddBindingsByConvention()` binds `IDerivedTypes` to `DerivedTypes`. That registry needs an `ITypes` registration, for example from `AddTypeDiscovery()`. Resolve it from the container so the converter uses the same type discovery as your services:
 
 ```csharp
 using Cratis.Serialization;
@@ -85,7 +85,9 @@ services.AddOptions<JsonSerializerOptions>()
         options.Converters.Add(new DerivedTypeJsonConverterFactory(derivedTypes)));
 ```
 
-### 4. Use in Your Models
+### 4. Use in your models
+
+Declare the payment properties with `IPaymentMethod` so the converter can select a concrete type. Serialize and deserialize `Order` using the configured options. For a top-level payment value, use `IPaymentMethod` as the serialization type too; serializing a concrete class directly does not select this converter just because the class has `[DerivedType]`.
 
 ```csharp
 public class Order
@@ -96,9 +98,9 @@ public class Order
 }
 ```
 
-## Serialization Format
+## Serialization format
 
-When serialized, derived types include a special `_derivedTypeId` property. In the Order payload below, `credit-card` identifies the CreditCard value held by PaymentMethod; the registry uses that identifier together with the declared target type to resolve the concrete type when reading:
+The converter writes `_derivedTypeId`, the JSON property that identifies the concrete type. In this `Order` payload, `"credit-card"` identifies the `CreditCard` held by `PaymentMethod`. On reading, the registry looks up that identifier together with the declared `IPaymentMethod` target. The camel-case `orderId` and `paymentMethod` names match the global options:
 
 ```json
 {
@@ -112,9 +114,9 @@ When serialized, derived types include a special `_derivedTypeId` property. In t
 }
 ```
 
-## Uniqueness Requirements
+## Uniqueness requirements
 
-Derived type IDs must be **unique across all attributed types discovered by the registry** (the `ITypes` universe it is built from), not only per interface, to enable proper polymorphic deserialization. The `DerivedTypes` constructor rejects duplicate identifiers across that whole set. Uniqueness across separate applications is not checked. The identifier is an arbitrary string — use whatever format makes sense for your domain:
+Every attributed type discovered by the registry must have a different identifier, even when the types implement different interfaces. The `DerivedTypes` constructor rejects duplicates across its entire `ITypes` set; it does not check separate applications. Use strings that make sense in your domain:
 
 ```csharp
 [DerivedType("credit-card")]
@@ -124,13 +126,13 @@ public class CreditCard : IPaymentMethod { }
 public class PayPal : IPaymentMethod { }
 ```
 
-Descriptive strings are strongly preferred — they make the serialized JSON readable and debugging straightforward.
+With these names, you can recognize the payment type in a payload without looking up an opaque identifier.
 
-## Advanced Scenarios
+## Advanced scenarios
 
-### Multiple Interfaces
+### Multiple interfaces
 
-If a derived type implements multiple interfaces, you must specify which interface it represents:
+If a derived type implements multiple non-system interfaces, specify the target explicitly. Here, `CreditCard` represents `IPaymentMethod`; implementing `IRefundable` does not make it another primary target:
 
 ```csharp
 public interface IPaymentMethod { }
@@ -143,41 +145,33 @@ public class CreditCard : IPaymentMethod, IRefundable
 }
 ```
 
-### Target Type Resolution
+### Target type resolution
 
-The system resolves a primary target type automatically from implemented non-system interfaces.
-If a class implements exactly one non-system interface, that interface becomes the primary target.
-If `targetType` is provided on `[DerivedType(..., targetType)]`, that value is used as the primary target.
+Without an explicit `targetType`, the registry requires exactly one non-system interface and uses it as the primary target. Supplying `targetType` selects that target instead, but the class must still implement at least one non-system interface and be assignable to the supplied type.
 
-In addition to the primary target, the system now also registers the derived type for all non-system base
-classes in its inheritance chain. This means polymorphic deserialization can work when the property is typed
-as either an interface or a base class.
+All non-system base classes in the inheritance chain are additional targets. They let the registry resolve the concrete class for base-class properties, but do not remove the interface requirement.
 
-### Validation Rules
+### Validation rules
 
-The system enforces several validation rules:
+Registry construction checks identifier uniqueness, requires a non-system interface, and rejects ambiguous interface selection when no target is supplied. For an explicit target, it checks that the concrete type is assignable to it. Resolve these registration errors before using the converter.
 
-1. **Unique Identifiers**: Each derived type must have a unique string identifier
-2. **Single Target Type**: A derived type can only represent one target interface
-3. **Interface Implementation**: Derived types must implement their declared target interface
-4. **Base Class Compatibility**: Derived types are also registered for non-system base classes automatically
+## Error handling
 
-## Error Handling
+Use the exception to locate the failed registration or lookup:
 
-The system provides specific exceptions for common issues:
+- `MissingTargetTypeForDerivedType`: the class has no non-system interface, or a requested derived type has no registered primary target.
+- `AmbiguousTargetTypeForDerivedType`: the class has multiple non-system interfaces and no explicit target.
+- `TargetTypeMismatchForDerivedType`: the class is not assignable to the explicit target.
+- `MissingDerivedTypeForTargetType`: the registry has no match for the requested target and identifier.
+- `AmbiguousDerivedTypeIdentifiers`: multiple discovered types use the same identifier.
 
-- **`MissingTargetTypeForDerivedType`**: Thrown when a derived type doesn't implement any recognizable interface
-- **`AmbiguousTargetTypeForDerivedType`**: Thrown when a derived type implements multiple interfaces without specifying the target
-- **`MissingDerivedTypeForTargetType`**: Thrown when trying to deserialize an unknown derived type identifier
-- **`AmbiguousDerivedTypeIdentifiers`**: Thrown when multiple types use the same identifier
+A missing `_derivedTypeId` behaves differently from an unknown value: the converter returns the default value when the property is absent. If a payment method comes back `null`, inspect the payload for that property first. If lookup throws, compare the identifier and declared target with the registry, then inspect [what type discovery found](../types.md#knowing-what-was-discovered) before changing an identifier.
 
-A missing `_derivedTypeId` is different from an unknown identifier: the converter returns the default value when the property is absent, but asks the registry to resolve an identifier when it is present. If a payment method comes back null, first inspect the payload for the discriminator; if lookup fails, compare the identifier and declared target with the types in the registry.
+## Best practices
 
-## Best Practices
+### 1. Stable identifiers
 
-### 1. Stable Identifiers
-
-Always use stable identifiers that won't change across versions:
+Keep identifiers stable across versions so stored payloads continue to resolve. Attribute arguments must also be compile-time constants; the dynamic expression marked as bad below is not valid C#:
 
 ```csharp
 // ✅ Good - Use a stable descriptive string
@@ -189,9 +183,9 @@ public class CreditCard : IPaymentMethod { }
 public class PayPal : IPaymentMethod { }
 ```
 
-### 2. Centralize Type Identifiers (Magic Strings)
+### 2. Centralize type identifiers (magic strings)
 
-Store derived type identifiers in a shared constants file to ensure consistency across your codebase:
+If several parts of the application refer to these identifiers, put them in shared constants:
 
 ```csharp
 // Constants/DerivedTypeIds.cs
@@ -210,11 +204,11 @@ public class CreditCard : IPaymentMethod { }
 public class PayPal : IPaymentMethod { }
 ```
 
-> **Why centralize?** These "magic strings" are critical for serialization consistency. Centralizing them prevents duplicates across your codebase, makes it easy to maintain and update, and ensures frontend and backend remain synchronized.
+The constants give each identifier one place to be defined. They do not enforce uniqueness or synchronize another client; the registry still checks the discovered types for duplicates.
 
-### 3. Interface Design
+### 3. Interface design
 
-Design interfaces to be stable and avoid breaking changes:
+Treat the target interface as a serialized contract. Consider how existing payloads will be read before adding required members or changing their types:
 
 ```csharp
 public interface IPaymentMethod
@@ -226,7 +220,7 @@ public interface IPaymentMethod
 
 ### 4. Testing
 
-Always test serialization round-trips:
+Check a round trip with the options your application actually uses. This test fragment assumes `options` is configured with a registry containing the payment types and that your test project supplies the shown assertion methods. Checking the concrete type and `CardNumber` catches both a missing identifier and a lost property:
 
 ```csharp
 [Fact]
@@ -241,16 +235,16 @@ public void should_serialize_and_deserialize_credit_card()
 }
 ```
 
-## Integration with Dependency Injection
+## Integration with dependency injection
 
-The `DerivedTypes` class is registered as a singleton in the DI container:
+`DerivedTypes` carries the `[Singleton]` attribute for convention-based registration:
 
 ```csharp
 [Singleton]
 public class DerivedTypes : IDerivedTypes
 ```
 
-You can inject `IDerivedTypes` into your services to programmatically work with the type registry:
+After registering type discovery and convention-based bindings, inject `IDerivedTypes` to query the registry. `IsDerivedType` checks whether the concrete type has a registered primary target:
 
 ```csharp
 public class PaymentService
@@ -269,17 +263,15 @@ public class PaymentService
 }
 ```
 
-## Performance Considerations
+## Performance considerations
 
-- The `DerivedTypes` registry builds its lookup maps from the supplied type-discovery result.
-- Reuse a registry rather than rebuilding its maps for each serialization call. The static `DerivedTypes.Instance` uses the global type-discovery instance; a dependency-injected registry uses its supplied type discovery.
-- Choose the registry for the types your application discovers, rather than switching to the static instance on the assumption that it makes serialization faster.
+Reuse the registry: constructing `DerivedTypes` builds lookup maps from its supplied type-discovery result. `DerivedTypes.Instance` uses global type discovery, while a dependency-injected registry uses the `ITypes` supplied by the container. Choose the registry that contains your application's types; switching to the static instance is not a serialization-speed setting.
 
-## Common Patterns
+## Common patterns
 
-### Event Sourcing
+### Event sourcing
 
-DerivedTypes are commonly used in event sourcing scenarios:
+An event interface can use the same mechanism. In this illustrative contract, `"user-created"` identifies the concrete event when it is serialized through `IEvent`:
 
 ```csharp
 public interface IEvent
@@ -296,9 +288,9 @@ public class UserCreated : IEvent
 }
 ```
 
-### Command/Query Pattern
+### Command/query pattern
 
-Perfect for CQRS implementations:
+The same registration works for a command interface. Here, `"create-user"` identifies `CreateUser` when the declared type is `ICommand`:
 
 ```csharp
 public interface ICommand { }

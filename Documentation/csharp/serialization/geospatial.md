@@ -1,15 +1,18 @@
 ---
-description: Serialize .NET Point, LineString and Polygon types to and from GeoJSON, with converters registered automatically.
+title: Geospatial serialization for .NET
+description: Configure Cratis Fundamentals to serialize Point, LineString and Polygon values as GeoJSON in .NET, with coordinates in longitude, latitude order.
 ---
-# Geospatial Serialization
+<a id="geospatial-serialization"></a>
 
-Geospatial types (Point, LineString, Polygon) serialize to [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/) format — the standard representation for geographic data in JSON.
+Cratis Fundamentals provides `System.Text.Json` converters that write `Point`, `LineString` and `Polygon` values as [GeoJSON](https://www.mongodb.com/docs/manual/reference/geojson/) geometry objects and read them back into `Cratis.Geospatial` types. Use them when a receiving system expects coordinates in longitude, latitude order.
 
-Choose which options your serializer uses before copying a shape example: the global options already contain the converters, while separate options need the manual configuration below. Compare the resulting payload with the example for your geometry and read its implemented checks; these readers do not reject every malformed shape. For a rejected payload, use [Validation Errors](#validation-errors). For stored data that still uses Coordinate, start with [Migration from Coordinate](#migration-from-coordinate) rather than passing the old shape to the new converter.
+Start with the options your serializer uses: the global options already contain the converters, while separate options need [manual configuration](#manual-converter-configuration). The examples below serialize geometries themselves, not GeoJSON `Feature` or `FeatureCollection` wrappers. If your stored data uses the removed `Coordinate` type, follow [Migration from Coordinate](#migration-from-coordinate) before reading it as a `Point`.
 
-## Automatic Registration
+## Automatic registration
 
-The geospatial converters are registered in `Cratis.Json.Globals.JsonSerializerOptions`, so any code that uses these options gets them. Cratis Arc also registers these converters in its own default JSON options; a serializer configured separately must register the converters itself (see Manual Converter Configuration below):
+Pass `Cratis.Json.Globals.JsonSerializerOptions` to use the registered converters without adding them yourself. Cratis Arc also includes them in its default JSON configuration. For naming and null handling in a model that contains a geometry, see the [JSON option defaults](./serialization.md#jsonserializeroptions).
+
+This example uses the global options to write a point:
 
 ```csharp
 using System.Text.Json;
@@ -21,9 +24,9 @@ var point = new Point(10.5, 20.3);
 var json = JsonSerializer.Serialize(point, Globals.JsonSerializerOptions);
 ```
 
-## Point Serialization
+## Point serialization
 
-Points serialize to GeoJSON Point format:
+A `Point` holds one longitude and latitude pair. Longitude is the first constructor argument and the first value in the JSON `coordinates` array. The converter adds `"type":"Point"` so the receiving system can identify the geometry:
 
 ```csharp
 var point = new Point(10.5, 20.3);
@@ -33,14 +36,13 @@ var json = JsonSerializer.Serialize(point, Globals.JsonSerializerOptions);
 var deserialized = JsonSerializer.Deserialize<Point>(json, Globals.JsonSerializerOptions);
 ```
 
-**Required format and implemented checks:**
+After deserialization, `deserialized` holds a `Point` with longitude `10.5` and latitude `20.3`. Reversing the constructor arguments changes the location without changing the JSON shape.
 
-- `type` must be "Point" (checked)
-- `coordinates` must be an array of two numbers [longitude, latitude]. The reader collects Number tokens and requires exactly two of them; other token kinds inside the array are skipped, not rejected
+The reader requires `type` to be `"Point"` and collects exactly two JSON number tokens from `coordinates`. Other token kinds inside the array are skipped, not rejected. Quoted numbers are not converted, and longitude and latitude ranges are not checked.
 
-## LineString Serialization
+## LineString serialization
 
-LineStrings serialize to GeoJSON LineString format:
+A `LineString` holds connected points, such as positions along a route. Its GeoJSON `coordinates` value is an array of longitude, latitude pairs:
 
 ```csharp
 var lineString = new LineString(
@@ -55,15 +57,13 @@ var json = JsonSerializer.Serialize(lineString, Globals.JsonSerializerOptions);
 var deserialized = JsonSerializer.Deserialize<LineString>(json, Globals.JsonSerializerOptions);
 ```
 
-**Required format and implemented checks:**
+Reading this payload with the same options restores the three points. The reader requires `type` to be `"LineString"` and at least two coordinate pairs. Within each pair, it collects exactly two JSON number tokens. It skips other token kinds, including non-array items in the enclosing array, so it does not reject every malformed shape.
 
-- `type` must be "LineString" (checked)
-- `coordinates` must be an array with at least two coordinate pairs (the point count is checked)
-- Each pair must be an array of two numbers [longitude, latitude]. The reader processes each nested array, collects its Number tokens and requires exactly two; it skips other token kinds, including non-array items in the enclosing array, rather than rejecting every malformed shape
+These checks happen on reading. Constructing a `LineString` record or writing it does not enforce the two-point minimum.
 
-## Polygon Serialization
+## Polygon serialization
 
-Polygons serialize to GeoJSON Polygon format with optional holes:
+A `Polygon` holds an outer boundary, called the shell, and optional inner boundaries, called holes. Build each boundary as a `LinearRing`, repeating the first point at the end to close it. This polygon has a shell and no holes:
 
 ```csharp
 var polygon = new Polygon(
@@ -83,7 +83,7 @@ var json = JsonSerializer.Serialize(polygon, Globals.JsonSerializerOptions);
 var deserialized = JsonSerializer.Deserialize<Polygon>(json, Globals.JsonSerializerOptions);
 ```
 
-With holes:
+The converter writes the shell first and then any holes. In this JSON, the first ring is the outer boundary and the second is a hole:
 
 ```json
 {
@@ -95,17 +95,17 @@ With holes:
 }
 ```
 
-**Required format and implemented checks:**
+When reading, the converter requires:
 
-- `type` must be "Polygon" (checked)
-- `coordinates` must be an array with at least one ring (the shell) (checked)
-- Each ring must have at least 4 coordinate pairs (checked)
-- The first and last coordinate of each ring must match. Closure is checked as an absolute difference of at most `1e-9` for each coordinate, not exact equality
-- Each coordinate must be an array of two numbers [longitude, latitude]. The reader processes nested arrays, collects Number tokens and requires exactly two; it skips other token kinds, including non-array items in the enclosing loops, rather than rejecting every malformed shape
+- `type` set to `"Polygon"` and at least one ring in `coordinates`.
+- At least four coordinate pairs per ring, each supplying two JSON number tokens in longitude, latitude order.
+- A closed ring: the first and last longitude must differ by no more than `1e-9`, as must the first and last latitude.
 
-## Manual Converter Configuration
+The reader skips other token kinds, including non-array items in the enclosing loops; these checks do not reject every malformed shape. Constructing the records or writing them does not validate ring length or closure.
 
-If you use your own `JsonSerializerOptions` instead of `Globals.JsonSerializerOptions`:
+## Manual converter configuration
+
+For separately configured options, add the converters from `Cratis.Json`. Pass these options to both `Serialize` and `Deserialize` in place of `Globals.JsonSerializerOptions` in the examples above:
 
 ```csharp
 using System.Text.Json;
@@ -122,9 +122,9 @@ var options = new JsonSerializerOptions
 };
 ```
 
-## Validation Errors
+## Validation errors
 
-If deserialization fails validation, a `JsonException` is thrown:
+A failed read check throws `JsonException`. This payload has a longitude but no latitude, so the point converter rejects it:
 
 ```csharp
 try
@@ -138,20 +138,24 @@ catch (JsonException ex)
 }
 ```
 
+For this example, the exception message is `Expected coordinates array with 2 elements [longitude, latitude]`. Correct the payload's coordinate count before reading it again. For polygons, also check that each ring has at least four points and repeats its first point at the end.
+
+Coordinate readers do not apply `JsonNumberHandling` settings: quoted coordinate values are skipped rather than parsed as numbers. The writers call `Utf8JsonWriter.WriteNumberValue` directly, so use finite `double` values, not `NaN` or infinity.
+
 ## Migration from Coordinate
 
-The removed `Coordinate` type used a different JSON format. If you have existing data:
+The removed `Coordinate` type wrote named longitude and latitude properties. Existing data in that format must change along with the C# type:
 
-**Old format:**
+Old format:
 
 ```json
 {"longitude": 10.5, "latitude": 20.3}
 ```
 
-**New format (GeoJSON):**
+New format (GeoJSON):
 
 ```json
 {"type": "Point", "coordinates": [10.5, 20.3]}
 ```
 
-Replace all `Coordinate` references with `Point` and update your stored JSON accordingly.
+Replace `Coordinate` references with `Point` and update stored JSON to the GeoJSON object shape. Longitude remains first in the coordinate pair. Update consumers expecting the old named properties too; replacing the C# type alone does not preserve the wire format.

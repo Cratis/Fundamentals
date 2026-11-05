@@ -1,22 +1,19 @@
 ---
-description: Discover types across project-referenced and prefixed package assemblies at runtime with Cratis.Types instead of configuring them by hand.
+title: Discover .NET implementations with Cratis.Types
+description: Cratis.Types finds implementations across assemblies using generated providers or reflection, and reports which assemblies contributed to discovery.
 ---
-# Types
 
-The fundamentals package includes `Cratis.Types`, which provides mechanisms for discovering types in the project referenced assemblies.
-It examines the entry assembly and finds all its project references at runtime, indexing the types from all of these assemblies.
+<a id="types"></a>
 
-The type discovery system automates tasks at runtime, for instance removing the need for manual configuration of types to include in a system by discovering them based on your criteria instead.
+`Cratis.Types` in Cratis Fundamentals finds types across assemblies so you can look up implementations of an interface or base type without maintaining a list by hand. Discovery prefers registered generated providers and falls back to reflection when none are registered. Use `ITypes` for queries or `IImplementationsOf<T>` when a consumer needs the implementations of one contract.
 
-If you want to bypass any automatic hookup of the system, you can manually create an instance of the `Types` class in the `Cratis.Types` namespace. This class implements the `ITypes` interface.
+Discovery builds a snapshot of the available types. Later lookups use that snapshot; they do not scan again for every query. If an implementation is missing, first check which discovery strategy and assemblies built it, as shown in [Knowing what was discovered](#knowing-what-was-discovered).
+
+For direct use outside a configured host, construct `Types` from the `Cratis.Types` namespace. It implements `ITypes` and uses the default provider selection unless you pass providers explicitly.
 
 ## Assembly Prefixes
 
-`Types` discovers project-referenced assemblies automatically. For **package**-referenced
-assemblies, the reflection fallback (or any `PackageReferencedAssemblies` provider you supply
-explicitly) opts in by assembly-name prefix — by default only assemblies whose
-name starts with `Cratis` are included. To include additional packages with that provider, add their prefixes to
-the shared `PackageReferencedAssemblies.Instance` before its first initialization:
+The reflection fallback includes project-referenced assemblies. Its `PackageReferencedAssemblies` provider includes package assemblies by name prefix; the default prefix is `Cratis`. To include other packages through that provider, add their prefixes to the shared `PackageReferencedAssemblies.Instance` before it first initializes:
 
 ```csharp
 using Cratis.Types;
@@ -24,23 +21,15 @@ using Cratis.Types;
 PackageReferencedAssemblies.Instance.AddAssemblyPrefixesToInclude("Microsoft", "SomeOther");
 ```
 
-The strings you pass are treated as prefixes, so a single value matches every assembly whose
-name starts with it — for example, `Microsoft` matches all `Microsoft.*` packages.
+A prefix matches the start of an assembly name: `Microsoft` includes `Microsoft.*` packages. Use the shared singleton to avoid creating separate providers that repeat the package scan.
 
-> Note: Use the shared `PackageReferencedAssemblies.Instance` singleton rather than constructing
-> your own — scanning all assemblies in the application has a performance cost.
->
-> Note: This runtime setting configures only the reflection provider. It does not configure generated discovery:
-> default selection prefers registered generated providers, and the generator applies its own `Cratis` prefix check.
-> Changing the singleton does not refresh a type universe that has already been built. To use a provider you configured,
-> pass it explicitly to `new Types(...)` or `AddTypeDiscovery(providers)`.
+This setting configures the reflection provider, not generated discovery. The generator applies its own `Cratis` prefix check for package discovery, and default provider selection prefers registered generated providers. To use your configured reflection provider, pass it explicitly to `new Types(...)` or `AddTypeDiscovery(providers)`.
+
+Changing a provider does not refresh a snapshot already built from it. Configure prefixes before the provider initializes, and choose providers before constructing the `Types` instance that will serve your lookups.
 
 ## Type Discovery
 
-There are basically two ways of discovering types:
-
-- Using the APIs found in `ITypes` where you can easily get access to all discovered types or find types based on common base types/interfaces.
-- Use the `IImplementationsOf<>` as a dependency and get all implementations of a specific type using generic parameters.
+Use `ITypes.FindMultiple<T>()` to find implementations of a known interface or base type. The overload taking a `Type` supports the same lookup when the contract is known only at runtime:
 
 ```csharp
 using Cratis.Types;
@@ -58,7 +47,7 @@ public class MySystem
 }
 ```
 
-An optimization of this would be the `IImplementationsOf<>`:
+If a consumer always works with one contract, inject `IImplementationsOf<T>` instead. It exposes the matching `Type` objects for enumeration, not instances of those types:
 
 ```csharp
 using Cratis.Types;
@@ -72,13 +61,11 @@ public class MySystem
 }
 ```
 
-> Note: The `ITypes` interface also has an `All` property where you can basically filter types based on your own custom criteria.
+For criteria other than an interface or base type, filter `ITypes.All`. To resolve objects rather than inspect their types, use [`IInstancesOf<T>`](#as-instances).
 
 ## Knowing what was discovered
 
-Discovery happens once, when the type universe is built, and everything downstream resolves against
-whatever it captured. Two properties on `ITypes` say what that was, so a consumer — or a spec, or a
-readiness probe — can assert the universe is the one it expected instead of inferring it.
+When a lookup returns fewer types than expected, inspect `ITypes.DiscoveryMode` and `ITypes.Assemblies`. They report how the snapshot was built and which assemblies contributed types, so you can distinguish an absent implementation from an assembly that never reached discovery:
 
 ```csharp
 using Cratis.Types;
@@ -108,72 +95,41 @@ public class MySystem
 | `Reflected` | No generated providers were registered, so the reference closures were walked by reflection |
 | `Explicit` | The providers were passed to the `Types` constructor by the caller |
 
-This matters because the generated strategy sees exactly the assemblies whose module initializers had
-run by the time the universe was built. An assembly that carries a generated provider and arrives later
-contributes nothing — and nothing says so, because a shorter `FindMultiple<T>()` result looks the same
-as a feature nobody wrote. `Assemblies` is the list of the ones that did contribute, so a missing name
-is the answer.
+Generated providers register through module initializers. Under the just-in-time (JIT) runtime, call `GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered()` before constructing `Types` to load reachable referenced assemblies and run their initializers. Constructing `Types` alone reads the providers already registered.
 
-> [!NOTE]
-> A project that consumes Fundamentals through a **project reference** rather than the NuGet package
-> does not get the generator, because the package flows it as an analyzer and a project reference does
-> not. Fundamentals still registers its own provider, so discovery reports `Generated` with only
-> `Cratis.Fundamentals` in `Assemblies` — and none of that project's own types are found. Reference the
-> generator explicitly from such a project.
+For a container, `AddTypeDiscovery()` ensures providers are registered before selecting its snapshot. Outside a container, `TypesServiceCollectionExtensions.CurrentTypeUniverse()` provides the same snapshot. Both reuse it while the provider set is unchanged and rebuild it when that set grows. An earlier `ITypes` instance remains unchanged, so check `Assemblies` on the instance your consumer actually uses.
+
+A project reference to Fundamentals does not bring in the generator the way the NuGet package's analyzer does. Reference the generator explicitly from projects that consume Fundamentals through a project reference. Otherwise, Fundamentals can register its own provider while the consuming project's types remain absent: discovery may report `Generated` with only `Cratis.Fundamentals` in `Assemblies`.
 
 ## Native AOT
 
-Under NativeAOT, all compiled module initializers run before `Main`, so the generated provider registry
-is complete after startup. `GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered()` detects that
-assembly-reference enumeration is unsupported and skips the reference walk; it does not need to load
-assemblies or run their initializers again.
+Native ahead-of-time compilation (NativeAOT) runs compiled module initializers before `Main`. The generated provider registry therefore does not need to load assemblies or run initializers again. `GeneratedTypeDiscoveryRegistry.EnsureProvidersRegistered()` skips its reference walk when assembly-reference enumeration is unsupported.
 
-An assembly that contributes only through reflection and is never referenced from compiled code may be
-trimmed away. Generated registration does not root its own assembly. Root such assemblies explicitly
-with `TrimmerRootAssembly` or `DynamicDependency`; no reference walk could recover an assembly removed
-by trimming. The type-discovery sample demonstrates discovery in a native executable.
+Trimming can remove an assembly that contributes only through reflection and is never referenced by compiled code. Generated registration does not itself keep its containing assembly in the executable. Keep such assemblies in the executable explicitly with `TrimmerRootAssembly` or `DynamicDependency`; discovery cannot recover code removed by trimming. The type-discovery sample demonstrates discovery in a native executable.
 
-The generated provider also creates the enum JSON converters for the enums its assembly declares, so
-`EnumConverterFactory` works under NativeAOT. Assemblies built with an older generator version must be
-rebuilt to get these converters.
+Generated providers also create enum JSON converters for enums declared in their assemblies, allowing `EnumConverterFactory` to use those converters under NativeAOT. Rebuild assemblies compiled with a generator version that did not emit them.
 
-Generated convention and self bindings preserve public instance constructors of bound, non-static,
-non-abstract classes and structs through `DynamicDependency` attributes on the generated module
-initializer, including open generic definitions. A type must have at least one public instance
-constructor; for structs it must be explicitly declared. An implicit struct parameterless constructor
-has no IL member to preserve, so no attribute is emitted for it. Enums, interfaces, delegates and types
-with only non-public constructors get no attribute. These checks do not change the binding lists.
-This allows dependency injection to activate types referenced only through discovery. Assemblies compiled
-with an older generator version must be rebuilt to gain this constructor preservation.
+For dependency injection, generated convention and self bindings preserve public instance constructors through `DynamicDependency` attributes on the module initializer. This covers bound, non-static, non-abstract classes and structs, including open generic definitions. Struct constructors must be explicitly declared: an implicit parameterless struct constructor has no IL member to preserve.
 
-Hand-written `ICanProvideConventionsForDependencyInjection` providers must preserve their implementation
-types' public constructors themselves. For example, put
-`[DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(MyImplementation))]`
-on a method that is kept when the provider is used. Passing `typeof(MyImplementation)` in a binding alone
-does not preserve its constructors.
+Types with no public instance constructor, along with enums, interfaces, and delegates, receive no constructor-preservation attribute. These checks affect preservation, not membership in the binding lists. Rebuild assemblies compiled with a generator version that did not emit constructor-preservation attributes.
+
+If you write an `ICanProvideConventionsForDependencyInjection` provider yourself, preserve the implementation types' public constructors too. For example, put `[DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(MyImplementation))]` on a method kept when the provider is used. A `typeof(MyImplementation)` reference in a binding alone does not preserve its constructors.
 
 ## Watching discovery happen
 
-The universe is built from a static field initializer, before any container or logger exists, so the
-decision is reported through an event source rather than a log. It costs nothing when nothing is
-listening:
+Default discovery can run from a static field initializer, before the host has a container or logger. Its event source lets you observe the result without relying on host logging:
 
 ```bash
 dotnet-trace collect --providers Cratis.Fundamentals.TypeDiscovery
 ```
 
-Two events are written. `UniverseBuilt` names the discovery mode and the assemblies every time a
-universe is built. `UniverseContainsOnlyThisPackage` is a warning, written when the universe reached
-nothing beyond `Cratis.Fundamentals` — which is never legitimate for an application, because every
-convention-based lookup will then come back empty and none of them will say so.
+`UniverseBuilt` reports the discovery mode and assemblies each time a snapshot is built. `UniverseContainsOnlyThisPackage` warns when the only contributing assembly is `Cratis.Fundamentals`. In an application, this usually means its own types are missing from discovery; check the generator reference and provider selection before relying on convention-based lookups.
 
-A host that wants these in its own log can bridge them with an `EventListener`.
+To include these events in host logs, bridge the event source with an `EventListener`.
 
 ## Asking what discovery missed
 
-A generated provider registers itself from a module initializer, which runs when the CLR loads its
-assembly. An assembly loaded after the universe was built therefore contributes nothing to it, silently.
-`TypeDiscoveryDiagnostics` answers which ones those were:
+If an expected assembly is absent from `ITypes.Assemblies`, use `TypeDiscoveryDiagnostics.FindMissingContributors(types)`. It compares the snapshot with project-referenced libraries in the entry assembly's dependency model:
 
 ```csharp
 using Cratis.Types;
@@ -184,17 +140,13 @@ foreach (var missing in TypeDiscoveryDiagnostics.FindMissingContributors(types))
 }
 ```
 
-This is something to ask rather than something start-up does. Comparing what was discovered against what
-could have been means consulting the dependency model, and doing that on every start-up would spend part
-of the cost the generated providers exist to avoid — so the cost lands only on the caller that wants the
-answer, typically a health check or a start-up self-test.
+Run this diagnostic where you need the comparison, such as a health check or startup self-test. It consults the dependency model only when called; default startup does not perform this comparison.
 
-It reads names and loads nothing, so a library that legitimately contributes no types is reported too.
+The diagnostic reads library names without loading assemblies. A reported library may legitimately contribute no types, so treat the result as a lead to investigate, not proof of a missing implementation.
 
 ## As Instances
 
-A common scenario is to discover types where the implementation has dependencies themselves and instances need to be resolved using
-the IoC container. The `IInstancesOf<>` interface provides this mechanism in a convenient way.
+Use `IInstancesOf<T>` when you need objects rather than `Type` metadata. It asks the dependency injection container to resolve each discovered concrete type, including its dependencies. Those concrete types and their dependencies must be registered; discovering a type does not register it. See [Dependency Injection](./dependency_injection.md) for convention and self-binding rules.
 
 ```csharp
 using Cratis.Types;
@@ -208,4 +160,4 @@ public class MySystem
 }
 ```
 
-> Note: The instances are only created when looping through. The instances are not cached and if you enumerate it multiple times, it will ask the IoC again for the instance.
+Resolution happens during enumeration. `IInstancesOf<T>` does not cache the results: enumerating again asks the container again, and the service registrations' lifetimes determine whether it returns new or shared instances.

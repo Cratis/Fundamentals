@@ -1,61 +1,48 @@
 ---
 uid: Fundamentals.Concepts
-description: Wrap primitive values in ConceptAs types so ids and values get compile-time safety, serialization and validation from the type itself.
+title: C# domain concepts with ConceptAs
+description: ConceptAs gives domain values distinct C# types, so method signatures express their meaning while JSON converters keep the underlying value.
 ---
-# Concepts
 
-To express a domain in a better way rather than representing input parameters, fields, or properties as primitives such as `int`, `string`, or `Guid`,
-we formalize these as their own types. This increases readability in the code and also represents an opportunity for implementing cross-cutting concerns.
-The type itself will then represent metadata that can be leveraged at runtime to reason about the code and also provide functionality such as
-authorization or validation rules based on the type.
+<a id="concepts"></a>
 
-The encapsulation should only be for a single value. That means you shouldn't have more properties than a single value. This is due to how all
-the serializers work internally—they wouldn't know how to resolve anything but a single value. All serializers and converters convert back and
-forth from the primitive representation.
+`ConceptAs<T>` in Cratis Fundamentals gives a single domain value its own C# type. Use it when a method needs a social security number, customer id, or other meaningful value rather than any `string` or `Guid`. The compiler can then check that callers pass the intended type.
 
-When we do these formalizations, there is an underlying base type that represents these called `ConceptAs<>`. With it we can handle cross-cutting
-things like serialization of these types.
+A property name explains what a primitive value means, but that name is lost when a method accepts any value of the same primitive type. A concept carries the meaning into the signature. The examples below replace a person's string identifier with `SocialSecurityNumber`, then configure converters to keep its string representation in JSON.
 
-`ConceptAs<>` implements `IComparable` and makes it possible to compare the primitive types without having to unwrap the concept. It is
-important to note that it inherently means that the type the concept represents needs to be a type that implements `IComparable`, which is
-true for primitives.
+`ConceptAs<T>` implements `IComparable` and delegates comparisons to its underlying value. The underlying type must also implement `IComparable`.
 
-The wrapped type is not necessarily what you want to have represented when storing in databases or during transport. There are therefore
-implementations for the common things we use to translate the concepts to their underlying type.
+Keep each concept to one value. The supplied converters write and read only the wrapped `Value`; they do not preserve additional properties. Use a separate model containing several concepts when you need to represent a more complex structure.
 
 ## Enums
 
-Enums are on their own already a domain concept and does not need further encapsulation.
+An enum already names a domain value and its allowed alternatives. Use it directly rather than wrapping it in `ConceptAs<T>`.
 
 ## Serialization
 
-Concepts using `ConceptAs<>` is meant as encapsulations of primitives, single values and aims to be a way of getting type safety and compile-time checking.
-The encapsulation is however very inconvenient when used in data transport or saved in a data store, as it would by default become a container with
-a single property `Value` within it. To overcome this, there are serializers and converters provided that unwraps the inner value and also then
-knows how to create instances of a concept when getting it back into the code. These assume that the value is a single value, so if you were to
-add more values these would be ignored and lost, because only the wrapped `Value` is written and read back.
+A concept gives you a distinct type in C#, but you may want its underlying value at a transport or storage boundary. For example, a JSON client can receive a social security number as a string rather than an object containing a `Value` property. The concept converters handle this translation in both directions. They require a constructor that accepts the single wrapped value to recreate the concept.
 
 ## Creating a Concept
 
-Let's say we have in our domain an entity called `Person`. It is identified by its social security number:
+Start with a `Person` whose identifier is a string:
 
 ```csharp
 public record Person(string SocialSecurityNumber);
 ```
 
-Instead of using `string`, we want this to actually be a specific type of `SocialSecurityNumber`:
+Define a record derived from `ConceptAs<string>` to give that identifier its own type:
 
 ```csharp
 public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value);
 ```
 
-Using it will then be:
+Use the concept in the model:
 
 ```csharp
 public record Person(SocialSecurityNumber SocialSecurityNumber);
 ```
 
-When we use this new type, our APIs become much clearer based on their signature:
+The same distinction now appears in a lookup method. `GetBy` requires a `SocialSecurityNumber`, not an arbitrary string:
 
 ```csharp
 public interface IPersons
@@ -64,28 +51,31 @@ public interface IPersons
 }
 ```
 
-> Note: It is important to note that anything that implements `ConceptAs<>` is assumed to be a wrapper for a primitive type only.
-> The serialization converters round-trip only the wrapped `Value`; additional properties are not preserved. Converting a value back into a concept requires a constructor that accepts the single wrapped value, and fails if there is none.
-> If one needs to represent complex types, you can do so without inheriting from `ConceptAs<>` and then have all its values be concepts instead.
+The record's constructor takes the wrapped string, so converters can recreate it. This type distinction does not itself validate the format of a social security number; any domain validation remains your responsibility.
 
 ## Generating new values
 
-A concept can implement `IGeneratable<TSelf>` to declare a static `New()` method that constrained generic code can call without reflection.
-When generation depends on the operation's clock or tenant, implement `IGeneratableInContext<TSelf>` with `New(GenerationContext context)` instead.
-If a type implements both interfaces, callers use the context form.
-Use `GenerateValue.Uuid()` for default random identifiers, `UuidV7()`, `Ulid()`, or `TypeId(prefix)` for time-ordered identifiers,
-and `NanoId()` or `Bytes(count)` for random strings. Use `Pattern(pattern, checksum)` for readable formats with optional check digits,
-or `Integer(minimum, maximum)` for an unbiased inclusive Int64 range. Date-bearing patterns require `Pattern(pattern, context, checksum)`
-and use the captured UTC date; check supplied values explicitly with `HasValidChecksum(value, checksum)`.
-The time-ordered strategies also accept a `GenerationContext` to use its captured time.
-The [Generating values](generating-values/index.md) section walks through the concept patterns, strategy choice, security trade-offs, and testing with known values or a pinned clock.
+When callers need a new id or code, put its generation rule on the concept. Implement `IGeneratable<TSelf>` to declare a static `New()` method that constrained generic code can call without reflection. Callers then ask the domain type for a new value without choosing the generation strategy themselves.
+
+If the rule depends on the operation's captured time or tenant, implement `IGeneratableInContext<TSelf>` with `New(GenerationContext context)`. The caller supplies the context, so values generated for one operation can share its captured time. If a type implements both interfaces, callers use the context form.
+
+Choose a `GenerateValue` method for the value you need:
+
+| Value needed | Method |
+| --- | --- |
+| Random identifier | `Uuid()` |
+| Time-ordered identifier | `UuidV7()`, `Ulid()`, or `TypeId(prefix)`; each also accepts a `GenerationContext` |
+| Random string | `NanoId()` or `Bytes(count)` |
+| Readable code with optional check digits | `Pattern(pattern, checksum)` |
+| Number from an inclusive Int64 range | `Integer(minimum, maximum)` |
+
+Date-bearing patterns require `Pattern(pattern, context, checksum)` and use the captured UTC date. Check supplied values explicitly with `HasValidChecksum(value, checksum)`.
+
+To build concepts that generate their own ids and codes, follow [Generating values](generating-values/index.md). That section also helps you choose between a public id, a readable code, and a secret, and test the rule with known values or a pinned clock.
 
 ## Implicit Operators
 
-The `ConceptAs<>` base record has an implicit operator overload for converting from the formalized type to the underlying primitive type.
-Due to a limitation of C#, the underlying `ConceptAs<>` does not have an implicit operator overload going the other way.
-It might not be needed either, but if you typically have the value represented by its primitive type and want a convenient way to automatically
-convert it to the formalized type, you can easily add an implicit operator for this:
+The `ConceptAs<T>` base record provides an implicit conversion from the concept to its underlying value. To allow conversion in the other direction, define an operator on your concept. This is useful when callers often receive the value as a primitive:
 
 ```csharp
 public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value)
@@ -94,7 +84,7 @@ public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value)
 }
 ```
 
-With this you get full interchangeability:
+With this operator, a string can initialize a `SocialSecurityNumber`, and the base operator can unwrap it again:
 
 ```csharp
 string socialSecurityNumber = "12345678901";
@@ -104,24 +94,21 @@ string unwrapped = formalized;
 
 ## Nullability
 
-While the formalized domain concept is a representation, or a wrapper of another type, the nullability of the underlying type is not important.
-The `ConceptAs<>` constructor does not allow for the value to be null. The reason for this is that you would be camouflaging whether or not
-null is an allowed value for the concept.
+`ConceptAs<T>` rejects a null wrapped value. Represent absence with a nullable concept reference instead, so the model states whether the value is optional.
 
-Imagine:
+This declaration expects a social security number:
 
 ```csharp
 public record Person(SocialSecurityNumber SocialSecurityNumber);
 ```
 
-If null is valid and the `ConceptAs<>` didn't have this constraint, you would end up with an instance for `SocialSecurityNumber` with a null value within it.
-This would hide the intent and possibly create problems down the line. A clearer approach, if null is allowed, is to make it nullable and very clear:
+If a person may have no social security number, make the property nullable:
 
 ```csharp
 public record Person(SocialSecurityNumber? SocialSecurityNumber);
 ```
 
-You can now see clearly that this value can be null. If this is a common theme for the concept, you can make the implicit operator handle nullables as well.
+The nullable annotation makes absence visible to callers. If the concept has an implicit conversion from its primitive type, that operator can return a null concept for a null input:
 
 ```csharp
 public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value)
@@ -132,9 +119,9 @@ public record SocialSecurityNumber(string Value) : ConceptAs<string>(Value)
 
 ## System.Text.Json
 
-Within the **Fundamentals** package you'll find a namespace called `Json`. This holds converters for serializing and deserializing concept types.
+The `Cratis.Json` namespace contains converters for writing concepts as their underlying values and reading them back.
 
-With the default behavior of the `JsonSerializer`:
+Without a converter, `JsonSerializer` writes the concept as an object. This example uses the implicit conversion defined above:
 
 ```csharp
 using System.Text.Json;
@@ -143,7 +130,7 @@ var person = new Person("12345678901"); // Implicit operator converting it to So
 var serialized = JsonSerializer.Serialize(person);
 ```
 
-The output would be:
+The output contains a nested `Value` property:
 
 ```json
 {
@@ -153,7 +140,7 @@ The output would be:
 }
 ```
 
-By leveraging the converter:
+Add `ConceptAsJsonConverterFactory` to the options passed to the serializer:
 
 ```csharp
 using System.Text.Json;
@@ -171,7 +158,7 @@ var person = new Person("12345678901"); // Implicit operator converting it to So
 var serialized = JsonSerializer.Serialize(person, options);
 ```
 
-The output will be:
+The same property is now a string in JSON:
 
 ```json
 {
@@ -179,7 +166,7 @@ The output will be:
 }
 ```
 
-The converter handles deserializing it correctly. Just pass in the converter factory:
+Use the same converter configuration when deserializing. It constructs `SocialSecurityNumber` from the incoming string:
 
 ```csharp
 using System.Text.Json;
@@ -197,14 +184,11 @@ var json = "{ \"SocialSecurityNumber\": \"12345678901\" }";
 var person = JsonSerializer.Deserialize<Person>(json, options);
 ```
 
-> Note: If you're using the Cratis Application Model, you do not have to configure this. It is automatically configured for the ASP.NET pipelines
-> and other parts that needs it, such as the Cratis Kernel transports.
+Cratis Arc configures the concept converters when setting up its host. In an application using Fundamentals directly, configure the JSON options used by your serializer or HTTP host.
 
 ## TypeConverters
 
-The .NET component model has the concept of a [type converter](https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter?view=net-6.0).
-These are leveraged by different parts of the .NET platform, including ASP.NET when dealing with things like parameters for controllers.
-Out of the box, **Fundamentals** provides a type converter for concepts. All you need to do is register it for your concept types.
+.NET [type converters](https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.typeconverter?view=net-6.0) serve consumers of `TypeDescriptor`, including ASP.NET controller parameter binding. They are separate from JSON converters. Fundamentals provides `ConceptAsTypeConverter<TConcept, TValue>`; register it for each concept type:
 
 ```csharp
 using System.ComponentModel;
@@ -213,10 +197,7 @@ using Cratis.Concepts;
 TypeDescriptor.AddAttributes(typeof(SocialSecurityNumber), new TypeConverterAttribute(typeof(ConceptAsTypeConverter<SocialSecurityNumber, string>)));
 ```
 
-This can become a lot of registrations and a cognitive load of having to remember to do this.
-One way to make it simpler would be to discover all `ConceptAs<>` implementations and register them automatically.
-With the [type](./types.md) system in **Fundamentals**, you can easily do this. There is however a convenience extension method for
-the `ITypes` type that does this for you.
+To avoid maintaining one registration per concept, use `RegisterTypeConvertersForConcepts` on an `ITypes` instance. It registers converters for the concepts found by [type discovery](./types.md):
 
 ```csharp
 using Cratis.Concepts;
@@ -226,4 +207,4 @@ var types = new Types();
 types.RegisterTypeConvertersForConcepts();
 ```
 
-> Note: If you're using the Cratis Application Model, you do not have to manually set this up. It is automatically configured at startup.
+Cratis Arc registers these type converters during host setup. When using Fundamentals directly, register them before a consumer needs to convert concept values. If a concept is missing from discovery, follow [Types](./types.md) to inspect which assemblies contributed.

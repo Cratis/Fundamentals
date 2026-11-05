@@ -1,5 +1,6 @@
 ---
-description: Serialize .NET dictionaries with complex object keys to JSON and back with the ComplexKeyDictionaryJsonConverterFactory.
+title: Complex key dictionaries in Cratis Fundamentals
+description: Cratis Fundamentals serializes .NET dictionaries with complex object keys as JSON property names and reconstructs typed keys when reading.
 ---
 # Complex Key Dictionaries
 

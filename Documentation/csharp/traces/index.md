@@ -1,9 +1,10 @@
 ---
-description: Create spans in .NET with typed IActivitySource and IActivityScope instead of raw ActivitySource and Activity, optionally source generated.
+title: Cratis Fundamentals tracing in .NET
+description: Cratis Fundamentals adds typed .NET tracing sources and disposable span scopes. Register a source and generate span methods to instrument your services.
 ---
 # Traces
 
-The Cratis Fundamentals library provides a typed tracing API on top of `.NET` activities. You work with `IActivitySource<T>` and `IActivityScope<T>` instead of raw `ActivitySource` and `Activity`, and you can generate spans from partial methods with the `Cratis.Observability.SourceGenerators` package.
+Cratis Fundamentals tracing lets you mark operations in a .NET service as spans: timed units of work that can form a trace of a request. Use `IActivitySource<T>` to create them and `IActivityScope<T>` to stop them when the work ends. The examples below instrument order processing and validation with generated span methods.
 
 ## Table of Contents
 
@@ -16,22 +17,17 @@ The Cratis Fundamentals library provides a typed tracing API on top of `.NET` ac
 
 ## Overview
 
-The tracing system gives you:
+A span records one operation, while its tags attach details you can use to investigate that operation. The typed API wraps .NET's `ActivitySource` and `Activity`; `[Span]` declarations let a source generator create the start-and-stop plumbing and turn method parameters into tags.
 
-- **Typed activity sources** through `IActivitySource<T>`
-- **Disposable activity scopes** through `IActivityScope<T>`
-- **Source-generated spans** with `[Span]`
-- **Automatic tags** from method parameters
-- **Ambient parent-child relationships** through `Activity.Current`
+Nested spans use `Activity.Current`, the activity active in the current execution context, to connect a sub-operation to its parent. This lets you follow validation within order processing without passing an activity between methods.
 
 ## Getting Started
 
-To use traces in your project:
+Reference `Cratis.Fundamentals` in your .NET project. For the generated methods used on this page:
 
-1. Add a reference to `Cratis.Fundamentals`
-2. Add a reference to `Cratis.Observability.SourceGenerators` if you want source-generated span methods
-3. Register your services with `AddBindingsByConvention()` or `AddSelfBindings()`
-4. Inject `IActivitySource<T>` into the service that creates spans
+1. Add a reference to `Cratis.Observability.SourceGenerators`.
+2. Register your services with `AddBindingsByConvention()` or `AddSelfBindings()`.
+3. Inject `IActivitySource<T>` into the service that creates spans.
 
 ```csharp
 var services = new ServiceCollection();
@@ -39,13 +35,15 @@ var services = new ServiceCollection();
 services.AddBindingsByConvention();
 ```
 
-For keyed named activity source configuration, see [Named Registration](named-registration.md).
+Both registration methods make unkeyed `IActivitySource<T>` available through dependency injection. The registration excerpt above uses the `Cratis.DependencyInjection` and `Microsoft.Extensions.DependencyInjection` namespaces.
+
+Registration makes a source available to your code; a telemetry provider must also subscribe to it to collect spans. Follow [Set up OpenTelemetry](../opentelemetry.md) for the host configuration. If several services should report under one source name, use [named activity source registration](named-registration.md).
 
 ## Core Concepts
 
 ### Activity sources
 
-An activity source is the typed entry point for creating spans:
+`IActivitySource<T>` gives code associated with `T` access to the underlying .NET activity source:
 
 ```csharp
 public interface IActivitySource<T>
@@ -54,9 +52,9 @@ public interface IActivitySource<T>
 }
 ```
 
-When you resolve unkeyed `IActivitySource<T>` from dependency injection, Fundamentals creates an `ActivitySource` named after `T`. Per-type sources are not subscribed by `Cratis.*` unless the source name matches that configured wildcard. Explicitly subscribe to the source name in your telemetry provider, or use a named source under a `Cratis.<Product>` scope that your provider subscribes to. Registering the source does not configure a provider; see [Set up OpenTelemetry](../opentelemetry.md).
+An unkeyed source uses `typeof(T).FullName` as its name, falling back to `typeof(T).Name` if no full name is available. For `OrderService` below, the source name is `MyApplication.Orders.OrderService`. Subscribe to that name in your telemetry provider. The `Cratis.*` subscription in the shared OpenTelemetry setup does not match it.
 
-`AddNamedActivitySource("Cratis.MyProduct", version: "1.2.3")` and `AddNamedMeter("Cratis.MyProduct", version: "1.2.3")` set the instrumentation scope version. The existing overloads without a version remain supported.
+Named sources let you choose a shared instrumentation scope instead of a per-type name. `AddNamedActivitySource("Cratis.MyProduct", version: "1.2.3")` sets the scope version; `AddNamedMeter("Cratis.MyProduct", version: "1.2.3")` does the same for metrics. Both APIs also have overloads without a version.
 
 ### Activity scopes
 
@@ -86,7 +84,7 @@ using var validationScope = _activitySource.ValidateOrder(order.Id);
 
 ## Using Source Generation
 
-The `Cratis.Observability.SourceGenerators` package can implement your span methods at compile time.
+The `Cratis.Observability.SourceGenerators` package implements partial span methods at compile time, so service code can call `_activitySource.ProcessOrder(...)` without constructing an activity itself.
 
 1. Create a static partial class
 2. Add `static partial` methods that return `IActivityScope<T>`
@@ -114,15 +112,15 @@ public static partial class OrderTraces
 }
 ```
 
-The generator:
+Calling `ProcessOrder` starts an `order.process` activity with `ActivityKind.Server` and adds `order_id` and `customer_id` tags from the arguments. `ValidateOrder` starts `order.validate` with the default `ActivityKind.Internal`. Both return an `ActivityScope<T>` that stops the activity when disposed.
 
-- starts the activity with the configured name and kind
-- uses `[Cratis.Diagnostics.Tag("cratis.…")]` for explicit attribute keys, or converts untagged parameter names to `snake_case` for compatibility
-- returns an `ActivityScope<T>` that stops the activity on disposal
+The generator converts parameter names to `snake_case` for tag keys. Use `[Cratis.Diagnostics.Tag("cratis.…")]` on a parameter when you need an explicit key. See the [Roslyn source generator guide](roslyn.md) for declaration details.
 
 ## Examples
 
 ### Creating spans in a service
+
+With `OrderTraces` declared above, the service can place a scope around each operation. The `Process` scope remains active across both awaited calls, so the validation span is nested beneath the processing span.
 
 ```csharp
 using Cratis.Traces;
@@ -158,7 +156,7 @@ public record Order(string Id, string CustomerId);
 
 ### Working with the underlying activity
 
-If you need to add extra tags or status details, use the wrapped activity directly:
+Use the wrapped activity to add details that are known only while processing, such as a retry count or the final status. `Activity` is nullable, so keep the null-conditional calls when updating it:
 
 ```csharp
 using var scope = _activitySource.ProcessOrder(order.Id, order.CustomerId);
@@ -169,12 +167,11 @@ scope.Activity?.SetStatus(ActivityStatusCode.Ok);
 
 ## Best Practices
 
-1. **Always use `using`** when you create an `IActivityScope<T>`
-2. **Keep span names stable** so dashboards and queries do not drift
-3. **Use low-cardinality tags** unless you explicitly need high-cardinality diagnostics
-4. **Create nested spans for meaningful sub-operations**, not every line of code
-5. **Prefer extension-method span declarations** so call sites read as `_activitySource.ProcessOrder(...)`
-6. **Keep trace declarations together** in a single partial class per area
+Keep span names stable so dashboards and queries continue to find the same operations. Add nested spans where a sub-operation needs its own timing or diagnostic context; tracing every line makes the useful boundaries harder to see.
+
+Use `using` for every `IActivityScope<T>` so its lifetime follows the operation, including when an exception leaves the method. Keep related declarations in one partial class per area, using extension methods to keep service call sites readable.
+
+Choose tags deliberately. Prefer values with a limited set of possibilities, such as an operation category. The order and customer IDs in these examples have many possible values; include identifiers only when you need that diagnostic detail, and avoid sensitive data.
 
 ## See Also
 

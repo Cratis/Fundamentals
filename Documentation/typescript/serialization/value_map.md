@@ -1,4 +1,5 @@
 ---
+title: ValueMap Serialization
 description: Serialize and deserialize ValueMap with JsonSerializer so complex dictionary keys from the backend come back as typed keys.
 ---
 # ValueMap Serialization

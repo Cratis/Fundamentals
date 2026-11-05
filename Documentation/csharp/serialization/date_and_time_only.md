@@ -1,4 +1,5 @@
 ---
+title: DateOnly and TimeOnly in Cratis Fundamentals
 description: Serialize and bind DateOnly and TimeOnly in .NET with the System.Text.Json converters and type converters in Cratis.Fundamentals.
 ---
 # Date & Time Only

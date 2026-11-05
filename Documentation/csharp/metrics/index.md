@@ -1,9 +1,10 @@
 ---
-description: Track application metrics in .NET with a typed API over System.Diagnostics.Metrics, with optional source generation for metric methods.
+title: Cratis Fundamentals metrics for .NET applications
+description: Cratis Fundamentals adds typed meters and generated metric methods to .NET so you can count operations, record current values, and measure distributions.
 ---
-# Metrics
+<a id="metrics"></a>
 
-The Cratis Fundamentals library provides a comprehensive metrics system for tracking and monitoring your application's performance and behavior. This system is built on top of .NET's System.Diagnostics.Metrics and provides a developer-friendly API with source generation capabilities.
+Cratis Fundamentals metrics let you instrument .NET services with typed meters built on `System.Diagnostics.Metrics`. Use them to count events such as login attempts, record current values such as memory usage, or measure distributions such as request duration. The optional source generator turns attributed partial methods into calls to the .NET metrics API.
 
 ## Table of Contents
 
@@ -16,22 +17,22 @@ The Cratis Fundamentals library provides a comprehensive metrics system for trac
 
 ## Overview
 
-The metrics system in Cratis Fundamentals offers:
+Start with the question your monitoring needs to answer. A counter can tell you how many login attempts failed; tags such as authentication method let you break that count down. A tag is a key-value pair attached to a measurement.
 
-- **Type-safe metrics** through generic interfaces
-- **Source generation** for automatic metrics implementation
-- **Scoped metrics** for contextual measurements
-- **Tag support** for dimensional metrics
-- **Counter, Gauge, and Histogram instruments** with standardized APIs
+Each service receives an `IMeter<T>`, where `T` identifies the service. From that meter, metric methods record measurements through counters, gauges, or histograms. When several measurements need the same tags, pass a meter scope to those methods to carry the shared context.
+
+Recording measurements and exporting them are separate steps. Your telemetry provider must subscribe to the meter and have an exporter configured before the measurements can reach your monitoring system.
 
 ## Getting Started
 
-To start using the metrics system in your project:
+The metric-method examples on this page use source generation:
 
-1. Add a reference to the `Cratis.Fundamentals` package
-2. Add the `Cratis.Observability.SourceGenerators` source generator package (optional but recommended)
-3. Define your metrics interface
-4. Use dependency injection to get access to your metrics
+1. Reference `Cratis.Fundamentals` for the typed meters and metric attributes.
+2. Reference `Cratis.Observability.SourceGenerators` to generate the partial method implementations.
+3. Register a meter in dependency injection, as shown below.
+4. Declare methods in a static partial class, then call them from your service with its injected meter.
+
+If you do not use the generator, access the underlying .NET meter through `IMeter<T>.ActualMeter` to create instruments yourself. The registration below is an excerpt for a service collection named `services` and your application's `MyService` type.
 
 ```csharp
 using Cratis.Metrics;
@@ -41,15 +42,15 @@ using Microsoft.Extensions.DependencyInjection;
 services.AddSingleton<IMeter<MyService>, UnkeyedMeter<MyService>>();
 ```
 
-`IMeter<T>` is an interface, so registering it alone cannot be resolved; pair it with the `UnkeyedMeter<T>` implementation. If you already call `AddBindingsByConvention()` or `AddSelfBindings()` (both from `Cratis.DependencyInjection`), the open generic pair `IMeter<>` to `UnkeyedMeter<>` is registered for you and you do not need the explicit registration.
+Register `IMeter<T>` with its `UnkeyedMeter<T>` implementation so dependency injection can resolve it. If you already call `AddBindingsByConvention()` or `AddSelfBindings()` from `Cratis.DependencyInjection`, those methods register the open generic pair `IMeter<>` to `UnkeyedMeter<>` for you. You can then omit the explicit registration.
 
-For keyed named meter configuration, see [Named Registration](named-registration.md).
+To give several services a shared meter name, use [named meter registration](named-registration.md). That page also explains how to resolve a meter by its dependency-injection key.
 
 ## Core Concepts
 
 ### Meters
 
-A meter is a factory for creating and managing metrics instruments. Each meter is typed to a specific class or service:
+A meter creates instruments: the counters, gauges, and histograms that record measurements. The typed wrapper associates a meter with a class or service:
 
 ```csharp
 public interface IMeter<T>
@@ -58,11 +59,11 @@ public interface IMeter<T>
 }
 ```
 
-Unkeyed `IMeter<T>` uses `typeof(T).FullName` as its meter name. These per-type meters are not subscribed by default: explicitly subscribe the name in your telemetry provider, or use a subscribed [named meter](named-registration.md).
+`UnkeyedMeter<T>` uses `typeof(T).FullName` as its meter name, falling back to `typeof(T).Name` if the full name is unavailable. Subscribe to that name in your telemetry provider, or use a [named meter](named-registration.md) whose name your provider subscribes to. Registering a meter alone does not subscribe it.
 
 ### Meter Scopes
 
-Meter scopes provide contextual metrics with associated tags:
+A meter scope pairs a meter with shared tags. Pass the scope as the first argument to generated metric methods that should include those tags:
 
 ```csharp
 public interface IMeterScope<T> : IDisposable
@@ -72,7 +73,7 @@ public interface IMeterScope<T> : IDisposable
 }
 ```
 
-Use scopes to add context to your metrics. You can use either a dictionary or an anonymous type:
+Create a scope from a dictionary or an anonymous object. A scope is passed explicitly; creating one does not change other calls made with the original meter.
 
 ```csharp
 // Using a dictionary
@@ -90,7 +91,7 @@ using var scope = meter.BeginScope(new
 });
 ```
 
-The anonymous type approach provides a more concise syntax and supports property name inference:
+With an anonymous object, its property names become tag keys. C# property name inference also works:
 
 ```csharp
 // Property names are inferred from the source properties
@@ -103,18 +104,17 @@ using var scope = meter.BeginScope(new
 
 ### Tags
 
-Tags allow you to add dimensions to your metrics for better filtering and analysis. Tags can be:
+Use tags to filter or group measurements, for example by login result or HTTP method. Generated methods collect tags from their parameters and, when passed an `IMeterScope<T>`, from that scope.
 
-- Added at the scope level (applied to all metrics within the scope)
-- Added at the individual metric level through method parameters
+Keep each tag's possible values bounded. Result names, HTTP methods, and route templates work better than user, tenant, request, or entity IDs. Each distinct combination of tag values can create a separate time series; the number of combinations is called cardinality. Scope tags contribute just as method tags do. See [metric views and cardinality](../opentelemetry.md#metric-views-and-cardinality) to set budgets and handle overflow.
 
-Choose bounded tags such as result, HTTP method or a route template, not user, tenant, request or entity IDs. Scope tags have the same cardinality cost as method tags. See [metric views and cardinality](../opentelemetry.md#metric-views-and-cardinality) for budgets, allowed tags and overflow handling. The excerpts below assume the illustrated service and domain types; use bounded vocabularies for their dimension values.
+The following declarations are excerpts for a static partial class. They assume the illustrated service types and a `Cratis.Metrics` import.
 
 ## Available Metrics
 
 ### Counters
 
-Counters track cumulative values that only increase. Use for counting events, requests, errors, etc.
+Counters accumulate non-negative increments. Use one when you need the number of events, requests, or errors. Without a measurement parameter, the generated method adds one per call:
 
 ```csharp
 [Counter<int>("user_logins", "Number of user login attempts")]
@@ -123,7 +123,7 @@ static partial void LogUserLogin(IMeter<AuthService> meter, string method, strin
 
 ### Gauges
 
-Gauges track values that can go up and down. Use for measuring current state like memory usage, active connections, etc.
+Gauges record current values that can rise or fall, such as memory usage or active connections:
 
 ```csharp
 [Gauge<double>("memory_usage_bytes", "Current memory usage in bytes")]
@@ -132,7 +132,7 @@ static partial void RecordMemoryUsage(IMeter<MemoryService> meter, double value)
 
 ### Histograms
 
-Histograms record distributions of measurements such as request durations or payload sizes. A measurement parameter matching the attribute's generic type is required; the optional third argument declares a UCUM unit.
+Histograms record measurements for a distribution, such as request durations or payload sizes. Supply a measurement parameter matching the attribute's generic type. The optional third attribute argument declares a unit using UCUM, the Unified Code for Units of Measure:
 
 ```csharp
 [Histogram<double>("request_duration", "Request duration", "s")]
@@ -143,21 +143,15 @@ Use `IMeterScope<T>` to include scope tags. Omitting the unit leaves the instrum
 
 ## Using Source Generation
 
-The `Cratis.Observability.SourceGenerators` source generator automatically implements your metrics methods. To use it:
-
-1. Create a static partial class
-2. Define partial methods with appropriate attributes
-3. The source generator will implement the methods
+The `Cratis.Observability.SourceGenerators` package implements attributed metric methods at compile time. Put the declarations in a static partial class and mark each static partial method with `[Counter<T>]`, `[Gauge<T>]`, or `[Histogram<T>]`. You then call the method from your service instead of creating and looking up the instrument yourself.
 
 ### Method Signature Requirements
 
-All metrics methods must follow these rules:
+Both the method and its containing class must be `static partial`. The first parameter must be `IMeter<T>` or `IMeterScope<T>`.
 
-1. **First parameter** must be either `IMeter<T>` or `IMeterScope<T>`
-2. **Value parameter** (required for gauges and histograms) must match the generic type in the attribute
-3. **Additional parameters** become tags automatically
-4. Methods must be `static partial`
-5. The containing class must be declared `static partial`. The generator skips classes that are not both `static` and `partial`.
+The first remaining parameter whose type matches the attribute's generic type supplies the measurement. Gauges and histograms require it; counters add one when it is absent. All other parameters become tags. In the example below, `count` supplies the `user_operations` increment, and `duration` supplies the `scoped_operations` increment despite its name. Use a histogram when you want a duration distribution.
+
+For callable methods, choose an access modifier that allows the service to call them, as the service examples below do with `internal`.
 
 ### Example Implementation
 
@@ -192,7 +186,11 @@ public static partial class UserMetrics
 
 ## Examples
 
+These service excerpts show where to record measurements in application code. They assume `Cratis.Metrics` is imported and the generator package is referenced. Supply your application's domain types and operations, such as `Order`, `ValidateCredentialsAsync`, and `SaveOrderAsync`; those implementations are not included here.
+
 ### Basic Counter Usage
+
+Record the result after checking the credentials, and count an exception as an error before rethrowing it:
 
 ```csharp
 public class AuthService
@@ -238,6 +236,8 @@ public static partial class AuthMetrics
 ```
 
 ### Using Scoped Metrics
+
+Create a scope once for the order operation, then pass it to each metric method. The generated methods combine the shared `operation` and `order_type` tags with any method-specific tags:
 
 ```csharp
 public class OrderService
@@ -302,6 +302,8 @@ public static partial class OrderMetrics
 
 ### Gauge Metrics
 
+Record each memory reading as a current value. This excerpt uses a timer to take readings every 30 seconds:
+
 ```csharp
 public class MemoryMonitorService
 {
@@ -337,14 +339,12 @@ public static partial class SystemMetrics
 
 ## Best Practices
 
-1. **Use meaningful names** for your metrics that clearly describe what they measure
-2. **Declare UCUM units** with the optional third attribute argument (e.g., `"By"` for bytes or `"s"` for seconds), rather than putting units only in descriptions
-3. **Keep tag cardinality low** to avoid performance issues
-4. **Use scopes** for contextual metrics to reduce tag duplication
-5. **Group related metrics** in the same static partial class for organization
-6. **Use appropriate metric types** - counters for cumulative values, gauges for current state, histograms for distributions
+Name each instrument for what it measures, and use its description to explain the measurement. Declare units with the optional third attribute argument, such as `"By"` for bytes or `"s"` for seconds, so collectors receive the unit as metadata.
+
+Group related methods in a static partial class. When the same context belongs on several measurements, use a scope to avoid repeating tags at every call. Keep those tags bounded regardless of whether they come from a scope or a method parameter.
 
 ## See Also
 
-- [Roslyn Source Generator](roslyn.md) - Detailed guide on the source generation capabilities
-- [.NET Metrics Documentation](https://docs.microsoft.com/en-us/dotnet/core/diagnostics/metrics) - Official Microsoft documentation
+Continue with the [metrics source generator guide](roslyn.md) for declaration rules, generated code, and diagnostics. To collect and export your measurements, use the [OpenTelemetry setup](../opentelemetry.md).
+
+For the underlying instrument model, see Microsoft's [.NET metrics documentation](https://docs.microsoft.com/en-us/dotnet/core/diagnostics/metrics).

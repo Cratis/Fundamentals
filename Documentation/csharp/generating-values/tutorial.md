@@ -1,11 +1,11 @@
 ---
-title: "Tutorial: generate your first values"
-description: Build the ids and codes of a small shop step by step, from a UUID to a pinned-clock spec.
+title: "Cratis Fundamentals tutorial: generate shop values"
+description: Build C# concepts that generate shop identifiers, invitation codes and API keys, then write a spec that fixes the time in an order identifier.
 ---
 
-You are building a small shop. Customers need ids, orders need ids that carry a time, invitations need short codes you can read out loud,
-and integrations need API keys. Today the code is full of `Guid.NewGuid()`. In this tutorial you replace each one with a concept that
-generates its own value, and you see a result after every step.
+In this Cratis Fundamentals tutorial, you will build C# concepts that generate identifiers, invitation codes and
+API keys for a small shop. Each concept owns the rule for creating its value, so callers do not repeat that rule.
+You will finish with a spec that fixes an order identifier's embedded time while leaving its random part random.
 
 You need the .NET 8 SDK or later. Create a folder for the solution with a console project inside it, and add the package.
 Every command in this tutorial runs from that `shop` folder:
@@ -20,7 +20,7 @@ dotnet add Shop package Cratis.Fundamentals
 You will add the `.cs` files to the `Shop` folder and run the program with `dotnet run --project Shop`. The console template turns on implicit
 usings, so `Program.cs` needs no `using` for `System`, `System.Linq`, `System.Collections.Generic` or `System.Threading.Tasks`.
 
-The printed values below are samples. Yours differ because the values are random, which is the point.
+The printed values below illustrate the output format. Your random values will differ.
 
 ## Step 1: a customer id that generates itself
 
@@ -41,12 +41,15 @@ Replace `Shop/Program.cs` with `Console.WriteLine(CustomerId.New());` and run `d
 054092b2-48e9-4a54-9bc2-d2e8ccfa04e1
 ```
 
-`GenerateValue.Uuid()` returns an RFC 9562 version 4 UUID from a cryptographically secure generator. `IGeneratable<CustomerId>` is the
-promise that `CustomerId.New()` exists, checked by the compiler. A `ConceptAs<Guid>` prints its inner value, which is why you see a plain UUID.
+`ConceptAs<Guid>` wraps the UUID as a customer identifier, giving it a domain meaning instead of passing a raw
+`Guid` through your code. `IGeneratable<CustomerId>` requires the static `New()` method, which the compiler checks.
+Here, that method delegates to `GenerateValue.Uuid()` for an RFC 9562 version 4 UUID from a cryptographically secure
+generator. The concept's `ToString()` returns its inner value, which is why the console shows a plain UUID.
 
 ## Step 2: a public id that sorts by age
 
-Customers will see their id in URLs and invoices, so make it self-describing and sortable. Replace `CustomerId.cs`:
+For an identifier that appears in URLs and invoices, add a customer prefix and a time-bearing value.
+Replace `CustomerId.cs`:
 
 ```csharp
 using Cratis.Concepts;
@@ -79,18 +82,20 @@ cus_01m4tq3wd2ap7q35madm22wkte
 cus_01m4tq3wekqn178wa6k9xeck0x
 ```
 
-A ULID starts with 48 bits of Unix time in milliseconds, so ids sort by creation time as plain strings. The `cus_` prefix and the lower case are
-ordinary string operations; the result is a custom-prefixed ULID, not a TypeID. Two ids created in the same millisecond have no guaranteed order,
-and every id reveals when it was created.
+A ULID starts with 48 bits of Unix time in milliseconds, so ordinal string sorting follows its embedded time.
+The `cus_` prefix and lowercase conversion are ordinary string operations; the result is a custom-prefixed ULID,
+not a TypeID. The identifier exposes its creation time. Two values created in the same millisecond have no
+guaranteed order, and clock adjustments can affect chronological order.
 
 :::note
-A `cus_` id is easy to read in logs and support tickets. If you want the prefix handled for you, [Choosing a strategy](choosing-a-strategy.md)
-shows `TypeId`.
+The `cus_` prefix identifies the kind of value in a log or support ticket. If you want the generator to handle
+the prefix, [Choosing a strategy](choosing-a-strategy.md) shows `TypeId`.
 :::
 
 ## Step 3: a short invite code
 
-Invitations are typed by people, so remove the characters that look alike. Add `InviteCode.cs`:
+For invitations that people type or read aloud, use a shorter value with an alphabet that omits ambiguous
+characters. This code is an identifier, not a bearer credential granting access by itself. Add `InviteCode.cs`:
 
 ```csharp
 using Cratis.Concepts;
@@ -127,9 +132,10 @@ SA65PT7D2G
 ```
 
 :::caution[50 bits is short]
-The chance of any two codes colliding reaches 1% after about 4.8 million codes. That is fine for invitations only because the
-loop above checks for a clash. In a real shop that check is a unique index. [Choosing a strategy](choosing-a-strategy.md#how-many-random-bits-you-need)
-explains the arithmetic.
+The chance of a collision reaches about 1% after 4.8 million generated codes. This loop checks only the codes
+issued during the current run. In a real shop, enforce uniqueness with a unique index, retry a rejected code
+and give invitations an expiry. None of those checks turns 50 bits into a high-entropy bearer token.
+[Choosing a strategy](choosing-a-strategy.md#how-many-random-bits-you-need) explains the arithmetic.
 :::
 
 ## Step 4: an API key
@@ -145,7 +151,9 @@ public record ApiKey(string Value) : ConceptAs<string>(Value), IGeneratable<ApiK
 }
 ```
 
-`Bytes(32)` draws 256 random bits and encodes them as unpadded URL-safe base64, 43 characters:
+`Bytes(32)` draws 256 random bits and encodes them as 43 characters of unpadded URL-safe base64.
+The next line displays a throwaway key so you can inspect that format. Do not use it for a real credential:
+`Console.WriteLine` calls the concept's `ToString()` and exposes the raw secret.
 
 ```csharp
 Console.WriteLine(ApiKey.New());
@@ -155,9 +163,12 @@ Console.WriteLine(ApiKey.New());
 gziGp2TEJPHWl6ztCXqiKMj7NVcyO3JhGD7t59Qe204
 ```
 
-Printing a key is fine in a tutorial and a leak in production: the concept prints its value. The attribute that keeps a value out of
-the command causation chain comes from the `Cratis.Arc.Chronicle` package, not from Fundamentals, and the tutorial project does not use it.
-In an Arc application with Chronicle, you mark the concept like this:
+In an application, return a bearer key once and store only its digest for later verification. Keep the raw key
+out of logs and events. Cratis Arc applications using Cratis Chronicle must also exclude it from command
+causation, the event metadata that records what caused the event.
+
+The following example is for that Arc application, not this console project. It uses `[NotAudited]` from the
+`Cratis.Arc.Chronicle` package, which the tutorial project does not reference:
 
 ```csharp
 using Cratis.Arc.Chronicle.Commands;
@@ -213,7 +224,8 @@ use the tenant itself, as [Context-dependent values](context.md) shows.
 
 ## Step 6: create values from generic code
 
-Frameworks create your values without knowing their types. You can write the same shape in a few lines:
+Generic code can ask for a value without knowing the concrete concept's generation strategy. Replace
+`Shop/Program.cs` with these helpers and calls:
 
 ```csharp
 using Cratis.Concepts;
@@ -231,8 +243,9 @@ Console.WriteLine(Create<InviteCode>());
 Console.WriteLine(CreateInContext<OrderId>(context));
 ```
 
-`T.New()` is a static abstract interface member, so the call is resolved at compile time with no reflection. You get back a `CustomerId`,
-an `InviteCode` and an `OrderId`, not untyped strings. `Create<OrderId>()` does not compile, because `OrderId` implements only the context interface.
+The constraints give each helper access to a static abstract `New()` method without reflection. Each call
+returns the requested concept: `CustomerId`, `InviteCode` or `OrderId`. `Create<OrderId>()` does not compile
+because `OrderId` implements only the context interface; the caller must supply a `GenerationContext`.
 
 ## Step 7: pin the clock in a spec
 
@@ -274,7 +287,9 @@ public class when_creating_two_orders_at_a_known_time : Specification
 }
 ```
 
-Run `dotnet test Shop.Specs`. The spec asserts only the parts you control (the prefix and the time part) and does not assert the random part. The exact timestamp literal and your test setup were not verified here.
+Run `dotnet test Shop.Specs`. The three facts check the prefix, the encoded received time and the shared time
+between calls. They leave the random characters unconstrained, so the expected result does not depend on which
+random values the generator produces.
 
 ## What you built
 
