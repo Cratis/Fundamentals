@@ -6,6 +6,11 @@ description: Connect .NET and TypeScript derived-type serialization with matchin
 
 Cratis Fundamentals uses matching derived-type identifiers to reconstruct concrete classes in .NET and TypeScript when a JSON field can hold more than one type. Use this when a payment request declares an `IPaymentMethod`, but the value must arrive as a `CreditCard` or `PayPal` rather than an untyped object.
 
+This guide covers the C#/TypeScript integration only. It does not establish the
+same discriminator registration or runtime reconstruction in Kotlin, Java, or Go.
+Choose those implementations from the [Fundamentals overview](index.mdx); Go's
+[parity map](/fundamentals/go/parity/) records its serialization boundaries.
+
 ## Overview
 
 Polymorphic serialization means writing and reading values through a shared interface or base class while retaining their concrete type. The JSON carries `_derivedTypeId`, a property that identifies that type. Each side uses its own registration mechanism to turn the identifier back into a class.

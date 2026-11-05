@@ -1,6 +1,6 @@
 ---
 title: Fundamentals
-description: The shared building blocks beneath the Cratis stack — concepts, serialization, dependency injection, and type discovery, for .NET, TypeScript, and Go.
+description: Find Fundamentals building blocks for C#, TypeScript, Kotlin and Java, and Go, with language-specific guides and explicit compatibility limits.
 ---
 
 import { CardGrid } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import SimpleCard from '@components/SimpleCard.astro';
 import TopicHero from '@components/TopicHero.astro';
 
 <TopicHero icon="seti:folder" eyebrow="Fundamentals" title="The building blocks beneath the stack">
-The convenience layer the rest of Cratis is built on: strongly-typed domain values, JSON serialization, convention-based DI, and runtime type discovery — for .NET, TypeScript, and Go. You meet it indirectly all the time, and you can use it on its own.
+Shared primitives for domain values and infrastructure, with implementations for C#, TypeScript, Kotlin and Java, and Go. APIs and package coverage differ: choose the building blocks your language provides, without adopting the rest of Cratis.
 </TopicHero>
 
 ## Choose your platform
@@ -25,13 +25,24 @@ The convenience layer the rest of Cratis is built on: strongly-typed domain valu
   </SimpleCard>
 </CardGrid>
 
+For Kotlin and Java, start with the [JVM repository's README](https://github.com/Cratis/Fundamentals.Kotlin#readme)
+for language-specific concept and Jackson examples. Its
+[compatibility reference](https://github.com/Cratis/Fundamentals.Kotlin/blob/main/Documentation/parity.md)
+records supported contracts and wire differences. These pages are not mounted
+in this documentation site; do not infer C# API equivalents.
+
 ## Use a building block on its own
 
-You do not need to adopt the rest of Cratis to use Fundamentals. Start with the [standalone C# concept example](./csharp/index.md#define-your-first-concept), or follow a configuration setting through the [Option, Result, and Catch chapter](./csharp/monads/index.md). The latter needs only a console app and the core NuGet package: no database, host, or service registration.
+You do not need to adopt the rest of Cratis to use Fundamentals. Start with [TypeScript concepts](./typescript/concept_as.md), the [Go domain-value guide](/fundamentals/go/getting-started/), or the [standalone C# concept example](./csharp/index.md#define-your-first-concept).
 
-The platforms offer different building blocks. The .NET `Cratis.Monads` examples do not imply equivalent APIs in TypeScript or Go; choose the platform guide for the package you use.
+The platforms offer different building blocks. For example, the C# [Option, Result, and Catch chapter](./csharp/monads/index.md) needs only a console app and the core NuGet package, not a database or host. It does not imply equivalent monad APIs in TypeScript, JVM, or Go.
 
 ## What it gives you
+
+The cards below lead to C# APIs and the C#/TypeScript derived-type integration.
+For other implementations, use the platform guides above. In particular, check
+Go's [parity map](/fundamentals/go/parity/) before carrying a serialization or
+container contract across.
 
 <CardGrid>
   <SimpleCard title="Concepts" icon="approve-check" link="/fundamentals/csharp/">
@@ -48,4 +59,4 @@ The platforms offer different building blocks. The .NET `Cratis.Monads` examples
   </SimpleCard>
 </CardGrid>
 
-Fundamentals is what lets [Chronicle](/chronicle/) and [Arc](/arc/) find your artifacts by convention — see [Why developers choose Cratis](/why-cratis/).
+On .NET, Fundamentals supports convention-based artifact discovery for [Chronicle](/chronicle/) and [Arc](/arc/). Other implementations have their own registration and discovery mechanisms; shared names do not establish runtime parity. See [Why developers choose Cratis](/why-cratis/).
