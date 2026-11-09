@@ -36,7 +36,8 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-        <TargetFramework>net10.0</TargetFramework>
+        <!-- Plural on purpose: a singular TargetFramework here would stop projects that set their own TargetFrameworks from cross-targeting. -->
+        <TargetFrameworks>net10.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
