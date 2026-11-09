@@ -3,6 +3,7 @@
     <PropertyGroup>
         <UseCratisSpecificationsRunner>true</UseCratisSpecificationsRunner>
         <PublishAot>true</PublishAot>
+        <PublishDocumentationFile>false</PublishDocumentationFile>
         <!-- Cratis Specifications runner projects are executables -->
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
