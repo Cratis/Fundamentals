@@ -44,19 +44,7 @@ public static partial class GenerateValue
     public static Guid UuidV7(GenerationContext context)
     {
         ValidateGenerationTime(context);
-#if NET9_0_OR_GREATER
         return Guid.CreateVersion7(context.Now);
-#else
-        var timestamp = context.Now.ToUnixTimeMilliseconds();
-        Span<byte> bytes = stackalloc byte[16];
-        RandomNumberGenerator.Fill(bytes);
-        WriteTimestamp(bytes, timestamp);
-
-        bytes[6] = (byte)((bytes[6] & 0x0f) | 0x70);
-        bytes[8] = (byte)((bytes[8] & 0x3f) | 0x80);
-
-        return new Guid(bytes, bigEndian: true);
-#endif
     }
 
     static void ValidateGenerationTime(GenerationContext context)

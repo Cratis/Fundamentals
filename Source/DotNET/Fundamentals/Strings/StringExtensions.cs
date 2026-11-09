@@ -55,17 +55,11 @@ public static class StringExtensions
 
     static string ConvertToCamelCase(string stringToConvert)
     {
-#if NETCOREAPP
         return string.Create(stringToConvert.Length, stringToConvert, (chars, name) =>
         {
             name.CopyTo(chars);
             FixCamelCasing(chars);
         });
-#else
-    char[] chars = stringToConvert.ToCharArray();
-    FixCasing(chars);
-    return new string(chars);
-#endif
     }
 
     /// <summary>

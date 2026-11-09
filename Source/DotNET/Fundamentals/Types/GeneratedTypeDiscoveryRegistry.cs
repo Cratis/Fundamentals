@@ -12,17 +12,14 @@ namespace Cratis.Types;
 /// </summary>
 public static class GeneratedTypeDiscoveryRegistry
 {
-    // Two locks, and the order between them is load-bearing. _gate guards _providers and
-    // _closureWalkGate guards _assembliesProcessedByClosureWalk; the walk holds _closureWalkGate across
-    // module constructors that call Register, so _closureWalkGate is taken before _gate and never the
-    // reverse. One lock for both would hold the provider lock across arbitrary module-initializer code.
-#if NET9_0_OR_GREATER
+    /// <summary>
+    /// Two locks, and the order between them is load-bearing. _gate guards _providers and
+    /// _closureWalkGate guards _assembliesProcessedByClosureWalk; the walk holds _closureWalkGate across
+    /// module constructors that call Register, so _closureWalkGate is taken before _gate and never the
+    /// reverse. One lock for both would hold the provider lock across arbitrary module-initializer code.
+    /// </summary>
     static readonly Lock _gate = new();
     static readonly Lock _closureWalkGate = new();
-#else
-    static readonly object _gate = new();
-    static readonly object _closureWalkGate = new();
-#endif
     static readonly List<ICanProvideAssembliesForDiscovery> _providers = [];
 
     /// <summary>

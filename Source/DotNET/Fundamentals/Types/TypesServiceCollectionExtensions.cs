@@ -10,11 +10,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 /// </summary>
 public static class TypesServiceCollectionExtensions
 {
-#if NET9_0_OR_GREATER
     static readonly Lock _defaultUniverseGate = new();
-#else
-    static readonly object _defaultUniverseGate = new();
-#endif
     static Types? _defaultUniverse;
     static HashSet<Type>? _defaultUniverseProviderTypes;
 

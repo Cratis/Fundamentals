@@ -35,9 +35,7 @@ public class a_listener_for_type_discovery_events : Specification
     protected sealed class capturing_listener : EventListener
     {
         readonly List<(int Id, string Name, string[] Payload)> _events = [];
-#pragma warning disable MA0158, IDE0330 // Cannot use Lock in .net 8
-        readonly object _lock = new();
-#pragma warning restore
+        readonly Lock _lock = new();
 
         public IEnumerable<(int Id, string Name, string[] Payload)> Events
         {
