@@ -28,6 +28,10 @@ internal sealed class TransformingSubjectReplay<T>(Lock gate) : IDisposable
     /// <summary>Gets whether owner disposal has cancelled attachment and delivery.</summary>
     internal bool IsDisposed => Volatile.Read(ref _disposed);
 
+    bool ShouldDispose => _disposed || (_retired && _sealed);
+
+    bool ShouldSeal => _closed && !_sealed && !_sealing;
+
     /// <inheritdoc/>
     public void Dispose()
     {
@@ -179,13 +183,13 @@ internal sealed class TransformingSubjectReplay<T>(Lock gate) : IDisposable
         lock (gate)
         {
             if (_operations != 0 || _released) return;
-            dispose = _disposed || (_retired && _sealed);
-            if (dispose) _disposed = true;
+            dispose = ShouldDispose;
             if (dispose)
             {
+                _disposed = true;
                 _released = true;
             }
-            else if (_closed && !_sealed && !_sealing)
+            else if (ShouldSeal)
             {
                 _sealing = true;
                 _operations++;
