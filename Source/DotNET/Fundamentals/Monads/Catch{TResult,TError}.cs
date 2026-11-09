@@ -65,14 +65,14 @@ public class Catch<TResult, TError> : OneOfBase<TResult, TError, Exception>
     /// </summary>
     /// <param name="error">The optional error.</param>
     /// <returns>A boolean indicating whether the error was present.</returns>
-    public bool TryGetError([NotNullWhen(true)]out TError? error) => TryPickT1(out error, out _);
+    public bool TryGetError([NotNullWhen(true)] out TError? error) => TryPickT1(out error, out _);
 
     /// <summary>
     /// Try to get the exception.
     /// </summary>
     /// <param name="error">The optional exception.</param>
     /// <returns>A boolean indicating whether the exception was present.</returns>
-    public bool TryGetException([NotNullWhen(true)]out Exception? error) => TryPickT2(out error, out _);
+    public bool TryGetException([NotNullWhen(true)] out Exception? error) => TryPickT2(out error, out _);
 
     /// <summary>
     /// Rethrows the <see cref="Exception"/> error if any, preserving the correct stack trace.

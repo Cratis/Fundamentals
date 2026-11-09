@@ -42,13 +42,17 @@ public class and_implementations_have_public_constructors : Specification
 
     [Fact] void should_not_report_diagnostics() => _result.Diagnostics.ShouldBeEmpty();
     [Fact] void should_keep_registration_as_a_module_initializer() => _registrationAttributes.ShouldContain("[ModuleInitializer]");
-    [Fact] void should_preserve_convention_implementation_constructors() => _registrationAttributes.ShouldContain(
+    [Fact]
+    void should_preserve_convention_implementation_constructors() => _registrationAttributes.ShouldContain(
         "[global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors, typeof(global::App.Foo))]");
-    [Fact] void should_preserve_self_binding_constructors() => _registrationAttributes.ShouldContain(
+    [Fact]
+    void should_preserve_self_binding_constructors() => _registrationAttributes.ShouldContain(
         "[global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors, typeof(global::App.Bar))]");
-    [Fact] void should_preserve_open_generic_constructors() => _registrationAttributes.ShouldContain(
+    [Fact]
+    void should_preserve_open_generic_constructors() => _registrationAttributes.ShouldContain(
         "[global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors, typeof(global::App.Box<>))]");
-    [Fact] void should_preserve_explicit_struct_constructors() => _registrationAttributes.ShouldContain(
+    [Fact]
+    void should_preserve_explicit_struct_constructors() => _registrationAttributes.ShouldContain(
         "[global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors, typeof(global::App.ExplicitStruct))]");
     [Fact] void should_skip_enums() => _registrationAttributes.ShouldNotContain("typeof(global::App.Choice)");
     [Fact] void should_skip_static_classes() => _registrationAttributes.ShouldNotContain("typeof(global::App.Utilities)");
@@ -57,16 +61,22 @@ public class and_implementations_have_public_constructors : Specification
     [Fact] void should_skip_interfaces() => _registrationAttributes.ShouldNotContain("typeof(global::App.IFoo)");
     [Fact] void should_skip_delegates() => _registrationAttributes.ShouldNotContain("typeof(global::App.Callback)");
     [Fact] void should_skip_implicit_struct_constructors_without_an_il_member() => _registrationAttributes.ShouldNotContain("typeof(global::App.ImplicitStruct)");
-    [Fact] void should_keep_the_enum_binding_shape() => _generatedSource.ShouldContain(
+    [Fact]
+    void should_keep_the_enum_binding_shape() => _generatedSource.ShouldContain(
         "new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Choice), ");
-    [Fact] void should_keep_the_non_public_constructor_binding_shape() => _generatedSource.ShouldContain(
+    [Fact]
+    void should_keep_the_non_public_constructor_binding_shape() => _generatedSource.ShouldContain(
         "new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Hidden), ");
-    [Fact] void should_keep_the_implicit_struct_binding_shape() => _generatedSource.ShouldContain(
+    [Fact]
+    void should_keep_the_implicit_struct_binding_shape() => _generatedSource.ShouldContain(
         "new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.ImplicitStruct), ");
-    [Fact] void should_keep_the_convention_binding_shape() => _generatedSource.ShouldContain(
+    [Fact]
+    void should_keep_the_convention_binding_shape() => _generatedSource.ShouldContain(
         "new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::App.IFoo), typeof(global::App.Foo), ");
-    [Fact] void should_keep_the_self_binding_shape() => _generatedSource.ShouldContain(
+    [Fact]
+    void should_keep_the_self_binding_shape() => _generatedSource.ShouldContain(
         "new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Bar), ");
-    [Fact] void should_keep_the_open_generic_binding_shape() => _generatedSource.ShouldContain(
+    [Fact]
+    void should_keep_the_open_generic_binding_shape() => _generatedSource.ShouldContain(
         "new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Box<>), ");
 }

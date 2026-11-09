@@ -32,7 +32,8 @@ public class when_converting_to_linestring : Specification
         result = converter.Read(ref reader, typeof(LineString), Globals.JsonSerializerOptions);
     }
 
-    [Fact] void should_convert_to_correct_linestring()
+    [Fact]
+    void should_convert_to_correct_linestring()
     {
         result.Coordinates.Length.ShouldEqual(expected.Coordinates.Length);
         for (var i = 0; i < result.Coordinates.Length; i++)

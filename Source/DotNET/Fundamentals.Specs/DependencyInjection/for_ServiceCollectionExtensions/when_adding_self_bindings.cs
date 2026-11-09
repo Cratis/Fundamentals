@@ -16,9 +16,11 @@ public class when_adding_self_bindings : Specification
         _serviceProvider = services.BuildServiceProvider();
     }
 
-    [Fact] void should_resolve_typed_meter() =>
+    [Fact]
+    void should_resolve_typed_meter() =>
         _serviceProvider.GetService<Metrics.IMeter<when_adding_self_bindings>>().ShouldNotBeNull();
 
-    [Fact] void should_resolve_typed_activity_source() =>
+    [Fact]
+    void should_resolve_typed_activity_source() =>
         _serviceProvider.GetService<Traces.IActivitySource<when_adding_self_bindings>>().ShouldNotBeNull();
 }

@@ -41,13 +41,15 @@ public class when_adding_host_telemetry : given.a_clean_environment
     [Fact] void should_set_the_service_version() => _metrics.GetResource().Attributes.Single(attribute => attribute.Key == "service.version").Value.ShouldEqual("1.2.3");
     [Fact] void should_include_log_scopes() => _logs.IncludeScopes.ShouldBeTrue();
     [Fact] void should_include_formatted_log_messages() => _logs.IncludeFormattedMessage.ShouldBeTrue();
-    [Fact] void should_subscribe_to_future_cratis_sources()
+    [Fact]
+    void should_subscribe_to_future_cratis_sources()
     {
         using var source = new ActivitySource("Cratis.Future.Product");
         using var activity = source.StartActivity("cratis.future.operation");
         activity.ShouldNotBeNull();
     }
-    [Fact] void should_not_subscribe_to_unkeyed_application_sources()
+    [Fact]
+    void should_not_subscribe_to_unkeyed_application_sources()
     {
         using var source = new ActivitySource("MyApplication.RequestHandler");
         using var activity = source.StartActivity("request");

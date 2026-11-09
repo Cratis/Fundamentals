@@ -87,7 +87,7 @@ public class Catch : OneOfBase<None, Exception>
     /// </summary>
     /// <param name="error">The optional error.</param>
     /// <returns>A boolean indicating whether the error was present.</returns>
-    public bool TryGetException([NotNullWhen(true)]out Exception? error)
+    public bool TryGetException([NotNullWhen(true)] out Exception? error)
     {
         TryPickT1(out error, out _);
         return error is not null;

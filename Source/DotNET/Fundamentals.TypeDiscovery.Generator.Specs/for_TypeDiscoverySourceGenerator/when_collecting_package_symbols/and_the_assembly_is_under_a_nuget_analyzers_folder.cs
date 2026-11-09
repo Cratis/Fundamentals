@@ -15,8 +15,10 @@ public class and_the_assembly_is_under_a_nuget_analyzers_folder : given.a_compil
     [Fact] void should_not_report_diagnostics() => _result.Diagnostics.ShouldBeEmpty();
     [Fact] void should_produce_generated_source() => _generatedSource.ShouldNotBeEmpty();
     [Fact] void should_include_the_current_assembly_type() => _generatedSource.ShouldContain("typeof(global::App.MyApp)");
-    [Fact] void should_not_include_service_interface_from_analyzer_assembly() =>
+    [Fact]
+    void should_not_include_service_interface_from_analyzer_assembly() =>
         _generatedSource.ShouldNotContain("Cratis.BuildOnly.IBuildOnlyService");
-    [Fact] void should_not_include_implementation_type_from_analyzer_assembly() =>
+    [Fact]
+    void should_not_include_implementation_type_from_analyzer_assembly() =>
         _generatedSource.ShouldNotContain("Cratis.BuildOnly.BuildOnlyService");
 }

@@ -30,5 +30,5 @@ public partial class Option<TValue> : OneOfBase<TValue, None>
     /// </summary>
     /// <param name="value">The value.</param>
     /// /// /// /// <returns>A boolean indicating whether the value is present.</returns>
-    public bool TryGetValue([NotNullWhen(true)]out TValue value) => TryPickT0(out value, out _);
+    public bool TryGetValue([NotNullWhen(true)] out TValue value) => TryPickT0(out value, out _);
 }

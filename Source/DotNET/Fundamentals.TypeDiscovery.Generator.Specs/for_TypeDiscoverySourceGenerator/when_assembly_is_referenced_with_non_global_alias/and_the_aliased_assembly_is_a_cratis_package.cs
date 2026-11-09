@@ -57,8 +57,10 @@ public class and_the_aliased_assembly_is_a_cratis_package : Specification
     [Fact] void should_not_report_diagnostics() => _result.Diagnostics.ShouldBeEmpty();
     [Fact] void should_produce_generated_source() => _generatedSource.ShouldNotBeEmpty();
     [Fact] void should_include_the_current_assembly_type() => _generatedSource.ShouldContain("typeof(global::App.MyApp)");
-    [Fact] void should_not_include_service_interface_from_aliased_assembly() =>
+    [Fact]
+    void should_not_include_service_interface_from_aliased_assembly() =>
         _generatedSource.ShouldNotContain("Cratis.Packages.IMyService");
-    [Fact] void should_not_include_implementation_type_from_aliased_assembly() =>
+    [Fact]
+    void should_not_include_implementation_type_from_aliased_assembly() =>
         _generatedSource.ShouldNotContain("Cratis.Packages.MyService");
 }
