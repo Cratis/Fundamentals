@@ -76,7 +76,7 @@ chmod +x run-aot.sh
 ./run-aot.sh
 ```
 
-The script publishes with `-f net11.0` and runs the native executable directly from `bin/Release/net10.0/<rid>/publish/TypeDiscovery`.
+The script publishes with `-f net11.0` and runs the native executable directly from `bin/Release/net11.0/<rid>/publish/TypeDiscovery`.
 
 The script supports:
 

@@ -22,7 +22,7 @@ cd "$root"
 output="$root/TestResults/native-aot"
 mkdir -p "$output"
 
-dotnet publish Samples/TypeDiscovery/TypeDiscovery.csproj -c Release -f net11.0 -r "$rid" \
+dotnet publish Samples/TypeDiscovery/TypeDiscovery.csproj -c Release -f "$framework" -r "$rid" \
     -p:TreatWarningsAsErrors=true -o "$output/sample"
 status=0
 "$output/sample/TypeDiscovery" > "$output/sample.log" 2>&1 || status=$?
