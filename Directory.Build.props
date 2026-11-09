@@ -22,12 +22,17 @@
         <NoWarn>NU1507;NU1510</NoWarn>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <!-- Target frameworks of specification projects. CI overrides this to net10.0;net11.0. -->
+        <SpecificationsTestFrameworks Condition="'$(SpecificationsTestFrameworks)' == ''">net11.0</SpecificationsTestFrameworks>
+    </PropertyGroup>
+
     <PropertyGroup Condition="'$(Configuration)'==''">
         <Configuration>Debug</Configuration>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">

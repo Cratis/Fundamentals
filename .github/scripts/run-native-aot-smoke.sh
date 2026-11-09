@@ -17,11 +17,12 @@ case "$1" in
     *) echo "Unsupported native smoke RID: $1" >&2; exit 2 ;;
 esac
 
+framework=${FRAMEWORK:-net11.0}
 cd "$root"
 output="$root/TestResults/native-aot"
 mkdir -p "$output"
 
-dotnet publish Samples/TypeDiscovery/TypeDiscovery.csproj -c Release -f net10.0 -r "$rid" \
+dotnet publish Samples/TypeDiscovery/TypeDiscovery.csproj -c Release -f net11.0 -r "$rid" \
     -p:TreatWarningsAsErrors=true -o "$output/sample"
 status=0
 "$output/sample/TypeDiscovery" > "$output/sample.log" 2>&1 || status=$?
@@ -39,10 +40,10 @@ for expected in 'Convention binding resolved:' 'Self binding resolved:' \
     fi
 done
 
-dotnet build Source/DotNET/Fundamentals.AOT.Specs/Fundamentals.AOT.Specs.csproj -c Release -f net10.0
+dotnet build Source/DotNET/Fundamentals.AOT.Specs/Fundamentals.AOT.Specs.csproj -c Release -f "$framework"
 dotnet publish Source/DotNET/Fundamentals.AOT.Specs/Fundamentals.AOT.Specs.csproj \
-    -c Release -f net10.0 -r "$rid" -p:TreatWarningsAsErrors=true -o "$output/specs-native"
+    -c Release -f "$framework" -r "$rid" -p:TreatWarningsAsErrors=true -o "$output/specs-native"
 node "$root/.github/scripts/verify-native-specifications.mjs" \
-    --jit Source/DotNET/Fundamentals.AOT.Specs/bin/Release/net10.0/Cratis.Fundamentals.AOT.Specs \
+    --jit Source/DotNET/Fundamentals.AOT.Specs/bin/Release/$framework/Cratis.Fundamentals.AOT.Specs \
     --native "$output/specs-native/Cratis.Fundamentals.AOT.Specs" --results "$output/specs" --label "$rid"
 echo "Native type-discovery sample and AOT.Specs both passed ($rid)."

@@ -76,7 +76,7 @@ chmod +x run-aot.sh
 ./run-aot.sh
 ```
 
-The script publishes with `-f net10.0` and runs the native executable directly from `bin/Release/net10.0/<rid>/publish/TypeDiscovery`.
+The script publishes with `-f net11.0` and runs the native executable directly from `bin/Release/net10.0/<rid>/publish/TypeDiscovery`.
 
 The script supports:
 
@@ -89,22 +89,22 @@ Publish for your platform by passing a Runtime Identifier (`-r`):
 
 ```bash
 # macOS (Apple Silicon)
-dotnet publish TypeDiscovery.csproj -c Release -f net10.0 -r osx-arm64 --self-contained
+dotnet publish TypeDiscovery.csproj -c Release -f net11.0 -r osx-arm64 --self-contained
 
 # macOS (Intel)
-dotnet publish TypeDiscovery.csproj -c Release -f net10.0 -r osx-x64 --self-contained
+dotnet publish TypeDiscovery.csproj -c Release -f net11.0 -r osx-x64 --self-contained
 
 # Linux x64
-dotnet publish TypeDiscovery.csproj -c Release -f net10.0 -r linux-x64 --self-contained
+dotnet publish TypeDiscovery.csproj -c Release -f net11.0 -r linux-x64 --self-contained
 
 # Linux arm64
-dotnet publish TypeDiscovery.csproj -c Release -f net10.0 -r linux-arm64 --self-contained
+dotnet publish TypeDiscovery.csproj -c Release -f net11.0 -r linux-arm64 --self-contained
 
 # Windows x64
-dotnet publish TypeDiscovery.csproj -c Release -f net10.0 -r win-x64 --self-contained
+dotnet publish TypeDiscovery.csproj -c Release -f net11.0 -r win-x64 --self-contained
 ```
 
-The output is a single self-contained native executable under `bin/Release/net10.0/<rid>/publish/`.
+The output is a single self-contained native executable under `bin/Release/net11.0/<rid>/publish/`.
 
 > **Note:** Native AOT compilation requires the native toolchain for the target platform — on macOS that means Xcode command-line tools, on Linux a C compiler (`gcc`/`clang`), and on Windows Visual Studio Build Tools with the C++ workload.
 

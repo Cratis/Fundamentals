@@ -14,7 +14,7 @@ internal sealed class MetricViews
     readonly bool _enabled;
     readonly int _cardinalityLimit;
     readonly double[]? _secondsHistogramBoundaries;
-    readonly Dictionary<string, MetricPolicy> _policies = new(StringComparer.OrdinalIgnoreCase);
+    readonly Dictionary<string, MetricPolicy> _policies = [with(StringComparer.OrdinalIgnoreCase)];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MetricViews"/> class.

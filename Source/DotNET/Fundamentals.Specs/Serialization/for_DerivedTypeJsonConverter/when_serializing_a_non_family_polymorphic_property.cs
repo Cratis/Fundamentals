@@ -14,7 +14,7 @@ public class when_serializing_a_non_family_polymorphic_property : given.a_set_of
 
     void Because() => result = JsonSerializer.Serialize(input, options);
 
-    [Fact] void should_keep_the_runtime_type_fields() => JsonDocument.Parse(result).RootElement.GetProperty("detail").GetProperty("ExtraValue").GetString().ShouldEqual("runtime field");
+    [Fact] void should_keep_the_runtime_type_fields() => JsonSerializer.Deserialize<JsonElement>(result).GetProperty("detail").GetProperty("ExtraValue").GetString().ShouldEqual("runtime field");
 
     [DerivedType("parent")]
     record ParentWithDetail(Detail Detail) : IParent;

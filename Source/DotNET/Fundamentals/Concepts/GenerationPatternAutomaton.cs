@@ -12,7 +12,7 @@ internal sealed class GenerationPatternAutomaton
 {
     readonly List<List<(string? Characters, int Target)>> _edges = [[]];
     readonly List<int[]> _states = [];
-    readonly Dictionary<string, int> _identities = new(StringComparer.Ordinal);
+    readonly Dictionary<string, int> _identities = [with(StringComparer.Ordinal)];
     readonly Dictionary<(int State, char Character), int> _moves = [];
     readonly GenerationWorkBudget _budget;
     readonly int _final;

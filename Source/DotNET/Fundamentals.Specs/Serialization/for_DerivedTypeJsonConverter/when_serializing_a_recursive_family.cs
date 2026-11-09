@@ -14,6 +14,6 @@ public class when_serializing_a_recursive_family : given.a_set_of_derived_type_f
 
     void Because() => result = JsonSerializer.Serialize(input, options);
 
-    [Fact] void should_write_the_branch_type_identifier() => JsonDocument.Parse(result).RootElement.GetProperty("child").GetProperty("_derivedTypeId").GetString().ShouldEqual("node");
-    [Fact] void should_write_the_leaf_type_identifier() => JsonDocument.Parse(result).RootElement.GetProperty("child").GetProperty("child").GetProperty("_derivedTypeId").GetString().ShouldEqual("node");
+    [Fact] void should_write_the_branch_type_identifier() => JsonSerializer.Deserialize<JsonElement>(result).GetProperty("child").GetProperty("_derivedTypeId").GetString().ShouldEqual("node");
+    [Fact] void should_write_the_leaf_type_identifier() => JsonSerializer.Deserialize<JsonElement>(result).GetProperty("child").GetProperty("child").GetProperty("_derivedTypeId").GetString().ShouldEqual("node");
 }

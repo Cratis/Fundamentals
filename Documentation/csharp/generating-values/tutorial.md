@@ -7,7 +7,7 @@ In this Cratis Fundamentals tutorial, you will build C# concepts that generate i
 API keys for a small shop. Each concept owns the rule for creating its value, so callers do not repeat that rule.
 You will finish with a spec that fixes an order identifier's embedded time while leaving its random part random.
 
-You need the .NET 8 SDK or later. Create a folder for the solution with a console project inside it, and add the package.
+You need the .NET 10 SDK or later. Create a folder for the solution with a console project inside it, and add the package.
 Every command in this tutorial runs from that `shop` folder:
 
 ```bash

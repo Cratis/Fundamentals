@@ -13,6 +13,19 @@ if ! command -v python3 >/dev/null; then
     exit 2
 fi
 configuration=${1:-Release}
+
+if [[ -n ${SPECIFICATION_FRAMEWORKS:-} && -z ${SPECIFICATION_FRAMEWORK:-} ]]; then
+    overall=0
+    for framework in $SPECIFICATION_FRAMEWORKS; do
+        echo "::group::Specifications on $framework"
+        SPECIFICATION_FRAMEWORK=$framework bash "${BASH_SOURCE[0]}" "$configuration"
+        status=$?
+        echo "::endgroup::"
+        if [[ $overall -eq 0 && $status -ne 0 ]]; then overall=$status; fi
+    done
+    exit "$overall"
+fi
+framework=${SPECIFICATION_FRAMEWORK:-net11.0}
 expected=${EXPECTED_SPECIFICATION_PROJECTS:-5}
 shopt -s nullglob
 projects=("$root"/Source/DotNET/*.Specs/*.Specs.csproj)
@@ -34,7 +47,7 @@ for project in "${projects[@]}"; do
         echo "::error::Expected one AssemblyName in $project"
         exit 2
     fi
-    executable="${project%/*}/bin/$configuration/net10.0/$assembly$suffix"
+    executable="${project%/*}/bin/$configuration/$framework/$assembly$suffix"
     if [[ ! -x $executable ]]; then
         echo "::error::Missing specification executable: $executable"
         exit 2

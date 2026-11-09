@@ -4,7 +4,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_file="${script_dir}/TypeDiscovery.csproj"
 configuration="Release"
-framework="net10.0"
+framework="net11.0"
 
 if [[ ! -f "${project_file}" ]]; then
     echo "Could not find TypeDiscovery.csproj next to this script."

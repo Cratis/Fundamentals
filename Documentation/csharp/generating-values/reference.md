@@ -133,4 +133,4 @@ Values from both are time-ordered but not monotonic within one millisecond. Cloc
 - Every random strategy uses `RandomNumberGenerator`; `UuidV5` is deterministic. NanoID chooses characters with `RandomNumberGenerator.GetItems<char>`, so each character is uniform.
 - There is no seeded `Random`, injectable generator, seed configuration or within-millisecond counter.
 - The helpers and the static interface calls use no reflection or dynamic code and are safe for Native AOT and trimming.
-- Targets: .NET 8, 9 and 10.
+- Targets: .NET 10 and 11.

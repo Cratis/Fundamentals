@@ -14,5 +14,5 @@ public class when_serializing_a_direct_nested_family : given.a_set_of_derived_ty
 
     void Because() => result = JsonSerializer.Serialize(input, options);
 
-    [Fact] void should_write_the_nested_type_identifier() => JsonDocument.Parse(result).RootElement.GetProperty("child").GetProperty("_derivedTypeId").GetString().ShouldEqual("child");
+    [Fact] void should_write_the_nested_type_identifier() => JsonSerializer.Deserialize<JsonElement>(result).GetProperty("child").GetProperty("_derivedTypeId").GetString().ShouldEqual("child");
 }

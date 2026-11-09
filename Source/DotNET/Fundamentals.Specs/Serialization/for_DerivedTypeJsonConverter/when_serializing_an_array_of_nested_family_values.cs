@@ -14,7 +14,7 @@ public class when_serializing_an_array_of_nested_family_values : given.a_set_of_
 
     void Because() => result = JsonSerializer.Serialize(input, options);
 
-    [Fact] void should_write_the_array_element_type_identifier() => JsonDocument.Parse(result).RootElement.GetProperty("children")[0].GetProperty("_derivedTypeId").GetString().ShouldEqual("child");
+    [Fact] void should_write_the_array_element_type_identifier() => JsonSerializer.Deserialize<JsonElement>(result).GetProperty("children")[0].GetProperty("_derivedTypeId").GetString().ShouldEqual("child");
 
     [DerivedType("parent")]
     record ParentWithChildren(IChild[] Children) : IParent;

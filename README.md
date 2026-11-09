@@ -94,16 +94,16 @@ If you want to jump into building this repository and possibly contributing, ple
 
 The following are prerequisites to work with this repository.
 
-* [.NET SDK 10.0.100](https://dotnet.microsoft.com/en-us/) or a later feature band, as selected by `global.json` (roll-forward policy `latestFeature`).
+* [.NET SDK 11.0](https://dotnet.microsoft.com/en-us/) (currently a release candidate), as selected by `global.json` (roll-forward policy `latestFeature`).
 * [Node 23+](https://nodejs.org/en) (`engines.node` is `>=23.0.0` in `package.json`).
 * [Yarn](https://yarnpkg.com)
 
-Consumers of the published libraries are not affected by these contributor requirements; the libraries target net8.0, net9.0, and net10.0.
+Consumers of the published libraries are not affected by these contributor requirements; the libraries target net10.0 and net11.0.
 
 ### Running .NET specifications
 
-The specifications use Cratis.Specifications 5.0 on the native xUnit v3 runner and require .NET 10.
-Specification projects target net10.0 only; libraries still build and pack for net8.0, net9.0, and net10.0.
+The specifications use Cratis.Specifications 5.0 on the native xUnit v3 runner and require .NET 11.
+Specification projects target net11.0 by default. Set `-p:SpecificationsTestFrameworks='"net10.0;net11.0"'` to build them for both, as CI does; libraries build and pack for net10.0 and net11.0 in Release.
 
 From the repository root, build once and run the five specification executables in parallel:
 
@@ -112,20 +112,22 @@ dotnet build -c Release
 bash .github/scripts/run-specifications.sh Release
 ```
 
+To run on both target frameworks, build with `-p:SpecificationsTestFrameworks='"net10.0;net11.0"'` and set `SPECIFICATION_FRAMEWORKS="net10.0 net11.0"` for the script.
+
 Logs and TRX results go under `TestResults/`. The script fails if a project is missing, fails, or runs zero tests.
 Use `bash .github/scripts/run-specifications.sh --self-test` to check the runner's failure guards.
 
 For a single project, run its executable directly (append `.exe` on Windows):
 
 ```bash
-Source/DotNET/Fundamentals.Specs/bin/Release/net10.0/Cratis.Fundamentals.Specs
+Source/DotNET/Fundamentals.Specs/bin/Release/net11.0/Cratis.Fundamentals.Specs
 ```
 
 Use `-method`, `-class`, or `-namespace` with a fully qualified name to filter the executable's tests;
 run it with `-?` to see all options. For example:
 
 ```bash
-Source/DotNET/Fundamentals.Specs/bin/Release/net10.0/Cratis.Fundamentals.Specs -namespace 'Cratis.Concepts*'
+Source/DotNET/Fundamentals.Specs/bin/Release/net11.0/Cratis.Fundamentals.Specs -namespace 'Cratis.Concepts*'
 ```
 
 `dotnet test -c Release --no-build` and IDE test explorers continue to use the VSTest adapter.

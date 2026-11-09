@@ -33,7 +33,7 @@ public static class DiagnosticsServiceCollectionExtensions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-        services.TryAddKeyedSingleton(typeof(Meter), name, (_, key) => new Meter((string)key!, version));
+        services.TryAddKeyedSingleton(typeof(Meter), name, (_, _) => new Meter(name, version));
         services.TryAddKeyedSingleton(typeof(IMeter<>), name, typeof(KeyedMeter<>));
 
         return services;
@@ -58,7 +58,7 @@ public static class DiagnosticsServiceCollectionExtensions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-        services.TryAddKeyedSingleton(typeof(DiagnosticsActivitySource), name, (_, key) => new DiagnosticsActivitySource((string)key!, version));
+        services.TryAddKeyedSingleton(typeof(DiagnosticsActivitySource), name, (_, _) => new DiagnosticsActivitySource(name, version));
         services.TryAddKeyedSingleton(typeof(IActivitySource<>), name, typeof(KeyedActivitySource<>));
 
         return services;
