@@ -11,7 +11,7 @@ public class when_disposing_during_a_sealed_late_attachment : Specification
 
     async Task Because()
     {
-        using var replay = new TransformingSubjectReplay<int>(new object());
+        using var replay = new TransformingSubjectReplay<int>(new Lock());
         replay.OnNext(1);
         replay.OnCompleted();
         using var chosen = new ManualResetEventSlim();

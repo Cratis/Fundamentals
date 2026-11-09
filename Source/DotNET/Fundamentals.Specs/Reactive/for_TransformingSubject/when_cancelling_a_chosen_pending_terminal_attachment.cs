@@ -11,7 +11,7 @@ public class when_cancelling_a_chosen_pending_terminal_attachment : Specificatio
 
     async Task Because()
     {
-        var gate = new object();
+        var gate = new Lock();
         using var replay = new TransformingSubjectReplay<int>(gate);
         replay.OnNext(1);
         lock (gate)

@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Reflection;
@@ -12,8 +13,8 @@ namespace Cratis.Reflection;
 /// </summary>
 public static class TypeExtensions
 {
-    static readonly HashSet<Type> _additionalPrimitiveTypes =
-    [
+    static readonly FrozenSet<Type> _additionalPrimitiveTypes = new HashSet<Type>
+    {
         typeof(decimal),
         typeof(string),
         typeof(Guid),
@@ -22,10 +23,10 @@ public static class TypeExtensions
         typeof(DateTime),
         typeof(DateTimeOffset),
         typeof(TimeSpan)
-    ];
+    }.ToFrozenSet();
 
-    static readonly HashSet<Type> _numericTypes =
-    [
+    static readonly FrozenSet<Type> _numericTypes = new HashSet<Type>
+    {
         typeof(byte),
         typeof(sbyte),
         typeof(short),
@@ -37,7 +38,7 @@ public static class TypeExtensions
         typeof(double),
         typeof(decimal),
         typeof(float)
-    ];
+    }.ToFrozenSet();
 
     /// <summary>
     /// Get the type string for a <see cref="Type"/>.

@@ -13,7 +13,7 @@ namespace Cratis.Reactive;
 /// <param name="transform">Transformation.</param>
 internal sealed class SubscriberScopedTransformingSubject<TSource, TResult>(Func<ISubject<TSource>> sourceFactory, Func<TSource, TResult> transform) : ISubject<TResult>, IDisposable
 {
-    readonly object _gate = new();
+    readonly Lock _gate = new();
     TransformingSubjectGeneration<TSource, TResult>? _current;
     bool _terminal;
     bool _disposed;

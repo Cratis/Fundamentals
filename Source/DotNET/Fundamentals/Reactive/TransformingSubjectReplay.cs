@@ -9,7 +9,7 @@ namespace Cratis.Reactive;
 /// <summary>Protects replay operations, terminal sealing and physical buffer disposal with operation leases.</summary>
 /// <typeparam name="T">Result value type.</typeparam>
 /// <param name="gate">Shared generation admission gate. Only bookkeeping runs under it.</param>
-internal sealed class TransformingSubjectReplay<T>(object gate) : IDisposable
+internal sealed class TransformingSubjectReplay<T>(Lock gate) : IDisposable
 {
     readonly ReplaySubject<T> _result = new(1);
     List<TransformingSubjectSubscription<T>>? _pending;
