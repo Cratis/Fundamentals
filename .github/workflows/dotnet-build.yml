@@ -55,7 +55,6 @@ jobs:
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          dotnet-quality: preview
 
       - name: Build .NET projects
         run: dotnet build --configuration Release -p:SpecificationsTestFrameworks='"net10.0;net11.0"'
@@ -91,7 +90,6 @@ jobs:
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          dotnet-quality: preview
 
       - name: Verify native specification checks
         run: bash .github/scripts/run-native-aot-smoke.sh --self-test
