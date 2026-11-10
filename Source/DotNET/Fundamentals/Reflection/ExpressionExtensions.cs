@@ -59,7 +59,7 @@ public static class ExpressionExtensions
                 arguments.Add(value);
             }
 
-            return [..arguments];
+            return [.. arguments];
         }
 
         return [];

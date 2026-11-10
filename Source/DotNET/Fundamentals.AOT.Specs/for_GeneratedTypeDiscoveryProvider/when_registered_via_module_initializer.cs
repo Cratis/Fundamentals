@@ -16,7 +16,8 @@ public class when_registered_via_module_initializer : Specification
 
     [Fact] void should_have_at_least_one_provider() => GeneratedTypeDiscoveryRegistry.Providers.ShouldNotBeEmpty();
     [Fact] void should_expose_conventions_interface() => convention_providers.ShouldNotBeEmpty();
-    [Fact] void should_expose_convention_binding_for_conventional_service() =>
+    [Fact]
+    void should_expose_convention_binding_for_conventional_service() =>
         convention_providers
             .SelectMany(_ => _.ConventionServiceBindings)
             .Any(_ => _.ServiceType == typeof(IConventionalService) && _.ImplementationType == typeof(ConventionalService))

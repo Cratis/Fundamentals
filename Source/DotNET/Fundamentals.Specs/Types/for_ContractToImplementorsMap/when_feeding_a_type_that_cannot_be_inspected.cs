@@ -17,7 +17,8 @@ public class when_feeding_a_type_that_cannot_be_inspected : given.an_empty_map
     ]));
 
     [Fact] void should_not_fail() => error.ShouldBeNull();
-    [Fact] void should_still_map_the_loadable_implementations() =>
+    [Fact]
+    void should_still_map_the_loadable_implementations() =>
         map.GetImplementorsFor(typeof(IInterface)).ShouldContainOnly(typeof(ImplementationOfInterface), typeof(SecondImplementationOfInterface));
 
     /// <summary>

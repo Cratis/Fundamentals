@@ -12,17 +12,14 @@ namespace Cratis.Types;
 /// </summary>
 public static class GeneratedTypeDiscoveryRegistry
 {
-    // Two locks, and the order between them is load-bearing. _gate guards _providers and
-    // _closureWalkGate guards _assembliesProcessedByClosureWalk; the walk holds _closureWalkGate across
-    // module constructors that call Register, so _closureWalkGate is taken before _gate and never the
-    // reverse. One lock for both would hold the provider lock across arbitrary module-initializer code.
-#if NET9_0_OR_GREATER
+    /// <summary>
+    /// Two locks, and the order between them is load-bearing. _gate guards _providers and
+    /// _closureWalkGate guards _assembliesProcessedByClosureWalk; the walk holds _closureWalkGate across
+    /// module constructors that call Register, so _closureWalkGate is taken before _gate and never the
+    /// reverse. One lock for both would hold the provider lock across arbitrary module-initializer code.
+    /// </summary>
     static readonly Lock _gate = new();
     static readonly Lock _closureWalkGate = new();
-#else
-    static readonly object _gate = new();
-    static readonly object _closureWalkGate = new();
-#endif
     static readonly List<ICanProvideAssembliesForDiscovery> _providers = [];
 
     /// <summary>
@@ -183,19 +180,8 @@ public static class GeneratedTypeDiscoveryRegistry
 
             if (assembly is null)
             {
-                try
-                {
-                    assembly = Assembly.Load(assemblyName);
-                }
-                catch (FileNotFoundException)
-                {
-                    continue;
-                }
-                catch (FileLoadException)
-                {
-                    continue;
-                }
-                catch (BadImageFormatException)
+                assembly = TryLoad(assemblyName);
+                if (assembly is null)
                 {
                     continue;
                 }
@@ -206,17 +192,7 @@ public static class GeneratedTypeDiscoveryRegistry
             Reach(assembly);
         }
 
-        foreach (var assembly in newlyReached)
-        {
-            if (!assembly.IsDynamic)
-            {
-                RuntimeHelpers.RunModuleConstructor(assembly.ManifestModule.ModuleHandle);
-            }
-
-            // Dynamic assemblies are marked as processed too - they have no module constructor to run,
-            // and leaving them out would make the gate walk again on every call for as long as one is loaded.
-            _assembliesProcessedByClosureWalk.AddOrUpdate(assembly, _processed);
-        }
+        RunModuleConstructorsAndMarkProcessed(newlyReached);
 
         void Reach(Assembly assembly)
         {
@@ -269,6 +245,33 @@ public static class GeneratedTypeDiscoveryRegistry
             }
 
             return null;
+        }
+    }
+
+    static Assembly? TryLoad(AssemblyName assemblyName)
+    {
+        try
+        {
+            return Assembly.Load(assemblyName);
+        }
+        catch (Exception exception) when (exception is FileNotFoundException or FileLoadException or BadImageFormatException)
+        {
+            return null;
+        }
+    }
+
+    static void RunModuleConstructorsAndMarkProcessed(List<Assembly> assemblies)
+    {
+        foreach (var assembly in assemblies)
+        {
+            if (!assembly.IsDynamic)
+            {
+                RuntimeHelpers.RunModuleConstructor(assembly.ManifestModule.ModuleHandle);
+            }
+
+            // Dynamic assemblies are marked as processed too - they have no module constructor to run,
+            // and leaving them out would make the gate walk again on every call for as long as one is loaded.
+            _assembliesProcessedByClosureWalk.AddOrUpdate(assembly, _processed);
         }
     }
 

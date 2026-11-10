@@ -9,7 +9,7 @@ namespace Cratis.Reactive;
 /// <summary>Protects replay operations, terminal sealing and physical buffer disposal with operation leases.</summary>
 /// <typeparam name="T">Result value type.</typeparam>
 /// <param name="gate">Shared generation admission gate. Only bookkeeping runs under it.</param>
-internal sealed class TransformingSubjectReplay<T>(object gate) : IDisposable
+internal sealed class TransformingSubjectReplay<T>(Lock gate) : IDisposable
 {
     readonly ReplaySubject<T> _result = new(1);
     List<TransformingSubjectSubscription<T>>? _pending;
@@ -27,6 +27,10 @@ internal sealed class TransformingSubjectReplay<T>(object gate) : IDisposable
 
     /// <summary>Gets whether owner disposal has cancelled attachment and delivery.</summary>
     internal bool IsDisposed => Volatile.Read(ref _disposed);
+
+    bool ShouldDispose => _disposed || (_retired && _sealed);
+
+    bool ShouldSeal => _closed && !_sealed && !_sealing;
 
     /// <inheritdoc/>
     public void Dispose()
@@ -179,13 +183,13 @@ internal sealed class TransformingSubjectReplay<T>(object gate) : IDisposable
         lock (gate)
         {
             if (_operations != 0 || _released) return;
-            dispose = _disposed || (_retired && _sealed);
-            if (dispose) _disposed = true;
+            dispose = ShouldDispose;
             if (dispose)
             {
+                _disposed = true;
                 _released = true;
             }
-            else if (_closed && !_sealed && !_sealing)
+            else if (ShouldSeal)
             {
                 _sealing = true;
                 _operations++;

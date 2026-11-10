@@ -8,7 +8,7 @@
         <NoWarn>$(NoWarn);SA1600</NoWarn>
     </PropertyGroup>
     <PropertyGroup>
-        <TargetFrameworks>net10.0</TargetFrameworks>
+        <TargetFrameworks>$(SpecificationsTestFrameworks)</TargetFrameworks>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../Fundamentals/Fundamentals.csproj" />

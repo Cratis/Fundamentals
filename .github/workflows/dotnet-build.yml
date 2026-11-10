@@ -5,7 +5,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOTNET_VERSION: "10.0.x"
+  DOTNET_VERSION: |
+    10.0.x
+    11.0.x
 
 on:
   workflow_dispatch:
@@ -55,12 +57,14 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Build .NET projects
-        run: dotnet build --configuration Release
+        run: dotnet build --configuration Release -p:SpecificationsTestFrameworks='"net10.0;net11.0"'
 
       - name: Verify specification runner
         run: bash .github/scripts/run-specifications.sh --self-test
 
       - name: Run specifications
+        env:
+          SPECIFICATION_FRAMEWORKS: "net10.0 net11.0"
         run: bash .github/scripts/run-specifications.sh Release
 
       - name: Upload failed specification results

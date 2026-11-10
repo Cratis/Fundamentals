@@ -12,7 +12,7 @@ internal sealed class GenerationPatternAutomaton
 {
     readonly List<List<(string? Characters, int Target)>> _edges = [[]];
     readonly List<int[]> _states = [];
-    readonly Dictionary<string, int> _identities = new(StringComparer.Ordinal);
+    readonly Dictionary<string, int> _identities = [with(StringComparer.Ordinal)];
     readonly Dictionary<(int State, char Character), int> _moves = [];
     readonly GenerationWorkBudget _budget;
     readonly int _final;
@@ -37,30 +37,7 @@ internal sealed class GenerationPatternAutomaton
         var positions = 0;
         foreach (var token in pattern.Tokens)
         {
-            var finish = Node();
-            var characters = token.Expand(date);
-            for (var repetition = 1; repetition <= token.Maximum; repetition++)
-            {
-                foreach (var alphabet in characters)
-                {
-                    if (positions == GenerationWorkBudget.PositionLimit)
-                    {
-                        budget.Exceeded("position budget (2048 character positions)");
-                    }
-
-                    positions++;
-                    var next = Node();
-                    _edges[current].Add((alphabet, next));
-                    current = next;
-                }
-
-                if (repetition >= token.Minimum)
-                {
-                    _edges[current].Add((null, finish));
-                }
-            }
-
-            current = finish;
+            current = AppendToken(token, date, current, ref positions);
         }
 
         _final = reverse ? 0 : current;
@@ -122,6 +99,35 @@ internal sealed class GenerationPatternAutomaton
         _moves.Add((state, character), target);
 
         return target;
+    }
+
+    int AppendToken(GenerationPatternToken token, DateOnly? date, int start, ref int positions)
+    {
+        var current = start;
+        var finish = Node();
+        var characters = token.Expand(date);
+        for (var repetition = 1; repetition <= token.Maximum; repetition++)
+        {
+            foreach (var alphabet in characters)
+            {
+                if (positions == GenerationWorkBudget.PositionLimit)
+                {
+                    _budget.Exceeded("position budget (2048 character positions)");
+                }
+
+                positions++;
+                var next = Node();
+                _edges[current].Add((alphabet, next));
+                current = next;
+            }
+
+            if (repetition >= token.Minimum)
+            {
+                _edges[current].Add((null, finish));
+            }
+        }
+
+        return finish;
     }
 
     int Node()

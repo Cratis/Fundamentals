@@ -7,7 +7,9 @@ concurrency:
 env:
   NUGET_OUTPUT: ./Artifacts/NuGet
   NUGET_SOURCE: https://nuget.pkg.github.com/cratis/index.json
-  DOTNET_VERSION: "10.0.x"
+  DOTNET_VERSION: |
+    10.0.x
+    11.0.x
 
 on:
   pull_request_target:

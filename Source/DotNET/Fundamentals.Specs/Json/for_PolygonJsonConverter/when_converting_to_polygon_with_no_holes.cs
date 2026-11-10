@@ -35,7 +35,8 @@ public class when_converting_to_polygon_with_no_holes : Specification
         result = converter.Read(ref reader, typeof(Polygon), Globals.JsonSerializerOptions);
     }
 
-    [Fact] void should_convert_to_correct_polygon()
+    [Fact]
+    void should_convert_to_correct_polygon()
     {
         result.Shell.Coordinates.Length.ShouldEqual(expected.Shell.Coordinates.Length);
         for (var i = 0; i < result.Shell.Coordinates.Length; i++)

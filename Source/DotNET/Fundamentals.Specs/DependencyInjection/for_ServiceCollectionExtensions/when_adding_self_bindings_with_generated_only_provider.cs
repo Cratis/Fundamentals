@@ -17,7 +17,8 @@ public class when_adding_self_bindings_with_generated_only_provider : Specificat
 
     void Because() => _services.AddSelfBindings();
 
-    [Fact] void should_register_the_generated_implementation_as_self_binding() => _services.Any(_ =>
+    [Fact]
+    void should_register_the_generated_implementation_as_self_binding() => _services.Any(_ =>
         _.ServiceType == typeof(Types.for_ContractToImplementorsMap.ImplementationOfInterface) &&
         _.ImplementationType == typeof(Types.for_ContractToImplementorsMap.ImplementationOfInterface)).ShouldBeTrue();
 }

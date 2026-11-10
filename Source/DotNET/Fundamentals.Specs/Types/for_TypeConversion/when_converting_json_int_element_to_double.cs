@@ -10,7 +10,7 @@ public class when_converting_json_int_element_to_double : Specification
     JsonElement input;
     double result;
 
-    void Establish() => input = JsonDocument.Parse("42").RootElement;
+    void Establish() => input = JsonSerializer.Deserialize<JsonElement>("42");
 
     void Because() => result = (double)TypeConversion.Convert(typeof(double), input);
 

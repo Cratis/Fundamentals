@@ -3,12 +3,13 @@
     <PropertyGroup>
         <UseCratisSpecificationsRunner>true</UseCratisSpecificationsRunner>
         <PublishAot>true</PublishAot>
+        <PublishDocumentationFile>false</PublishDocumentationFile>
         <!-- Cratis Specifications runner projects are executables -->
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
         <AssemblyName>Cratis.Fundamentals.AOT.Specs</AssemblyName>
         <RootNamespace>Cratis.Fundamentals.AOT.Specs</RootNamespace>
-        <TargetFrameworks>net10.0</TargetFrameworks>
+        <TargetFrameworks>$(SpecificationsTestFrameworks)</TargetFrameworks>
         <NoWarn>$(NoWarn);SA1600</NoWarn>
     </PropertyGroup>
     <PropertyGroup Condition="'$(UseCratisSpecificationsRunner)'=='true'">

@@ -10,7 +10,7 @@ namespace Cratis.Reactive;
 /// <typeparam name="TResult">Result value type.</typeparam>
 /// <param name="owner">Generation owner.</param>
 /// <param name="gate">Shared admission gate.</param>
-internal sealed class TransformingSubjectGeneration<TSource, TResult>(SubscriberScopedTransformingSubject<TSource, TResult> owner, object gate) : IObserver<TSource>, IDisposable
+internal sealed class TransformingSubjectGeneration<TSource, TResult>(SubscriberScopedTransformingSubject<TSource, TResult> owner, Lock gate) : IObserver<TSource>, IDisposable
 {
     /// <summary>Assignment-safe connection, available before external Subscribe.</summary>
     internal readonly SingleAssignmentDisposable Connection = new();

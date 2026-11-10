@@ -23,7 +23,7 @@ public static partial class GenerateValue
     /// use a password hashing function for those, with a salt and a slow algorithm, including for PINs and short codes.
     /// Anyone who knows the input can recompute the digest. A digest of personal data is still personal data.
     /// The temporary UTF-8 buffer is cleared, but strings cannot be erased.
-    /// Compare digests directly with <see cref="CryptographicOperations.FixedTimeEquals"/> over equal-length bytes.
+    /// Compare digests directly with <see cref="CryptographicOperations.FixedTimeEquals(ReadOnlySpan{byte}, ReadOnlySpan{byte})"/> over equal-length bytes.
     /// Lookup by digest index is not constant-time and is acceptable only for tokens with at least 128 bits of entropy.
     /// </remarks>
     /// <exception cref="ArgumentNullException">The value is null.</exception>

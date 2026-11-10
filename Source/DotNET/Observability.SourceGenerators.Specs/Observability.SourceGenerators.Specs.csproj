@@ -7,7 +7,7 @@
         <IsPackable>false</IsPackable>
         <AssemblyName>Cratis.Metrics.Roslyn.Specs</AssemblyName>
         <RootNamespace>Cratis.Metrics.Roslyn.Specs</RootNamespace>
-        <TargetFrameworks>net10.0</TargetFrameworks>
+        <TargetFrameworks>$(SpecificationsTestFrameworks)</TargetFrameworks>
         <LangVersion>13</LangVersion>
         <!-- Trials the experimental Cratis.Specifications shared resources (Cratis/Fundamentals#1210). -->
         <NoWarn>$(NoWarn);SA1600;MA0101;RCS1266;CRSPECEXP01</NoWarn>

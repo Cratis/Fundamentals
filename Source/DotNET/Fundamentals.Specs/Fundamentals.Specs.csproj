@@ -4,7 +4,7 @@
         <IsTestProject>true</IsTestProject>
         <!-- xUnit v3 test projects are executables -->
         <OutputType>Exe</OutputType>
-        <TargetFrameworks>net10.0</TargetFrameworks>
+        <TargetFrameworks>$(SpecificationsTestFrameworks)</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <AssemblyName>Cratis.Fundamentals.Specs</AssemblyName>
         <RootNamespace>Cratis</RootNamespace>

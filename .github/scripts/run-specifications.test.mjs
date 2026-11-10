@@ -30,7 +30,7 @@ report="$5/$8"`;
 }
 
 function fixture(t, options = {}) {
-    const { count = 5, missing = -1, exits = {}, totals = {}, documents = {}, noTrx = -1, runner = [], windows = false, missingPython = false } = options;
+    const { count = 5, missing = -1, exits = {}, totals = {}, documents = {}, noTrx = -1, runner = [], windows = false, missingPython = false, frameworks = [] } = options;
     mkdirSync(join(root, '.ai-work'), { recursive: true });
     const directory = mkdtempSync(join(root, '.ai-work/run-specifications-test-'));
     t.after(() => rmSync(directory, { recursive: true }));
@@ -39,12 +39,12 @@ function fixture(t, options = {}) {
     copyFileSync(join(scripts, 'run-specifications.sh'), join(target, 'run-specifications.sh'));
     for (let index = 0; index < count; index++) {
         const project = join(directory, `Source/DotNET/Project${index}.Specs`);
-        const output = join(project, 'bin/Release/net10.0');
-        mkdirSync(output, { recursive: true });
+        const outputs = (frameworks.length ? frameworks : ['net11.0']).map(framework => join(project, 'bin/Release', framework));
+        for (const output of outputs) mkdirSync(output, { recursive: true });
         writeFileSync(join(project, `Project${index}.Specs.csproj`), `<Project><AssemblyName>Assembly${index}</AssemblyName>${runner.includes(index) ? '<UseCratisSpecificationsRunner>true</UseCratisSpecificationsRunner>' : ''}</Project>`);
         if (index === missing) continue;
         const document = documents[index] ?? `<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"><ResultSummary><Counters total="${totals[index] ?? 1}" /></ResultSummary></TestRun>`;
-        writeFileSync(join(output, `Assembly${index}${windows ? '.exe' : ''}`), `#!/usr/bin/env bash
+        for (const output of outputs) writeFileSync(join(output, `Assembly${index}${windows ? '.exe' : ''}`), `#!/usr/bin/env bash
 set -eu
 ${reportArguments(runner.includes(index), index)}
 echo 'Project${index} executed'
@@ -58,6 +58,7 @@ exit ${exits[index] ?? 0}
         env: {
             ...process.env,
             EXPECTED_SPECIFICATION_PROJECTS: '5',
+            ...(frameworks.length ? { SPECIFICATION_FRAMEWORKS: frameworks.join(' ') } : {}),
             OS: windows ? 'Windows_NT' : 'Linux',
             PATH: missingPython ? pathWithoutPython(directory) : process.env.PATH
         }
@@ -168,6 +169,12 @@ test('rejects invalid TRX even when the executable succeeds', async t => {
             assert.match(result.stderr, /Invalid TRX:/);
         });
     }
+});
+
+test('runs every executable once per requested framework', t => {
+    const result = fixture(t, { frameworks: ['net10.0', 'net11.0'] });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal((result.stdout.match(/executed/g) ?? []).length, 10);
 });
 
 test('uses Windows apphost suffixes', t => {

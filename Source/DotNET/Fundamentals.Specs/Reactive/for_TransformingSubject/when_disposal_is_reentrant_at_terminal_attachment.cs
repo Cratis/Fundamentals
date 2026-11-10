@@ -15,7 +15,7 @@ public class when_disposal_is_reentrant_at_terminal_attachment : Specification
         received = [];
         foreach (var pendingTerminal in new[] { false, true })
         {
-            var gate = new object();
+            var gate = new Lock();
             using var replay = new TransformingSubjectReplay<int>(gate);
             replay.OnNext(1);
             if (pendingTerminal)

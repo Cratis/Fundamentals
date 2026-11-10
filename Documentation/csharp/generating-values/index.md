@@ -60,4 +60,4 @@ The guides below help you choose a strategy for your own values and handle the r
 | Your specs break because ids are random | [Testing generated values](testing.md) |
 | You need exact signatures, limits and encodings | [Reference](reference.md) |
 
-These APIs are in `Cratis.Fundamentals` and target .NET 8, 9 and 10. Concepts themselves are introduced on the [Concepts](../concepts.md) page.
+These APIs are in `Cratis.Fundamentals` and target .NET 10 and 11. Concepts themselves are introduced on the [Concepts](../concepts.md) page.

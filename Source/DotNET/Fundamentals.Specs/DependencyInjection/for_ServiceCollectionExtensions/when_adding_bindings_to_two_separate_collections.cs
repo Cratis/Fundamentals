@@ -35,6 +35,7 @@ public class when_adding_bindings_to_two_separate_collections : Specification
 
     [Fact] void should_add_registrations_to_the_first_collection() => _firstCollectionBindings.ShouldNotBeEmpty();
 
-    [Fact] void should_replay_every_registration_from_the_first_collection_onto_the_second() =>
+    [Fact]
+    void should_replay_every_registration_from_the_first_collection_onto_the_second() =>
         _firstCollectionBindings.Except(_secondCollectionBindings).ShouldBeEmpty();
 }

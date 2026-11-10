@@ -25,6 +25,7 @@ public class and_there_is_one_implementor_per_interface : Specification
     void Because() => _result = [.. TypeDiscoveryCollector.GetContractsAndImplementors(_symbols, _assembly)];
 
     [Fact] void should_include_the_interface_as_a_contract() => _result.Select(e => e.ContractExpression).ShouldContain("global::App.IFoo");
-    [Fact] void should_map_the_class_as_the_implementor() =>
+    [Fact]
+    void should_map_the_class_as_the_implementor() =>
         _result.Single(e => e.ContractExpression == "global::App.IFoo").ImplementorExpressions.ShouldContain("global::App.Foo");
 }

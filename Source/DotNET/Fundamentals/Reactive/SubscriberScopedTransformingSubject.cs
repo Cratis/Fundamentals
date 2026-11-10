@@ -13,10 +13,12 @@ namespace Cratis.Reactive;
 /// <param name="transform">Transformation.</param>
 internal sealed class SubscriberScopedTransformingSubject<TSource, TResult>(Func<ISubject<TSource>> sourceFactory, Func<TSource, TResult> transform) : ISubject<TResult>, IDisposable
 {
-    readonly object _gate = new();
+    readonly Lock _gate = new();
     TransformingSubjectGeneration<TSource, TResult>? _current;
     bool _terminal;
     bool _disposed;
+
+    bool Finished => _disposed || _terminal;
 
     /// <inheritdoc/>
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Reserve transfers its attachment to the consumer, which is disposed if attachment or connection setup throws.")]
@@ -93,7 +95,7 @@ internal sealed class SubscriberScopedTransformingSubject<TSource, TResult>(Func
     {
         lock (_gate)
         {
-            if (_disposed || _terminal || generation.Closed || !generation.Replay.TryEnter()) return;
+            if (Finished || generation.Closed || !generation.Replay.TryEnter()) return;
         }
         try
         {
@@ -122,7 +124,7 @@ internal sealed class SubscriberScopedTransformingSubject<TSource, TResult>(Func
         lock (_gate)
         {
             if (direct) ObjectDisposedException.ThrowIf(_disposed, this);
-            if (_disposed || _terminal || expected?.Closed == true) return;
+            if (Finished || expected?.Closed == true) return;
             _terminal = true;
             generation = _current ??= new(this, _gate);
             generation.Closed = true;
@@ -139,7 +141,7 @@ internal sealed class SubscriberScopedTransformingSubject<TSource, TResult>(Func
         lock (_gate)
         {
             generation.Consumers--;
-            if (generation.Consumers != 0 || generation.Closed || _disposed || _terminal) return;
+            if (generation.Consumers != 0 || generation.Closed || Finished) return;
 
             // Retire before external disposal: a replacement never shares this connection or replay.
             generation.Closed = true;

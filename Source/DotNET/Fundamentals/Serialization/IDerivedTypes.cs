@@ -11,7 +11,7 @@ public interface IDerivedTypes
     /// <summary>
     /// Gets all the types that has derivatives.
     /// </summary>
-    IEnumerable<Type> TypesWithDerivatives { get; }
+    IEnumerable<Type> TypesWithDerivatives { get; }
 
     /// <summary>
     /// Get the derived type for a target type.

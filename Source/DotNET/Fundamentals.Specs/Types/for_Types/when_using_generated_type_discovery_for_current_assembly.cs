@@ -13,7 +13,8 @@ public class when_using_generated_type_discovery_for_current_assembly : Specific
             .FindMultiple<for_ContractToImplementorsMap.IInterface>()
     ];
 
-    [Fact] void should_find_the_known_implementations() => result.ShouldContainOnly(
+    [Fact]
+    void should_find_the_known_implementations() => result.ShouldContainOnly(
     [
         typeof(for_ContractToImplementorsMap.ImplementationOfInterface),
         typeof(for_ContractToImplementorsMap.SecondImplementationOfInterface),

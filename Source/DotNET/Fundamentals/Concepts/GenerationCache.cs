@@ -16,11 +16,7 @@ internal sealed class GenerationCache<TKey, [DynamicallyAccessedMembers(Dynamica
 {
     const int Capacity = 128;
     readonly ConcurrentDictionary<TKey, Lazy<TValue>> _entries = new();
-#if NET9_0_OR_GREATER
     readonly Lock _missLock = new();
-#else
-    readonly object _missLock = new();
-#endif
 
     /// <summary>
     /// Gets a retained value or shares its construction with concurrent callers.
