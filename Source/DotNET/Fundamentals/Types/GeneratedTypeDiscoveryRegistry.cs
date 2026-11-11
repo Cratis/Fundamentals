@@ -161,7 +161,7 @@ public static class GeneratedTypeDiscoveryRegistry
 
         var newlyReached = new List<Assembly>();
         var reached = new HashSet<Assembly>();
-        var visitedAssemblyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> visitedAssemblyNames = [with(StringComparer.OrdinalIgnoreCase)];
         var assemblyNamesToLoad = new Queue<AssemblyName>();
 
         foreach (var loadedAssembly in loadedAssemblies)
