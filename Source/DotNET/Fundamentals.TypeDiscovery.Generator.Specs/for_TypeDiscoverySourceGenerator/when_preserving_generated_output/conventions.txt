@@ -42,17 +42,15 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
     {
         get
         {
-            List<global::Cratis.DependencyInjection.ConventionSelfBinding> bindings =
-            [
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.A), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.B), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Derived), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Generic<>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Inherited), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Multiple), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Only), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Service), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient)
-            ];
+            List<global::Cratis.DependencyInjection.ConventionSelfBinding> bindings = [];
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.A), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.B), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Derived), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Generic<>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Inherited), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Multiple), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Only), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Service), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
             TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.DependencyInjection.IgnoreConventionAttribute), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
             return bindings;
         }

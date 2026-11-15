@@ -56,7 +56,7 @@ public class an_application_built_against_an_older_package : Specification
         var olderPath = Path.Combine(_directory, "Cratis.Pkg.dll");
         File.WriteAllBytes(olderPath, Emit(CreateCompilation(OlderPackage).WithAssemblyName("Cratis.Pkg")));
 
-        var application = CreateCompilation("namespace App { public class MyApp { } }");
+        var application = CreateCompilation("namespace App { public class MyApp { } public interface IOwnPair { } public class OwnPair : IOwnPair { } } namespace Zeta { public class Late { } public interface ILatePair { } public class LatePair : ILatePair { } }");
         application = application.AddReferences(MetadataReference.CreateFromFile(olderPath));
         CSharpGeneratorDriver.Create(new TypeDiscoverySourceGenerator()).RunGeneratorsAndUpdateCompilation(application, out var withGenerated, out _);
         _generatedSource = withGenerated.SyntaxTrees.Last().GetText().ToString();

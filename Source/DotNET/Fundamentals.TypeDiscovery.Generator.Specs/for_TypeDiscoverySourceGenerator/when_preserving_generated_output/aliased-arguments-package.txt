@@ -23,9 +23,7 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
     {
         get
         {
-            List<global::Cratis.DependencyInjection.ConventionServiceBinding> bindings =
-            [
-            ];
+            List<global::Cratis.DependencyInjection.ConventionServiceBinding> bindings = [];
             TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::App.Container<global::Shared.Value>.IRepo), typeof(global::App.Repo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
             return bindings;
         }
@@ -35,9 +33,7 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
     {
         get
         {
-            List<global::Cratis.DependencyInjection.ConventionSelfBinding> bindings =
-            [
-            ];
+            List<global::Cratis.DependencyInjection.ConventionSelfBinding> bindings = [];
             TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.CachingRepo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
             TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Container<>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
             TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Repo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));

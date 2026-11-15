@@ -79,14 +79,12 @@ internal static class GeneratedSourceBuilder
         var definedTypes = string.Join(",\n", namedTypes.Select(static name => $"        typeof({name})"));
 
         bool IsOwn(string expression) => ownTypes?.Contains(expression) != false;
-        var ownServiceBindings = conventionServiceBindings.Where(b => IsOwn(b.ImplementationExpression)).Select(GetServiceBinding).ToArray();
-        var packageServiceBindings = conventionServiceBindings.Where(b => !IsOwn(b.ImplementationExpression)).Select(GetServiceBinding).ToArray();
-        var ownSelfBindings = conventionSelfBindings.Where(b => IsOwn(b.ImplementationExpression)).Select(GetSelfBinding).ToArray();
-        var packageSelfBindings = conventionSelfBindings.Where(b => !IsOwn(b.ImplementationExpression)).Select(GetSelfBinding).ToArray();
+        var serviceBindings = conventionServiceBindings.Select(b => (Entry: GetServiceBinding(b), IsOwn: IsOwn(b.ImplementationExpression))).ToArray();
+        var selfBindings = conventionSelfBindings.Select(b => (Entry: GetSelfBinding(b), IsOwn: IsOwn(b.ImplementationExpression))).ToArray();
 
-        var serviceBindingsProperty = GetBindingsProperty("global::Cratis.DependencyInjection.ConventionServiceBinding", "ConventionServiceBindings", ownServiceBindings, packageServiceBindings);
-        var selfBindingsProperty = GetBindingsProperty("global::Cratis.DependencyInjection.ConventionSelfBinding", "SelfBindings", ownSelfBindings, packageSelfBindings);
-        var tryAddMethod = packageServiceBindings.Length + packageSelfBindings.Length > 0 ? GetTryAddMethod() : [];
+        var serviceBindingsProperty = GetBindingsProperty("global::Cratis.DependencyInjection.ConventionServiceBinding", "ConventionServiceBindings", serviceBindings);
+        var selfBindingsProperty = GetBindingsProperty("global::Cratis.DependencyInjection.ConventionSelfBinding", "SelfBindings", selfBindings);
+        var tryAddMethod = serviceBindings.Concat(selfBindings).Any(static binding => !binding.IsOwn) ? GetTryAddMethod() : [];
 
         return string.Join(
             "\n",
@@ -171,31 +169,31 @@ internal static class GeneratedSourceBuilder
     static string GetSelfBinding((string ImplementationExpression, string LifetimeExpression) binding) =>
         $"new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof({binding.ImplementationExpression}), {binding.LifetimeExpression})";
 
-    static string[] GetBindingsProperty(string bindingType, string name, string[] ownEntries, string[] packageEntries)
+    static string[] GetBindingsProperty(string bindingType, string name, (string Entry, bool IsOwn)[] bindings)
     {
-        if (packageEntries.Length == 0)
+        if (bindings.All(static binding => binding.IsOwn))
         {
             return
             [
                 $"    public IEnumerable<{bindingType}> {name} =>",
                 "    [",
-                string.Join(",\n", ownEntries.Select(static entry => $"        {entry}")),
+                string.Join(",\n", bindings.Select(static binding => $"        {binding.Entry}")),
                 "    ];"
             ];
         }
 
-        string[] ownLines = ownEntries.Length == 0 ? [] : [string.Join(",\n", ownEntries.Select(static entry => $"                {entry}"))];
+        // Entries are emitted in their sorted position so that registration order, which decides which
+        // implementation wins for a service, is the same as when every binding is the assembly's own.
         return
         [
             $"    public IEnumerable<{bindingType}> {name}",
             "    {",
             "        get",
             "        {",
-            $"            List<{bindingType}> bindings =",
-            "            [",
-            ..ownLines,
-            "            ];",
-            ..packageEntries.Select(static entry => $"            TryAdd(bindings, static () => {entry});"),
+            $"            List<{bindingType}> bindings = [];",
+            ..bindings.Select(static binding => binding.IsOwn
+                ? $"            bindings.Add({binding.Entry});"
+                : $"            TryAdd(bindings, static () => {binding.Entry});"),
             "            return bindings;",
             "        }",
             "    }"

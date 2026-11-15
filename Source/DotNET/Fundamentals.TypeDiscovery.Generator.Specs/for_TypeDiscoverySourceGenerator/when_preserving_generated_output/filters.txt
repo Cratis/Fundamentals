@@ -30,11 +30,9 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
     {
         get
         {
-            List<global::Cratis.DependencyInjection.ConventionServiceBinding> bindings =
-            [
-                new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::App.IBar), typeof(global::App.Bar), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped),
-                new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::App.IFoo), typeof(global::App.Foo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton)
-            ];
+            List<global::Cratis.DependencyInjection.ConventionServiceBinding> bindings = [];
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::App.IBar), typeof(global::App.Bar), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::App.IFoo), typeof(global::App.Foo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton));
             TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::Services.IExperimental), typeof(global::Services.Experimental), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
             return bindings;
         }
@@ -44,14 +42,12 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
     {
         get
         {
-            List<global::Cratis.DependencyInjection.ConventionSelfBinding> bindings =
-            [
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Alias), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Bar), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Experimental), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Foo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton),
-                new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Obsolete), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient)
-            ];
+            List<global::Cratis.DependencyInjection.ConventionSelfBinding> bindings = [];
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Alias), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Bar), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Experimental), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Foo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Obsolete), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
             TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.DependencyInjection.IgnoreConventionAttribute), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
             TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.DependencyInjection.ScopedAttribute), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
             TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.DependencyInjection.SingletonAttribute), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
