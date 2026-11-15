@@ -11,7 +11,7 @@ description: Cratis.DependencyInjection registers .NET services by naming conven
 
 A registration tells the container which implementation to construct when a consumer asks for a service. `AddBindingsByConvention` pairs an interface with its matching implementation; `AddSelfBindings` registers a concrete type so consumers can request it directly.
 
-Both methods default to a transient lifetime: the container creates an instance for each resolution. Apply `[Singleton]` when the registration should reuse one instance, or `[IgnoreConvention]` when you want to register a type yourself. Existing registrations take precedence: neither method replaces a service type already registered.
+Both methods default to a transient lifetime: the container creates an instance for each resolution. Apply `[Singleton]` when the registration should reuse one instance, `[Scoped]` when it should reuse one instance per scope, or `[IgnoreConvention]` when you want to register a type yourself. Existing registrations take precedence: neither method replaces a service type already registered.
 
 Each method prefers its generated binding list and falls back to reflection when that list is empty. If an expected service is missing, check the contributing assemblies in [type discovery](./types.md) before changing its registration.
 
@@ -92,6 +92,20 @@ public class DatabaseConnection : IDatabaseConnection
 
 The attribute controls the lifetime of an eligible registration; it does not make an otherwise excluded type eligible. Choose it only when sharing the instance across consumers fits the service's state and dependencies.
 
+### ScopedAttribute
+
+Apply `[Scoped]` to change a convention or self-binding registration from transient to scoped, so the container creates one instance per scope, such as one per ASP.NET Core request:
+
+```csharp
+[Scoped]
+public class UnitOfWork : IUnitOfWork
+{
+    // This service will be registered as scoped
+}
+```
+
+Like `[Singleton]`, the attribute controls only the lifetime of an eligible registration. If a type has both attributes, `[Singleton]` wins.
+
 ### IgnoreConventionAttribute
 
 Apply `[IgnoreConvention]` to keep a class out of both `AddBindingsByConvention` and `AddSelfBindings`:
@@ -110,7 +124,7 @@ Use this for test implementations or services you register manually, including d
 
 ### 1. Use Convention-Based Registration First
 
-Combine the two methods when the application uses both interface and concrete-type dependencies. Register exceptions explicitly, as with the scoped service below:
+Combine the two methods when the application uses both interface and concrete-type dependencies. Register exceptions explicitly, such as an implementation whose name does not match its interface:
 
 ```csharp
 public void ConfigureServices(IServiceCollection services)

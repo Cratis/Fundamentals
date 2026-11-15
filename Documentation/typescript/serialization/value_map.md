@@ -44,10 +44,12 @@ class Projection {
 - Lookup with a new key instance works when key content is equal.
 
 > [!NOTE]
-> A `ConceptAs` type does not currently round-trip as a **key**. It is written as its underlying value
-> but read back without it, because `ConceptAs<T>` carries no runtime information about `T` and a key
-> arrives as a string with nothing to say what it should be parsed into. Use the underlying type as the
-> key, or a class with `@field`-decorated properties.
+> A `ConceptAs` **key** is written as the JSON text of its underlying value, so a string concept
+> `'abc'` becomes the property name `"abc"` including the quotes. On read, the key is parsed as JSON and
+> wrapped in the concept type, so the value is preserved. When the underlying value needs its own
+> conversion, such as a `Guid`, declare it on the concept with `static readonly valueType = Guid;`.
+> A key that is not valid JSON text, such as an unquoted string written by another serializer, fails to
+> parse. In that case, use the underlying type as the key, or a class with `@field`-decorated properties.
 
 ## Example
 

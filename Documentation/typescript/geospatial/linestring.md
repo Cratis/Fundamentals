@@ -62,7 +62,7 @@ LineStrings automatically serialize to GeoJSON format. See [Geospatial Serializa
 Once created, you can access the Points in a LineString:
 
 ```typescript
-import { LineString } from '@cratis/fundamentals';
+import { LineString, Point } from '@cratis/fundamentals';
 
 const route = new LineString([
     new Point(10.5, 20.3),
