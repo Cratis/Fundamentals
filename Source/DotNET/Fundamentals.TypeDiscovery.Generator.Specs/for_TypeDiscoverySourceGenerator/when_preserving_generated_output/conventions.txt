@@ -38,18 +38,23 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
         new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::App.IOnly), typeof(global::App.Only), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient)
     ];
 
-    public IEnumerable<global::Cratis.DependencyInjection.ConventionSelfBinding> SelfBindings =>
-    [
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.A), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.B), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Derived), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Generic<>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Inherited), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Multiple), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Only), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Service), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.DependencyInjection.IgnoreConventionAttribute), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient)
-    ];
+    public IEnumerable<global::Cratis.DependencyInjection.ConventionSelfBinding> SelfBindings
+    {
+        get
+        {
+            List<global::Cratis.DependencyInjection.ConventionSelfBinding> bindings = [];
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.A), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.B), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Derived), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Generic<>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Inherited), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Multiple), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Only), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Service), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.DependencyInjection.IgnoreConventionAttribute), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            return bindings;
+        }
+    }
 
     public IDictionary<Type, IEnumerable<Type>> ContractsAndImplementors => new Dictionary<Type, IEnumerable<Type>>
     {
@@ -63,6 +68,17 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
 
     public void Initialize()
     {
+    }
+
+    static void TryAdd<T>(List<T> into, Func<T> create)
+    {
+        try
+        {
+            into.Add(create());
+        }
+        catch (Exception exception) when (exception is TypeLoadException or global::System.IO.FileNotFoundException or global::System.IO.FileLoadException or MissingMemberException)
+        {
+        }
     }
 }
 

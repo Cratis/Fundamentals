@@ -19,20 +19,30 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
         typeof(global::App.Local)
     ];
 
-    public IEnumerable<global::Cratis.DependencyInjection.ConventionServiceBinding> ConventionServiceBindings =>
-    [
-        new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::Cratis.Services.IFoo), typeof(global::Cratis.Services.Foo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient)
-    ];
+    public IEnumerable<global::Cratis.DependencyInjection.ConventionServiceBinding> ConventionServiceBindings
+    {
+        get
+        {
+            List<global::Cratis.DependencyInjection.ConventionServiceBinding> bindings = [];
+            TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof(global::Cratis.Services.IFoo), typeof(global::Cratis.Services.Foo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            return bindings;
+        }
+    }
 
-    public IEnumerable<global::Cratis.DependencyInjection.ConventionSelfBinding> SelfBindings =>
-    [
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Local), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Box<>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Foo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Generic<>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Outer), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient),
-        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Outer.Nested), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient)
-    ];
+    public IEnumerable<global::Cratis.DependencyInjection.ConventionSelfBinding> SelfBindings
+    {
+        get
+        {
+            List<global::Cratis.DependencyInjection.ConventionSelfBinding> bindings = [];
+            bindings.Add(new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::App.Local), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Box<>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Foo), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Generic<>), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Outer), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            TryAdd(bindings, static () => new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof(global::Cratis.Services.Outer.Nested), global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient));
+            return bindings;
+        }
+    }
 
     public IDictionary<Type, IEnumerable<Type>> ContractsAndImplementors => new Dictionary<Type, IEnumerable<Type>>
     {
@@ -42,6 +52,17 @@ file sealed class GeneratedTypeDiscoveryProvider : global::Cratis.Types.ICanProv
 
     public void Initialize()
     {
+    }
+
+    static void TryAdd<T>(List<T> into, Func<T> create)
+    {
+        try
+        {
+            into.Add(create());
+        }
+        catch (Exception exception) when (exception is TypeLoadException or global::System.IO.FileNotFoundException or global::System.IO.FileLoadException or MissingMemberException)
+        {
+        }
     }
 }
 

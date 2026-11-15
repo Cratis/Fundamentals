@@ -50,6 +50,7 @@ internal static class GeneratedSourceBuilder
     /// <param name="implementationsWithPublicConstructors">Types whose constructors are preserved.</param>
     /// <param name="experimentalDiagnosticIds">Experimental diagnostic identifiers.</param>
     /// <param name="enumTypes">Enum type expressions declared in the current assembly.</param>
+    /// <param name="ownTypes">Expressions of the types declared in the current assembly. A binding whose implementation is not among them comes from a referenced package and is emitted guarded, so a package that removed the type cannot break the provider. When omitted, every type is treated as the assembly's own.</param>
     /// <returns>The complete provider source text.</returns>
     public static string BuildFromNames(
         ImmutableArray<string> namedTypes,
@@ -58,7 +59,8 @@ internal static class GeneratedSourceBuilder
         ImmutableArray<(string ImplementationExpression, string LifetimeExpression)> conventionSelfBindings,
         IEnumerable<string> implementationsWithPublicConstructors,
         ImmutableArray<string> experimentalDiagnosticIds,
-        ImmutableArray<string> enumTypes = default)
+        ImmutableArray<string> enumTypes = default,
+        ISet<string>? ownTypes = null)
     {
         var hasEnums = !enumTypes.IsDefaultOrEmpty;
         var enumInterface = hasEnums ? ", global::Cratis.Json.ICanCreateEnumConverters" : string.Empty;
@@ -76,15 +78,13 @@ internal static class GeneratedSourceBuilder
         var suppressedDiagnostics = string.Join(", ", ["CS0612", "CS0618", .. experimentalIds]);
         var definedTypes = string.Join(",\n", namedTypes.Select(static name => $"        typeof({name})"));
 
-        var generatedServiceBindings = string.Join(
-            ",\n",
-            conventionServiceBindings.Select(static b =>
-                $"        new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof({b.ServiceExpression}), typeof({b.ImplementationExpression}), {b.LifetimeExpression})"));
+        bool IsOwn(string expression) => ownTypes?.Contains(expression) != false;
+        var serviceBindings = conventionServiceBindings.Select(b => (Entry: GetServiceBinding(b), IsOwn: IsOwn(b.ImplementationExpression))).ToArray();
+        var selfBindings = conventionSelfBindings.Select(b => (Entry: GetSelfBinding(b), IsOwn: IsOwn(b.ImplementationExpression))).ToArray();
 
-        var generatedSelfBindings = string.Join(
-            ",\n",
-            conventionSelfBindings.Select(static b =>
-                $"        new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof({b.ImplementationExpression}), {b.LifetimeExpression})"));
+        var serviceBindingsProperty = GetBindingsProperty("global::Cratis.DependencyInjection.ConventionServiceBinding", "ConventionServiceBindings", serviceBindings);
+        var selfBindingsProperty = GetBindingsProperty("global::Cratis.DependencyInjection.ConventionSelfBinding", "SelfBindings", selfBindings);
+        var tryAddMethod = serviceBindings.Concat(selfBindings).Any(static binding => !binding.IsOwn) ? GetTryAddMethod() : [];
 
         return string.Join(
             "\n",
@@ -115,15 +115,9 @@ internal static class GeneratedSourceBuilder
                 definedTypes,
                 "    ];",
                 string.Empty,
-                "    public IEnumerable<global::Cratis.DependencyInjection.ConventionServiceBinding> ConventionServiceBindings =>",
-                "    [",
-                generatedServiceBindings,
-                "    ];",
+                ..serviceBindingsProperty,
                 string.Empty,
-                "    public IEnumerable<global::Cratis.DependencyInjection.ConventionSelfBinding> SelfBindings =>",
-                "    [",
-                generatedSelfBindings,
-                "    ];",
+                ..selfBindingsProperty,
                 string.Empty,
                 "    public IDictionary<Type, IEnumerable<Type>> ContractsAndImplementors => new Dictionary<Type, IEnumerable<Type>>",
                 "    {",
@@ -134,6 +128,7 @@ internal static class GeneratedSourceBuilder
                 "    {",
                 "    }",
                 ..enumConverterMethod,
+                ..tryAddMethod,
                 "}",
                 string.Empty,
                 "file static class GeneratedTypeDiscoveryProviderRegistration",
@@ -145,6 +140,64 @@ internal static class GeneratedSourceBuilder
                 "        global::Cratis.Types.GeneratedTypeDiscoveryRegistry.Register(new GeneratedTypeDiscoveryProvider());",
                 "}"
             ]);
+    }
+
+    /// <summary>
+    /// A typeof() is resolved when the method holding it is compiled, so a package type that a newer package
+    /// version removed would fail the whole property. Each package binding lives in its own delegate and is
+    /// skipped, by this helper, when its type no longer loads.
+    /// </summary>
+    /// <returns>The lines of the generated helper method.</returns>
+    static string[] GetTryAddMethod() =>
+    [
+        string.Empty,
+        "    static void TryAdd<T>(List<T> into, Func<T> create)",
+        "    {",
+        "        try",
+        "        {",
+        "            into.Add(create());",
+        "        }",
+        "        catch (Exception exception) when (exception is TypeLoadException or global::System.IO.FileNotFoundException or global::System.IO.FileLoadException or MissingMemberException)",
+        "        {",
+        "        }",
+        "    }"
+    ];
+
+    static string GetServiceBinding((string ServiceExpression, string ImplementationExpression, string LifetimeExpression) binding) =>
+        $"new global::Cratis.DependencyInjection.ConventionServiceBinding(typeof({binding.ServiceExpression}), typeof({binding.ImplementationExpression}), {binding.LifetimeExpression})";
+
+    static string GetSelfBinding((string ImplementationExpression, string LifetimeExpression) binding) =>
+        $"new global::Cratis.DependencyInjection.ConventionSelfBinding(typeof({binding.ImplementationExpression}), {binding.LifetimeExpression})";
+
+    static string[] GetBindingsProperty(string bindingType, string name, (string Entry, bool IsOwn)[] bindings)
+    {
+        if (bindings.All(static binding => binding.IsOwn))
+        {
+            return
+            [
+                $"    public IEnumerable<{bindingType}> {name} =>",
+                "    [",
+                string.Join(",\n", bindings.Select(static binding => $"        {binding.Entry}")),
+                "    ];"
+            ];
+        }
+
+        // Entries are emitted in their sorted position so that registration order, which decides which
+        // implementation wins for a service, is the same as when every binding is the assembly's own.
+        return
+        [
+            $"    public IEnumerable<{bindingType}> {name}",
+            "    {",
+            "        get",
+            "        {",
+            $"            List<{bindingType}> bindings = [];",
+            ..bindings.Select(static binding => binding.IsOwn
+                ? $"            bindings.Add({binding.Entry});"
+                : $"            TryAdd(bindings, static () => {binding.Entry});"),
+            "            return bindings;",
+            "        }",
+            "    }"
+        ];
     }
 
     static string GetContractAndImplementorsMapEntry((string ContractExpression, ImmutableArray<string> ImplementorExpressions) entry) =>
