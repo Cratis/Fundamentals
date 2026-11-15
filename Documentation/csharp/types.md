@@ -25,6 +25,8 @@ A prefix matches the start of an assembly name: `Microsoft` includes `Microsoft.
 
 This setting configures the reflection provider, not generated discovery. The generator applies its own `Cratis` prefix check for package discovery, and default provider selection prefers registered generated providers. To use your configured reflection provider, pass it explicitly to `new Types(...)` or `AddTypeDiscovery(providers)`.
 
+A generated provider also binds public types from referenced `Cratis` packages. If an application is built against one package version and runs with another that no longer has such a type, the generated provider skips that binding instead of failing with a `TypeLoadException`.
+
 Changing a provider does not refresh a snapshot already built from it. Configure prefixes before the provider initializes, and choose providers before constructing the `Types` instance that will serve your lookups.
 
 ## Type Discovery

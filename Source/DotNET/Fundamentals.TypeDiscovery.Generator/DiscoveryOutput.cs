@@ -44,7 +44,8 @@ internal static class DiscoveryOutput
             selfBindings,
             preserved,
             experimentalIds,
-            [.. types.Where(static type => type.IsEnum).Select(static type => type.Expression).OrderBy(static name => name, StringComparer.Ordinal)]);
+            [.. types.Where(static type => type.IsEnum).Select(static type => type.Expression).OrderBy(static name => name, StringComparer.Ordinal)],
+            new HashSet<string>(types.Select(static type => type.Expression), StringComparer.Ordinal));
     }
 
     static ImmutableArray<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> GetContracts(
