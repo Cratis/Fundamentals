@@ -66,7 +66,7 @@ const buildingFootprint = new Polygon(
 Polygons work as properties in your classes:
 
 ```typescript
-import { Polygon, field } from '@cratis/fundamentals';
+import { LinearRing, Point, Polygon, field } from '@cratis/fundamentals';
 
 class Zone {
     @field(String)
@@ -99,11 +99,25 @@ lot.boundary = new Polygon(
 Access the outer boundary and any holes:
 
 ```typescript
-import { Polygon } from '@cratis/fundamentals';
+import { LinearRing, Point, Polygon } from '@cratis/fundamentals';
 
 const polygon = new Polygon(
-    new LinearRing([...]),
-    [new LinearRing([...])]
+    new LinearRing([
+        new Point(0, 0),
+        new Point(20, 0),
+        new Point(20, 20),
+        new Point(0, 20),
+        new Point(0, 0)
+    ]),
+    [
+        new LinearRing([
+            new Point(5, 5),
+            new Point(15, 5),
+            new Point(15, 15),
+            new Point(5, 15),
+            new Point(5, 5)
+        ])
+    ]
 );
 
 const shell = polygon.shell;    // Outer boundary

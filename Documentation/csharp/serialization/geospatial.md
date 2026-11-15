@@ -52,7 +52,7 @@ var lineString = new LineString(
     new Point(12.0, 22.0)
 ]);
 var json = JsonSerializer.Serialize(lineString, Globals.JsonSerializerOptions);
-// {"type":"LineString","coordinates":[[10.5,20.3],[11.2,21.1],[12.0,22.0]]}
+// {"type":"LineString","coordinates":[[10.5,20.3],[11.2,21.1],[12,22]]}
 
 var deserialized = JsonSerializer.Deserialize<LineString>(json, Globals.JsonSerializerOptions);
 ```

@@ -119,14 +119,11 @@ An empty digit payload counts as zero. Check digits add no entropy. Pattern reje
 - A TypeID suffix is the 16 big-endian bytes of a UUID v7 in the lowercase alphabet `0123456789abcdefghjkmnpqrstvwxyz`.
 - The first 10 characters of either encoding carry the 48-bit timestamp.
 
-## UUID v7 on each runtime
+## UUID v7 implementation
 
-| Runtime | Implementation |
-| --- | --- |
-| .NET 9 and later | Delegates to `Guid.CreateVersion7` with the supplied time |
-| .NET 8 | Built-in polyfill: six timestamp bytes, version 7 and RFC variant bits set, 74 bits from `RandomNumberGenerator` |
+Fundamentals targets .NET 10 and later, and `UuidV7` always delegates to `Guid.CreateVersion7` with the supplied time. There is no separate polyfill.
 
-Values from both are time-ordered but not monotonic within one millisecond. Clock adjustments can move timestamps backward.
+Values are time-ordered but not monotonic within one millisecond. Clock adjustments can move timestamps backward.
 
 ## Randomness and runtime support
 

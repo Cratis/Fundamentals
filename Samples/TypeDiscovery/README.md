@@ -23,9 +23,9 @@ cd Samples/TypeDiscovery
 dotnet run
 ```
 
-Expected output:
+Expected output (the order of discovered implementations can vary between runs):
 
-```
+```text
 === AOT-Friendly Type Discovery Demo ===
 
 Discovered implementations of ISomeInterface:
@@ -43,9 +43,10 @@ IInstancesOf<ISomeInterface> (instance-level):
 - FirstImplementation
 - SecondImplementation
 
-Convention binding resolved: ConventionalService
-
-Self binding resolved: ScopedSelfBinding
+Convention binding resolved: Registered through AddBindingsByConvention
+Self binding resolved: Registered through AddSelfBindings
+Discovery-only convention binding resolved: Registered through AddBindingsByConvention
+Discovery-only self binding resolved: OnlySelfBound
 
 Total discovered types: <n>
 Demo complete.
