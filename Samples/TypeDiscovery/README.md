@@ -23,7 +23,7 @@ cd Samples/TypeDiscovery
 dotnet run
 ```
 
-Expected output:
+Expected output (the order of discovered implementations can vary between runs):
 
 ```text
 === AOT-Friendly Type Discovery Demo ===
