@@ -1,8 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection.Metadata;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace Cratis.Fundamentals.TypeDiscovery.Generator;
 
@@ -32,17 +32,23 @@ internal sealed class ReferenceMetadata(MetadataReference reference, string name
     public static ReferenceMetadata Create(MetadataReference reference, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var compilation = CSharpCompilation.Create("TypeDiscoveryReferenceHeaders", references: [reference]);
-        if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assembly)
+        if (reference is CompilationReference compilationReference)
+        {
+            var assembly = compilationReference.Compilation.Assembly;
+            return new(reference, assembly.Name, new([.. assembly.Modules.SelectMany(static module => module.ReferencedAssemblies)
+                .Select(static identity => identity.Name).Distinct().OrderBy(static name => name, StringComparer.Ordinal)]));
+        }
+
+        if (reference is not PortableExecutableReference portable || portable.GetMetadata() is not AssemblyMetadata metadata)
         {
             return new(reference, string.Empty, default);
         }
 
+        var readers = metadata.GetModules().Select(static module => module.GetMetadataReader()).ToArray();
         return new(
             reference,
-            assembly.Name,
-            new([.. assembly.Modules.SelectMany(static module => module.ReferencedAssemblies).Select(static identity => identity.Name)
-                .Distinct().OrderBy(static name => name, StringComparer.Ordinal)]));
+            readers[0].GetString(readers[0].GetAssemblyDefinition().Name),
+            new([.. readers.SelectMany(GetDependencies).Distinct().OrderBy(static name => name, StringComparer.Ordinal)]));
     }
 
     /// <inheritdoc/>
@@ -54,4 +60,7 @@ internal sealed class ReferenceMetadata(MetadataReference reference, string name
 
     /// <inheritdoc/>
     public override int GetHashCode() => _comparer.GetHashCode(Reference);
+
+    static IEnumerable<string> GetDependencies(MetadataReader reader) =>
+        reader.AssemblyReferences.Select(handle => reader.GetString(reader.GetAssemblyReference(handle).Name));
 }

@@ -20,7 +20,7 @@ public sealed class TypeDiscoverySourceGenerator : IIncrementalGenerator
             .WithTrackingName("ReferenceMetadata");
         var referenceTypes = metadata.Collect()
             .SelectMany(static (headers, _) => ReferenceInput.CreateAll(headers))
-            .Select(static (input, cancellationToken) => ReferenceDiscovery.Create(input.Reference, input.References, cancellationToken))
+            .Select(static (input, cancellationToken) => ReferenceDiscovery.Create(input.Metadata, input.References, cancellationToken))
             .WithTrackingName("ReferenceDiscovery");
         var currentTypes = context.SyntaxProvider.CreateSyntaxProvider(
                 static (node, _) => node is BaseTypeDeclarationSyntax or DelegateDeclarationSyntax,

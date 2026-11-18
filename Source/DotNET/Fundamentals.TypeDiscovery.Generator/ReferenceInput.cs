@@ -15,6 +15,9 @@ internal sealed class ReferenceInput(ReferenceMetadata metadata, ImmutableArray<
 {
     static readonly MetadataReferenceComparer _comparer = new();
 
+    /// <summary>Gets the reference headers being analyzed.</summary>
+    public ReferenceMetadata Metadata { get; } = metadata;
+
     /// <summary>Gets the reference being analyzed.</summary>
     public MetadataReference Reference { get; } = metadata.Reference;
 
