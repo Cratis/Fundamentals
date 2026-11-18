@@ -29,32 +29,27 @@ internal sealed class ReferenceDiscovery(string name, string identity, Equatable
     public EquatableArray<DiscoveredType> PackageTypes { get; } = packageTypes;
 
     /// <summary>Analyzes one reference with its metadata dependencies.</summary>
-    /// <param name="reference">The reference to analyze.</param>
+    /// <param name="metadata">The reference headers to analyze.</param>
     /// <param name="references">The reference universe, independent of source edits.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>Equatable discovery facts, without compiler objects.</returns>
-    public static ReferenceDiscovery Create(MetadataReference reference, ImmutableArray<MetadataReference> references, CancellationToken cancellationToken)
+    public static ReferenceDiscovery Create(ReferenceMetadata metadata, ImmutableArray<MetadataReference> references, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-
-        // Public names do not require dependency binding. Only Cratis convention facts do.
-        var compilation = CSharpCompilation.Create("TypeDiscoveryReferences", references: [reference]);
-        if (!HasGlobalAlias(reference) || compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assembly)
+        var reference = metadata.Reference;
+        if (!HasGlobalAlias(reference))
         {
             return new(string.Empty, string.Empty, default, default);
         }
 
-        var isPackage = assembly.Name.StartsWith("Cratis", StringComparison.Ordinal) && IsRuntimeAsset(reference) &&
-            !assembly.Modules.Any(static module => module.ReferencedAssemblies.Any(static identity => identity.Name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal)));
-        if (isPackage)
-        {
-            compilation = CSharpCompilation.Create("TypeDiscoveryReferences", references: references);
-            if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol runtimeAssembly)
-            {
-                return new(string.Empty, string.Empty, default, default);
-            }
+        var isPackage = metadata.Name.StartsWith("Cratis", StringComparison.Ordinal) && IsRuntimeAsset(reference) &&
+            !metadata.Dependencies.Any(static name => name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal));
 
-            assembly = runtimeAssembly;
+        // Public names need no dependency binding; package facts use the independently cached dependency closure.
+        var compilation = CSharpCompilation.Create("TypeDiscoveryReferences", references: isPackage ? references : [reference]);
+        if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assembly)
+        {
+            return new(string.Empty, string.Empty, default, default);
         }
 
         var symbols = assembly.GlobalNamespace.GetAllNamedTypes().Where(static type => type.DeclaredAccessibility == Accessibility.Public).ToArray();
