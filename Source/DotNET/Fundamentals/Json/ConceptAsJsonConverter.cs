@@ -14,11 +14,13 @@ namespace Cratis.Json;
 /// <typeparam name="T">Underlying concept type.</typeparam>
 public class ConceptAsJsonConverter<T> : JsonConverter<T>
 {
+    static readonly Type _conceptValueType = typeof(T).GetConceptValueType();
+
     /// <inheritdoc/>
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         object? value;
-        var conceptValueType = typeof(T).GetConceptValueType();
+        var conceptValueType = _conceptValueType;
 
         switch (reader.TokenType)
         {
@@ -115,10 +117,12 @@ public class ConceptAsJsonConverter<T> : JsonConverter<T>
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Concept JSON serialization uses well-known concept types that are safe for AOT.")]
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
-        var actualValue = value?.GetConceptValue();
+        if (value is null) return;
+
+        var actualValue = value is IConceptValueAccessor accessor ? accessor.ValueAsObject : value.GetConceptValue();
         if (actualValue is null) return;
 
-        var conceptValueType = typeof(T).GetConceptValueType();
+        var conceptValueType = _conceptValueType;
         if (conceptValueType == typeof(DateOnly))
         {
             writer.WriteStringValue(((DateOnly)actualValue).ToString("O"));
@@ -177,7 +181,7 @@ public class ConceptAsJsonConverter<T> : JsonConverter<T>
         }
         else if (conceptValueType == typeof(Guid))
         {
-            writer.WriteStringValue(actualValue.ToString());
+            writer.WriteStringValue((Guid)actualValue);
         }
         else if (conceptValueType.IsEnum)
         {

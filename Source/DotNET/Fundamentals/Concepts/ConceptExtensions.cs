@@ -51,6 +51,8 @@ public static class ConceptExtensions
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "ConceptAs<T>.Value is a well-known property that is always preserved.")]
     public static object GetConceptValue(this object conceptObject)
     {
+        if (conceptObject is IConceptValueAccessor accessor) return accessor.ValueAsObject;
+
         if (!IsConcept(conceptObject)) throw new TypeIsNotAConcept(conceptObject.GetType());
 
         return conceptObject.GetType()!.GetTypeInfo()!.GetProperty(nameof(ConceptAs<string>.Value))!.GetValue(conceptObject, null)!;
