@@ -17,6 +17,7 @@ namespace Cratis.Types;
 /// </summary>
 public static class TypeConversion
 {
+    static readonly object _noConversion = new();
     static readonly MethodInfo _getValueMethod = typeof(JsonValue).GetMethod(nameof(JsonValue.GetValue))!;
 
     /// <summary>
@@ -32,6 +33,13 @@ public static class TypeConversion
         if (value is null)
         {
             return value!;
+        }
+
+        // Fast path: already the requested type and not something that needs unwrapping.
+        var runtimeType = value.GetType();
+        if (runtimeType == type && (runtimeType == typeof(string) || (runtimeType.IsValueType && runtimeType != typeof(JsonElement))))
+        {
+            return value;
         }
 
         if (value is JsonElement jsonElement)
@@ -64,7 +72,7 @@ public static class TypeConversion
             }
         }
 
-        var val = new object();
+        var val = _noConversion;
 
         if (value.IsConcept())
         {
