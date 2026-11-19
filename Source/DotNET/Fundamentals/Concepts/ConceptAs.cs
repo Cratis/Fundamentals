@@ -7,7 +7,7 @@ namespace Cratis.Concepts;
 /// Expresses a Concept as a another type, usually a primitive such as Guid, Int or String.
 /// </summary>
 /// <typeparam name="T">Type of the concept.</typeparam>
-public record ConceptAs<T> : IComparable<ConceptAs<T>>, IComparable<T>, IComparable
+public record ConceptAs<T> : IComparable<ConceptAs<T>>, IComparable<T>, IComparable, IConceptValueAccessor
     where T : IComparable
 {
     /// <summary>
@@ -25,6 +25,9 @@ public record ConceptAs<T> : IComparable<ConceptAs<T>>, IComparable<T>, ICompara
     /// Gets or inits the underlying value for the instance.
     /// </summary>
     public T Value { get; init; }
+
+    /// <inheritdoc/>
+    object IConceptValueAccessor.ValueAsObject => Value;
 
     /// <summary>
     /// Implicitly convert from the <see cref="ConceptAs{T}"/> to the value of the type given.
