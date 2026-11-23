@@ -35,8 +35,11 @@ internal sealed class ReferenceMetadata(MetadataReference reference, string name
         if (reference is CompilationReference compilationReference)
         {
             var assembly = compilationReference.Compilation.Assembly;
-            return new(reference, assembly.Name, new([.. assembly.Modules.SelectMany(static module => module.ReferencedAssemblies)
-                .Select(static identity => identity.Name).Distinct().OrderBy(static name => name, StringComparer.Ordinal)]));
+            return new(reference, assembly.Name, new(
+                [
+                    .. assembly.Modules.SelectMany(static module => module.ReferencedAssemblies)
+                        .Select(static identity => identity.Name).Distinct().OrderBy(static name => name, StringComparer.Ordinal)
+                ]));
         }
 
         if (reference is not PortableExecutableReference portable || portable.GetMetadata() is not AssemblyMetadata metadata)

@@ -64,16 +64,20 @@ internal static class GeneratedSourceBuilder
     {
         var hasEnums = !enumTypes.IsDefaultOrEmpty;
         var enumInterface = hasEnums ? ", global::Cratis.Json.ICanCreateEnumConverters" : string.Empty;
-        string[] enumConverterMethod = hasEnums
-            ? [
+        string[] enumConverterMethod = [];
+        if (hasEnums)
+        {
+            enumConverterMethod =
+            [
                 string.Empty,
                 "    public global::System.Text.Json.Serialization.JsonConverter CreateEnumConverter(Type enumType)",
                 "    {",
                 .. enumTypes.Select(static name => $"        if (enumType == typeof({name})) return new global::Cratis.Json.EnumConverter<{name}>();"),
                 "        return null;",
                 "    }"
-            ]
-            : [];
+            ];
+        }
+
         var experimentalIds = experimentalDiagnosticIds.IsDefault ? [] : experimentalDiagnosticIds;
         var suppressedDiagnostics = string.Join(", ", ["CS0612", "CS0618", .. experimentalIds]);
         var definedTypes = string.Join(",\n", namedTypes.Select(static name => $"        typeof({name})"));

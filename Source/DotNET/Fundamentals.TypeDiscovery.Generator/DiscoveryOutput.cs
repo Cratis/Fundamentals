@@ -50,12 +50,14 @@ internal static class DiscoveryOutput
 
     static ImmutableArray<(string ContractExpression, ImmutableArray<string> ImplementorExpressions)> GetContracts(
         DiscoveredType[] types, HashSet<string> identities, HashSet<string> ambiguousNames) =>
-        [.. types.Where(static type => type.IsImplementation)
-            .SelectMany(type => type.Contracts.Where(contract => IsAccessible(contract.Assembly, identities) && !ambiguousNames.Contains(contract.Expression))
-                .Select(contract => (Contract: contract.Expression, Implementation: type.Expression)))
-            .GroupBy(static entry => entry.Contract)
-            .OrderBy(static group => group.Key, StringComparer.Ordinal)
-            .Select(static group => (group.Key, group.Select(static entry => entry.Implementation).Distinct().OrderBy(static name => name, StringComparer.Ordinal).ToImmutableArray()))];
+        [
+            .. types.Where(static type => type.IsImplementation)
+                .SelectMany(type => type.Contracts.Where(contract => IsAccessible(contract.Assembly, identities) && !ambiguousNames.Contains(contract.Expression))
+                    .Select(contract => (Contract: contract.Expression, Implementation: type.Expression)))
+                .GroupBy(static entry => entry.Contract)
+                .OrderBy(static group => group.Key, StringComparer.Ordinal)
+                .Select(static group => (group.Key, group.Select(static entry => entry.Implementation).Distinct().OrderBy(static name => name, StringComparer.Ordinal).ToImmutableArray()))
+        ];
 
     static IEnumerable<(string ServiceExpression, string ImplementationExpression, string LifetimeExpression)> GetBindings(DiscoveredType[] symbols, HashSet<string>? identities = null)
     {
