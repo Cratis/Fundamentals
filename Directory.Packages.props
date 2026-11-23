@@ -2,6 +2,15 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
+    <!-- Keep non-net11 consumers on .NET 10 dependencies; OpenTelemetry 1.21 requires DiagnosticSource 11 on net10. -->
+    <MicrosoftRuntimePackageVersion>10.0.15</MicrosoftRuntimePackageVersion>
+    <OpenTelemetryPackageVersion>1.20.1</OpenTelemetryPackageVersion>
+    <OpenTelemetryWebInstrumentationPackageVersion>1.20.2</OpenTelemetryWebInstrumentationPackageVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net11.0'">
+    <MicrosoftRuntimePackageVersion>11.0.0</MicrosoftRuntimePackageVersion>
+    <OpenTelemetryPackageVersion>1.21.0</OpenTelemetryPackageVersion>
+    <OpenTelemetryWebInstrumentationPackageVersion>1.21.0</OpenTelemetryWebInstrumentationPackageVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Handlebars.Net" Version="2.5.0" />
@@ -26,18 +35,18 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
     <PackageVersion Include="Moq" Version="4.21.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="11.0.0" />
-    <PackageVersion Include="System.Text.Json" Version="11.0.0" />
-    <PackageVersion Include="OpenTelemetry" Version="1.21.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="11.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="11.0.0" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.21.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.21.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.21.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.21.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.21.0" />
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftRuntimePackageVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftRuntimePackageVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftRuntimePackageVersion)" />
+    <PackageVersion Include="System.Text.Json" Version="$(MicrosoftRuntimePackageVersion)" />
+    <PackageVersion Include="OpenTelemetry" Version="$(OpenTelemetryPackageVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(MicrosoftRuntimePackageVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftRuntimePackageVersion)" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryPackageVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryPackageVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="$(OpenTelemetryWebInstrumentationPackageVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="$(OpenTelemetryWebInstrumentationPackageVersion)" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryPackageVersion)" />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="$(MicrosoftRuntimePackageVersion)" />
   </ItemGroup>
 </Project>
