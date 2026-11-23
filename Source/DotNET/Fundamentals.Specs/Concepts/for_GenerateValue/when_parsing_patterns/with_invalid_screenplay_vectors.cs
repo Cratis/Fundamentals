@@ -19,7 +19,8 @@ public class with_invalid_screenplay_vectors : Specification
         var error = Catch.Exception(() => GenerateValue.Pattern(pattern, GenerationVectors.Algorithm(vector)));
 
         return error is InvalidValuePattern && error.Message.Contains(pattern, StringComparison.Ordinal) && error.Message.Contains(reason, StringComparison.Ordinal)
-            ? null : $"{pattern}: expected '{reason}', got {error}";
+            ? null
+            : $"{pattern}: expected '{reason}', got {error}";
     }).OfType<string>()];
 
     [Fact] void should_exercise_every_invalid_vector() => _vectors.Length.ShouldEqual(25);

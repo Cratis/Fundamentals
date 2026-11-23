@@ -37,19 +37,25 @@ internal sealed class DiscoveredType(INamedTypeSymbol symbol, IAssemblySymbol as
     public bool PreserveConstructors { get; } = ConstructorPreservation.GetImplementationTypes([symbol], [symbol.GetTypeOfExpression()]).Any();
 
     /// <summary>Gets accessible contracts and their defining assembly identities.</summary>
-    public EquatableArray<(string Expression, string Assembly)> Contracts { get; } = new([.. symbol
-        .GetAllBaseAndImplementingSymbols(assembly)
-        .Select(contract => (contract.GetTypeOfExpression(), ExternalIdentity(contract, assembly)))]);
+    public EquatableArray<(string Expression, string Assembly)> Contracts { get; } = new(
+        [
+            .. symbol
+                .GetAllBaseAndImplementingSymbols(assembly)
+                .Select(contract => (contract.GetTypeOfExpression(), ExternalIdentity(contract, assembly)))
+        ]);
 
     /// <summary>Gets interface identities and convention-matching facts.</summary>
-    public EquatableArray<(string Key, string Expression, string Assembly, bool Accessible, bool Matches)> Interfaces { get; } = new([.. symbol.AllInterfaces
-        .Select(contract => (
-            TypeIdentity.Create(contract),
-            contract.GetTypeOfExpression(),
-            ExternalIdentity(contract, assembly),
-            contract.IsAccessibleFromAssembly(assembly),
-            contract.ContainingNamespace.ToDisplayString() == symbol.ContainingNamespace.ToDisplayString() &&
-            contract.MetadataName == $"I{symbol.MetadataName}"))]);
+    public EquatableArray<(string Key, string Expression, string Assembly, bool Accessible, bool Matches)> Interfaces { get; } = new(
+        [
+            .. symbol.AllInterfaces
+                .Select(contract => (
+                    TypeIdentity.Create(contract),
+                    contract.GetTypeOfExpression(),
+                    ExternalIdentity(contract, assembly),
+                    contract.IsAccessibleFromAssembly(assembly),
+                    contract.ContainingNamespace.ToDisplayString() == symbol.ContainingNamespace.ToDisplayString() &&
+                    contract.MetadataName == $"I{symbol.MetadataName}"))
+        ]);
 
     /// <summary>Gets experimental diagnostic identifiers.</summary>
     public EquatableArray<string> ExperimentalIds { get; } = new(symbol.GetExperimentalDiagnosticIds());

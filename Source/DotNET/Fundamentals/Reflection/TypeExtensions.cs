@@ -46,9 +46,9 @@ public static class TypeExtensions
     /// <param name="type">Type to get from.</param>
     /// <returns>A type string.</returns>
     public static string GetTypeString(this Type type) =>
-        (type.Namespace?.StartsWith("System") ?? false) ?
-            (type.FullName ?? type.Name) :
-            $"{type.FullName ?? type.Name}, {type.Assembly.GetName().Name}";
+        (type.Namespace?.StartsWith("System") ?? false)
+            ? (type.FullName ?? type.Name)
+            : $"{type.FullName ?? type.Name}, {type.Assembly.GetName().Name}";
 
     /// <summary>
     /// Check if a type has an attribute associated with it.

@@ -54,8 +54,11 @@ internal sealed class ReferenceDiscovery(string name, string identity, Equatable
 
         var symbols = assembly.GlobalNamespace.GetAllNamedTypes().Where(static type => type.DeclaredAccessibility == Accessibility.Public).ToArray();
         var packageTypes = isPackage
-            ? new EquatableArray<DiscoveredType>([.. symbols.Where(static type => !type.IsImplicitlyDeclared && !type.IsAnonymousType && !type.IsFileLocal && type.CanBeReferencedByName && !type.IsNestedInGenericType())
-                .Select(type => new DiscoveredType(type, compilation.Assembly))])
+            ? new EquatableArray<DiscoveredType>(
+                [
+                    .. symbols.Where(static type => !type.IsImplicitlyDeclared && !type.IsAnonymousType && !type.IsFileLocal && type.CanBeReferencedByName && !type.IsNestedInGenericType())
+                        .Select(type => new DiscoveredType(type, compilation.Assembly))
+                ])
             : default;
         return new(
             assembly.Name,

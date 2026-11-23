@@ -21,15 +21,17 @@ public class and_warnings_are_errors : Specification
         using var stream = new MemoryStream();
         var emitResult = CSharpCompilation.Create(
             "Cratis.Packages",
-            [CSharpSyntaxTree.ParseText(
-                "[assembly: System.Diagnostics.CodeAnalysis.Experimental(\"ASM001\")]\n" +
-                "namespace Cratis.Packages\n" +
-                "{\n" +
-                "    [System.Diagnostics.CodeAnalysis.Experimental(\"TYPE001\")]\n" +
-                "    public class Outer { public class Inner { } }\n" +
-                "    [System.Diagnostics.CodeAnalysis.Experimental(\"TYPE001\")]\n" +
-                "    public class Duplicate { }\n" +
-                "}")],
+            [
+                CSharpSyntaxTree.ParseText(
+                    "[assembly: System.Diagnostics.CodeAnalysis.Experimental(\"ASM001\")]\n" +
+                    "namespace Cratis.Packages\n" +
+                    "{\n" +
+                    "    [System.Diagnostics.CodeAnalysis.Experimental(\"TYPE001\")]\n" +
+                    "    public class Outer { public class Inner { } }\n" +
+                    "    [System.Diagnostics.CodeAnalysis.Experimental(\"TYPE001\")]\n" +
+                    "    public class Duplicate { }\n" +
+                    "}")
+            ],
             [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
             .Emit(stream);

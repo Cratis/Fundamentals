@@ -219,15 +219,15 @@ public class DerivedTypeJsonConverter<T>(IDerivedTypes derivedTypes) : JsonConve
             (ShouldSerialize is not null && !ShouldSerialize(instance, propertyValue)) ||
             IgnoredByCondition(propertyValue);
 
+        [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "Only value types are instantiated, which never need constructors.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Only value types are instantiated, which never need constructors.")]
+        static object? CreateDefault(Type type) => type.IsValueType && Nullable.GetUnderlyingType(type) is null ? RuntimeHelpers.GetUninitializedObject(type) : null;
+
         bool IgnoredByCondition(object? propertyValue) => Condition switch
         {
             JsonIgnoreCondition.WhenWritingNull => propertyValue is null,
             JsonIgnoreCondition.WhenWritingDefault => propertyValue?.Equals(_defaultValue) ?? true,
             _ => false
         };
-
-        [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "Only value types are instantiated, which never need constructors.")]
-        [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Only value types are instantiated, which never need constructors.")]
-        static object? CreateDefault(Type type) => type.IsValueType && Nullable.GetUnderlyingType(type) is null ? RuntimeHelpers.GetUninitializedObject(type) : null;
     }
 }

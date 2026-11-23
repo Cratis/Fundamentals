@@ -18,17 +18,21 @@ internal static class GenerationVectors
 
     internal static string Text(JsonElement vector, string name) => vector.GetProperty(name).GetString()!;
     internal static Checksum Algorithm(JsonElement vector, string property = "checksum") =>
-        !vector.TryGetProperty(property, out var value) ? Checksum.None : value.GetString() switch
-        {
-            "luhn" => Checksum.Luhn,
-            "mod11" => Checksum.Mod11,
-            "mod97" => Checksum.Mod97,
-            _ => throw new UnknownChecksum((Checksum)(-1))
-        };
+        !vector.TryGetProperty(property, out var value)
+            ? Checksum.None
+            : value.GetString() switch
+            {
+                "luhn" => Checksum.Luhn,
+                "mod11" => Checksum.Mod11,
+                "mod97" => Checksum.Mod97,
+                _ => throw new UnknownChecksum((Checksum)(-1))
+            };
 
     internal static DateOnly? Date(JsonElement vector) => vector.TryGetProperty("date", out var date)
-        ? DateOnly.Parse(date.GetString()!, CultureInfo.InvariantCulture) : null;
+        ? DateOnly.Parse(date.GetString()!, CultureInfo.InvariantCulture)
+        : null;
 
     internal static DateTimeOffset? Instant(JsonElement vector) => vector.TryGetProperty("instant", out var instant)
-        ? DateTimeOffset.Parse(instant.GetString()!, CultureInfo.InvariantCulture) : null;
+        ? DateTimeOffset.Parse(instant.GetString()!, CultureInfo.InvariantCulture)
+        : null;
 }
