@@ -31,13 +31,10 @@
         <Configuration>Debug</Configuration>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <PropertyGroup>
+        <!-- Debug and Release target the same frameworks so net11.0-only code paths compile locally too. -->
         <!-- Plural on purpose: a singular TargetFramework here would stop projects that set their own TargetFrameworks from cross-targeting. -->
-        <TargetFrameworks>net10.0</TargetFrameworks>
+        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
