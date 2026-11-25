@@ -163,3 +163,5 @@ public class MySystem
 ```
 
 Resolution happens during enumeration. `IInstancesOf<T>` does not cache the results: enumerating again asks the container again, and the service registrations' lifetimes determine whether it returns new or shared instances.
+
+If the container cannot resolve a discovered concrete type, enumeration throws an `InvalidOperationException` that names the type when it reaches that type. Register the concrete type and its dependencies. Other exceptions thrown while the container creates an instance propagate unchanged.
